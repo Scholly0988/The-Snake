@@ -4,6 +4,8 @@ Ein mobiles Browser-Arcade-Spiel: Eine segmentierte Schlange bewegt sich in Schl
 
 ## Spielregeln
 
+- Vor dem Start wird zwischen Leicht, Normal und Schwer gewählt.
+- Die Lebenspunkte jedes folgenden Segments steigen je nach Schwierigkeit um 10 %, 15 % oder 20 % des Grundwertes.
 - Das erste Upgrade-Segment befindet sich an Position 2 der Schlange.
 - Danach erscheint alle fünf Segmente ein weiteres Upgrade-Segment.
 - Wird ein Segment zerstört, rückt das nächste intakte Segment nach vorn und übernimmt die Kopfposition.

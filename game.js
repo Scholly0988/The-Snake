@@ -19,6 +19,7 @@ const state = {
   lastTime: 0,
   fireTimer: 0,
   nextId: 1,
+  difficultyRate: 0.15,
   bullets: [],
   particles: [],
   snake: [],
@@ -67,11 +68,13 @@ function createSnake(count) {
   state.snake = [];
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
+    const baseHp = upgrade ? 3 : (i === 0 ? 4 : 2);
+    const scaledHp = Number((baseHp * (1 + state.difficultyRate * i)).toFixed(2));
     state.snake.push({
       id: state.nextId++,
       upgrade,
-      hp: upgrade ? 3 : (i === 0 ? 4 : 2),
-      maxHp: upgrade ? 3 : (i === 0 ? 4 : 2),
+      hp: scaledHp,
+      maxHp: scaledHp,
       x: state.width / 2,
       y: -40 - i * SEGMENT_SPACING
     });
@@ -79,6 +82,8 @@ function createSnake(count) {
 }
 
 function startGame() {
+  const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
+  state.difficultyRate = Number(selectedDifficulty?.value || 0.15);
   resetGame();
   state.mode = "playing";
   state.lastTime = performance.now();

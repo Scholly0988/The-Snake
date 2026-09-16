@@ -86,6 +86,47 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .panel p { color: #b9d2df; line-height: 1.45; }
 .eyebrow { margin: 0 !important; color: #ffca5c !important; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
 
+.difficulty-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 18px 0 5px;
+  padding: 0;
+  border: 0;
+}
+
+.difficulty-picker legend {
+  width: 100%;
+  margin-bottom: 7px;
+  color: #8eafbe;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.difficulty-picker label { position: relative; cursor: pointer; }
+.difficulty-picker input { position: absolute; opacity: 0; pointer-events: none; }
+.difficulty-picker span {
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  border: 1px solid #315b6e;
+  border-radius: 10px;
+  color: #d9edf5;
+  background: #0b202b;
+  font-size: 13px;
+  font-weight: 800;
+}
+.difficulty-picker small { display: block; margin-top: 3px; color: #759bab; font-size: 9px; }
+.difficulty-picker input:checked + span {
+  border-color: #73dcff;
+  color: #06131a;
+  background: #73dcff;
+  box-shadow: 0 0 16px rgba(78, 200, 239, .35);
+}
+.difficulty-picker input:checked + span small { color: #225368; }
+
 button {
   width: 100%;
   min-height: 50px;
