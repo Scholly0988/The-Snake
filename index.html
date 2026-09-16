@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#07131b">
+  <title>The Snake</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="hud">
+      <div><span>PUNKTE</span><strong id="score">0</strong></div>
+      <div><span>SCHADEN</span><strong id="damage">1</strong></div>
+      <div><span>FEUERRATE</span><strong id="fireRate">1.0×</strong></div>
+    </header>
+
+    <section id="gameWrap" class="game-wrap" aria-label="Spielfeld">
+      <canvas id="game" width="420" height="720"></canvas>
+
+      <div id="startScreen" class="overlay">
+        <div class="panel start-panel">
+          <p class="eyebrow">MOBILE ARCADE</p>
+          <h1>THE SNAKE</h1>
+          <p>Halte den Finger auf dem Spielfeld und wische nach links oder rechts. Deine Pistole feuert automatisch.</p>
+          <button id="startButton">SPIEL STARTEN</button>
+        </div>
+      </div>
+
+      <div id="upgradeScreen" class="overlay hidden">
+        <div class="panel upgrade-panel">
+          <p class="eyebrow">ZEIT ANGEHALTEN</p>
+          <h2>Upgrade wählen</h2>
+          <p>Das Spiel läuft erst nach deiner Auswahl weiter.</p>
+          <div id="upgradeChoices" class="upgrade-choices"></div>
+        </div>
+      </div>
+
+      <div id="gameOverScreen" class="overlay hidden">
+        <div class="panel">
+          <p class="eyebrow">DIE SCHLANGE WAR SCHNELLER</p>
+          <h2>Game Over</h2>
+          <p>Erreichte Punkte: <strong id="finalScore">0</strong></p>
+          <button id="restartButton">NOCH EINMAL</button>
+        </div>
+      </div>
+    </section>
+
+    <p class="hint">Finger halten und seitlich wischen</p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
