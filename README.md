@@ -19,6 +19,8 @@ Ein mobiles Browser-Arcade-Spiel: Eine segmentierte Schlange bewegt sich in Schl
 
 ## Spielregeln
 
+- Jede Schlange hat 100 Körperteile plus den separaten Kopf, auch in Folgewellen.
+
 - Vor dem Start wird zwischen Leicht, Normal und Schwer gewählt.
 - Das erste Körperteil hat 5 HP. Jedes folgende erhält prozentual mehr: Leicht +10 %, Normal +15 %, Schwer +20 %. Formel: runden(5 × (1 + Rate)^Index); erst am Ende runden. Auf Leicht: 5, 6, 6, 7, 7. Upgrade-Teile haben dieselbe HP-Kurve.
 - Über jedem Körperteil stehen seine verbleibenden HP als Zahl; der Kopf hat weiterhin keine eigenen HP.

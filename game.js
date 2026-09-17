@@ -38,6 +38,7 @@ const SEGMENT_SPACING = 33;
 const SEGMENT_RADIUS = 14;
 const SEGMENT_HIT_RADIUS = 25;
 const UPGRADE_INTERVAL = 5;
+const SEGMENTS_PER_SNAKE = 100;
 
 function resizeCanvas() {
   const rect = wrap.getBoundingClientRect();
@@ -65,7 +66,7 @@ function resetGame() {
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
   state.weapon = { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0 };
-  createSnake(26);
+  createSnake(SEGMENTS_PER_SNAKE);
   refreshHud();
 }
 
@@ -169,7 +170,7 @@ function update(dt) {
 
   if (state.snake.length === 0) {
     state.headDistance = 0;
-    createSnake(28);
+    createSnake(SEGMENTS_PER_SNAKE);
     syncSnakePositions();
     state.score += 500;
     refreshHud();
@@ -446,5 +447,5 @@ function loop(time) {
 }
 
 resizeCanvas();
-createSnake(26);
+createSnake(SEGMENTS_PER_SNAKE);
 requestAnimationFrame(loop);
