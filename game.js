@@ -32,6 +32,7 @@ const state = {
 
 const SEGMENT_SPACING = 33;
 const SEGMENT_RADIUS = 14;
+const SEGMENT_HIT_RADIUS = 25;
 const UPGRADE_INTERVAL = 5;
 
 function resizeCanvas() {
@@ -68,7 +69,10 @@ function createSnake(count) {
   state.snake = [];
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
-    const baseHp = upgrade ? 3 : (i === 0 ? 4 : 2);
+    // Der Kopf ist nur die Darstellung auf dem vordersten Körperteil und
+    // besitzt keine eigenen Lebenspunkte. Alle Körperteile starten daher
+    // mit derselben Basis; Upgrade-Teile bleiben widerstandsfähiger.
+    const baseHp = upgrade ? 3 : 2;
     const scaledHp = Number((baseHp * (1 + state.difficultyRate * i)).toFixed(2));
     state.snake.push({
       id: state.nextId++,
@@ -156,7 +160,7 @@ function handleHits() {
   outer: for (const bullet of state.bullets) {
     for (let i = 0; i < state.snake.length; i++) {
       const segment = state.snake[i];
-      if (Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_RADIUS + 4) {
+      if (Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS) {
         segment.hp -= state.weapon.damage;
         bullet.hitsLeft--;
         burst(segment.x, segment.y, segment.upgrade ? "#ffd35f" : "#63ef98", 5);
@@ -280,10 +284,14 @@ function drawSegment(segment, isHead) {
       ctx.beginPath(); ctx.arc(-6, -4, 2.5, 0, Math.PI * 2); ctx.arc(6, -4, 2.5, 0, Math.PI * 2); ctx.fill();
     }
   }
-  const ratio = Math.max(0, segment.hp / segment.maxHp);
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(-14, 20, 28, 3);
-  ctx.fillStyle = ratio > .5 ? "#68efa0" : "#ff6d64"; ctx.fillRect(-14, 20, 28 * ratio, 3);
+  // Der Kopf selbst hat keine HP-Anzeige. Treffer dort beschädigen das
+  // Körperteil, auf dem er gerade sitzt; nach dessen Zerstörung rückt er zurück.
+  if (!isHead) {
+    const ratio = Math.max(0, segment.hp / segment.maxHp);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(-14, 20, 28, 3);
+    ctx.fillStyle = ratio > .5 ? "#68efa0" : "#ff6d64"; ctx.fillRect(-14, 20, 28 * ratio, 3);
+  }
   ctx.restore();
 }
 
