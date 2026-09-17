@@ -11,6 +11,10 @@ const upgradeScreen = document.querySelector("#upgradeScreen");
 const gameOverScreen = document.querySelector("#gameOverScreen");
 const upgradeChoices = document.querySelector("#upgradeChoices");
 const finalScore = document.querySelector("#finalScore");
+const headSprite = new Image();
+headSprite.src = "snake-head.png";
+const bodySprite = new Image();
+bodySprite.src = "snake-body.png";
 
 const state = {
   mode: "start",
@@ -76,6 +80,7 @@ function createSnake(count) {
     const scaledHp = Number((baseHp * (1 + state.difficultyRate * i)).toFixed(2));
     state.snake.push({
       id: state.nextId++,
+      pathOffset: i * SEGMENT_SPACING,
       upgrade,
       hp: scaledHp,
       maxHp: scaledHp,
@@ -96,22 +101,39 @@ function startGame() {
 }
 
 function pathPoint(distance) {
-  const y = -35 + distance;
-  const amplitude = Math.max(55, state.width * .34);
-  const center = state.width / 2;
-  const x = center + Math.sin(distance / 72) * amplitude;
-  return { x, y };
+  const radius = 26;
+  const left = 54;
+  const right = Math.max(left + 20, state.width - 54);
+  const width = right - left;
+  if (distance < 0) return { x: left, y: 38 + distance, angle: Math.PI / 2 };
+  const length = width + Math.PI * radius;
+  const row = Math.floor(distance / length);
+  const d = distance - row * length;
+  const forward = row % 2 === 0;
+  const y = 38 + row * radius * 2;
+  if (d <= width) return {
+    x: forward ? left + d : right - d, y,
+    angle: forward ? 0 : Math.PI
+  };
+  const t = (d - width) / radius;
+  return {
+    x: forward ? right + radius * Math.sin(t) : left - radius * Math.sin(t),
+    y: y + radius * (1 - Math.cos(t)),
+    angle: forward ? t : Math.PI - t
+  };
 }
 
 function update(dt) {
   state.elapsed += dt;
-  const speed = Math.min(35 + state.elapsed * .45, 70);
+  // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
+  const speed = Math.min(22 + state.elapsed * .25, 45);
   state.headDistance += speed * dt;
 
   for (let i = 0; i < state.snake.length; i++) {
-    const p = pathPoint(state.headDistance - i * SEGMENT_SPACING);
+    const p = pathPoint(state.headDistance - state.snake[i].pathOffset);
     state.snake[i].x = p.x;
     state.snake[i].y = p.y;
+    state.snake[i].angle = p.angle;
   }
 
   const dx = state.player.targetX - state.player.x;
@@ -131,6 +153,7 @@ function update(dt) {
   }
   handleHits();
   state.bullets = state.bullets.filter(b => b.y > -25 && !b.dead);
+  if (state.mode !== "playing") return;
 
   for (const p of state.particles) {
     p.life -= dt;
@@ -158,14 +181,18 @@ function fireWeapon() {
 
 function handleHits() {
   outer: for (const bullet of state.bullets) {
+    if (bullet.dead) continue;
+    bullet.hitIds ||= new Set();
     for (let i = 0; i < state.snake.length; i++) {
       const segment = state.snake[i];
-      if (Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS) {
+      if (!bullet.hitIds.has(segment.id) && Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS) {
+        bullet.hitIds.add(segment.id);
         segment.hp -= state.weapon.damage;
         bullet.hitsLeft--;
         burst(segment.x, segment.y, segment.upgrade ? "#ffd35f" : "#63ef98", 5);
         if (bullet.hitsLeft <= 0) bullet.dead = true;
-        if (segment.hp <= 0) destroySegment(i);
+        if (segment.hp <= 0) { destroySegment(i); i--; }
+        if (state.mode !== "playing") return;
         if (bullet.dead) continue outer;
       }
     }
@@ -185,6 +212,7 @@ function destroySegment(index) {
 
 function openUpgrade() {
   state.mode = "upgrade";
+  releaseDrag();
   const pool = [
     { name: "+1 Schaden", text: "Jedes Geschoss verursacht mehr Schaden.", apply: () => state.weapon.damage++ },
     { name: "+20 % Feuerrate", text: "Die Pistole schießt deutlich schneller.", apply: () => state.weapon.shotsPerSecond *= 1.2 },
@@ -264,6 +292,26 @@ function drawSegment(segment, isHead) {
   if (segment.y < -30 || segment.y > state.height + 30) return;
   ctx.save();
   ctx.translate(segment.x, segment.y);
+  const sprite = isHead ? headSprite : bodySprite;
+  if (sprite.complete && sprite.naturalWidth) {
+    ctx.save();
+    ctx.rotate(segment.angle || 0);
+    const size = isHead ? 44 : 38;
+    ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+    ctx.restore();
+    if (segment.upgrade) {
+      ctx.strokeStyle = "#ffd35f"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 19, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#ffd35f"; ctx.font = "bold 16px system-ui";
+      ctx.textAlign = "center"; ctx.fillText("+", 0, 6);
+    }
+    if (!isHead) {
+      ctx.fillStyle = "#142d24"; ctx.fillRect(-14, 22, 28, 3);
+      ctx.fillStyle = "#77efa0"; ctx.fillRect(-14, 22, 28 * Math.max(0, segment.hp / segment.maxHp), 3);
+    }
+    ctx.restore();
+    return;
+  }
   if (segment.upgrade) {
     ctx.shadowColor = "#ffd35f"; ctx.shadowBlur = 18;
     ctx.fillStyle = "#ffd35f";
@@ -321,24 +369,36 @@ function drawParticles() {
 }
 
 function setPointer(clientX) {
-  const rect = canvas.getBoundingClientRect();
-  state.player.targetX = clientX - rect.left;
+  const delta = clientX - state.lastPointerX;
+  state.lastPointerX = clientX;
+  state.player.targetX = Math.max(20, Math.min(state.width - 20, state.player.targetX + delta));
+}
+
+function releaseDrag() {
+  const id = state.pointerId;
+  state.pointerDown = false;
+  state.pointerId = null;
+  state.player.targetX = state.player.x;
+  if (id != null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
 }
 
 canvas.addEventListener("pointerdown", event => {
-  if (state.mode !== "playing") return;
+  if (state.mode !== "playing" || state.pointerDown) return;
   state.pointerDown = true;
+  state.pointerId = event.pointerId;
+  state.lastPointerX = event.clientX;
+  state.player.targetX = state.player.x;
   canvas.setPointerCapture(event.pointerId);
-  setPointer(event.clientX);
 });
 canvas.addEventListener("pointermove", event => {
-  if (state.pointerDown && state.mode === "playing") setPointer(event.clientX);
+  if (state.pointerDown && event.pointerId === state.pointerId && state.mode === "playing") setPointer(event.clientX);
 });
 canvas.addEventListener("pointerup", event => {
-  state.pointerDown = false;
-  if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  if (event.pointerId === state.pointerId) releaseDrag();
 });
-canvas.addEventListener("pointercancel", () => state.pointerDown = false);
+canvas.addEventListener("pointercancel", releaseDrag);
+canvas.addEventListener("lostpointercapture", releaseDrag);
+window.addEventListener("blur", releaseDrag);
 
 document.querySelector("#startButton").addEventListener("click", startGame);
 document.querySelector("#restartButton").addEventListener("click", startGame);
