@@ -23,7 +23,7 @@ const state = {
   lastTime: 0,
   fireTimer: 0,
   nextId: 1,
-  difficultyRate: 0.15,
+  difficultyRate: 0.90,
   bullets: [],
   particles: [],
   snake: [],
@@ -74,8 +74,9 @@ function createSnake(count) {
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
     // Nur Körperteile speichern HP; Kopftreffer werden an das erste weitergeleitet.
-    const baseHp = upgrade ? 3 : 2;
-    const scaledHp = Number((baseHp * (1 + state.difficultyRate * i)).toFixed(2));
+    // Runde erst den Endwert: 5 * 1.6^i ergibt auf Leicht 5, 8, 13, 20 …
+    // Upgrade-Teile folgen derselben HP-Kurve.
+    const scaledHp = Math.round(5 * (1 + state.difficultyRate) ** i);
     state.snake.push({
       id: state.nextId++,
       pathOffset: (i + 1) * SEGMENT_SPACING,
@@ -90,7 +91,7 @@ function createSnake(count) {
 
 function startGame() {
   const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
-  state.difficultyRate = Number(selectedDifficulty?.value || 0.15);
+  state.difficultyRate = Number(selectedDifficulty?.value || 0.90);
   resetGame();
   state.mode = "playing";
   state.lastTime = performance.now();
@@ -281,6 +282,8 @@ function draw() {
   for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], false);
   const head = snakeHead();
   if (head) drawSegment(head, true);
+  // Nach allen Sprites zeichnen, damit Nachbarteile die Zahlen nicht verdecken.
+  for (const segment of state.snake) drawHpLabel(segment);
   drawBullets();
   drawPlayer();
   drawParticles();
@@ -302,6 +305,21 @@ function drawBackground() {
   ctx.setLineDash([8, 9]);
   ctx.beginPath(); ctx.moveTo(0, danger); ctx.lineTo(state.width, danger); ctx.stroke();
   ctx.setLineDash([]);
+}
+
+function drawHpLabel(segment) {
+  if (segment.y < 0 || segment.y > state.height + 30) return;
+  const label = String(Math.max(0, Math.ceil(segment.hp)));
+  ctx.save();
+  ctx.font = "bold 11px system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#031019";
+  ctx.fillStyle = segment.upgrade ? "#ffe083" : "#ffffff";
+  ctx.strokeText(label, segment.x, segment.y - 23, 31);
+  ctx.fillText(label, segment.x, segment.y - 23, 31);
+  ctx.restore();
 }
 
 function drawSegment(segment, isHead) {

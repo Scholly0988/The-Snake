@@ -62,3 +62,13 @@ assert.equal(run('state.snake[0].hp'),initialHp-1,'Head and body cannot double-h
 run('createSnake(1); destroySegment(0)');
 assert.equal(run('snakeHead()'),null,'No independent head remains after last body dies');
 console.log('PASS: bounds, drag, front/middle/tail collapse, head damage, no double damage, death');
+run('state.difficultyRate=0.6; createSnake(5)');
+assert.deepEqual(JSON.parse(run('JSON.stringify(state.snake.map(s=>s.hp))')),[5,8,13,20,33]);
+const healthBefore=run('state.snake[3].hp');
+run('destroySegment(2)');
+assert.equal(run('state.snake[2].hp'),healthBefore,'Retreat must not recalculate HP');
+const labels=[];
+context.ctxStub=labels;
+run('ctx.save=()=>{}; ctx.restore=()=>{}; ctx.strokeText=()=>{}; ctx.fillText=(text)=>ctxStub.push(text); drawHpLabel({x:100,y:100,hp:7,upgrade:false})');
+assert.deepEqual(labels,['7']);
+console.log('PASS: compounded HP, upgrade HP, stable HP after collapse, current HP label');

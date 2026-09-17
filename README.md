@@ -20,7 +20,8 @@ Ein mobiles Browser-Arcade-Spiel: Eine segmentierte Schlange bewegt sich in Schl
 ## Spielregeln
 
 - Vor dem Start wird zwischen Leicht, Normal und Schwer gewählt.
-- Die Lebenspunkte jedes folgenden Segments steigen je nach Schwierigkeit um 10 %, 15 % oder 20 % des Grundwertes.
+- Das erste Körperteil hat 5 HP. Jedes folgende erhält prozentual mehr: Leicht +60 %, Normal +90 %, Schwer +120 %. Formel: runden(5 × (1 + Rate)^Index); erst am Ende runden. Auf Leicht: 5, 8, 13, 20, 33. Upgrade-Teile haben dieselbe HP-Kurve.
+- Über jedem Körperteil stehen seine verbleibenden HP als Zahl; der Kopf hat weiterhin keine eigenen HP.
 - Die Trefferbereiche der Körperteile sind größer als ihre sichtbare Darstellung, damit das Zielen auf dem Handy zuverlässiger ist.
 - Der Kopf ist separat sichtbar und besitzt keine eigenen Lebenspunkte. Kopftreffer beschädigen das erste Körperteil direkt dahinter.
 - Sobald alle Körperteile zerstört sind, ist die Schlange besiegt.
