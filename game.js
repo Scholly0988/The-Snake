@@ -23,7 +23,7 @@ const state = {
   lastTime: 0,
   fireTimer: 0,
   nextId: 1,
-  difficultyRate: 0.90,
+  difficultyRate: 0.15,
   bullets: [],
   particles: [],
   snake: [],
@@ -74,7 +74,7 @@ function createSnake(count) {
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
     // Nur Körperteile speichern HP; Kopftreffer werden an das erste weitergeleitet.
-    // Runde erst den Endwert: 5 * 1.6^i ergibt auf Leicht 5, 8, 13, 20 …
+    // Runde erst den Endwert: 5 * 1.1^i ergibt auf Leicht 5, 6, 6, 7 …
     // Upgrade-Teile folgen derselben HP-Kurve.
     const scaledHp = Math.round(5 * (1 + state.difficultyRate) ** i);
     state.snake.push({
@@ -91,7 +91,7 @@ function createSnake(count) {
 
 function startGame() {
   const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
-  state.difficultyRate = Number(selectedDifficulty?.value || 0.90);
+  state.difficultyRate = Number(selectedDifficulty?.value || 0.15);
   resetGame();
   state.mode = "playing";
   state.lastTime = performance.now();
