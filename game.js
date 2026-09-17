@@ -243,22 +243,36 @@ function destroySegment(index) {
   if (destroyed.upgrade) openUpgrade();
 }
 
+function roundUpgradePool() {
+  return [
+    { rarity: "grey", label: "Grau", damage: 1, rate: 10, pierce: 1 },
+    { rarity: "green", label: "Grün", damage: 2, rate: 20, pierce: 2 },
+    { rarity: "purple", label: "Lila", damage: 4, rate: 30, pierce: 3 }
+  ].flatMap(tier => [
+    { rarity: tier.rarity, label: tier.label, name: "+" + tier.damage + " Schaden",
+      text: "Zusätzlicher Schaden pro Geschoss.",
+      apply: () => state.weapon.damage += tier.damage },
+    { rarity: tier.rarity, label: tier.label, name: "+" + tier.rate + " % Feuerrate",
+      text: "Erhöht deine aktuelle Feuerrate um " + tier.rate + " %.",
+      apply: () => state.weapon.shotsPerSecond *= 1 + tier.rate / 100 },
+    { rarity: tier.rarity, label: tier.label, name: "+" + tier.pierce + " Durchschlag",
+      text: "Durchdringt " + tier.pierce + " zusätzliche Körperteile.",
+      apply: () => state.weapon.pierce += tier.pierce }
+  ]);
+}
+
 function openUpgrade() {
   state.mode = "upgrade";
   releaseDrag();
-  const pool = [
-    { name: "+1 Schaden", text: "Jedes Geschoss verursacht mehr Schaden.", apply: () => state.weapon.damage++ },
-    { name: "+20 % Feuerrate", text: "Die Pistole schießt deutlich schneller.", apply: () => state.weapon.shotsPerSecond *= 1.2 },
-    { name: state.weapon.bullets < 3 ? "+1 Geschoss" : "+1 Durchschlag", text: state.weapon.bullets < 3 ? "Ein zusätzliches Geschoss pro Schuss." : "Geschosse treffen ein weiteres Segment.", apply: () => state.weapon.bullets < 3 ? (state.weapon.bullets++, state.weapon.spread = 24) : state.weapon.pierce++ },
-    { name: "+1 Durchschlag", text: "Geschosse können ein weiteres Segment treffen.", apply: () => state.weapon.pierce++ }
-  ];
+  const pool = roundUpgradePool();
   const choices = shuffle(pool).slice(0, 3);
   upgradeChoices.replaceChildren();
   for (const choice of choices) {
     const button = document.createElement("button");
-    button.className = "upgrade-choice";
-    button.innerHTML = `${choice.name}<span>${choice.text}</span>`;
+    button.className = "upgrade-choice rarity-" + choice.rarity;
+    button.innerHTML = `<small>${choice.label}</small>${choice.name}<span>${choice.text}</span>`;
     button.addEventListener("click", () => {
+      if (state.mode !== "upgrade") return;
       choice.apply();
       refreshHud();
       upgradeScreen.classList.add("hidden");
@@ -271,7 +285,12 @@ function openUpgrade() {
 }
 
 function shuffle(items) {
-  return [...items].sort(() => Math.random() - .5);
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 function endGame() {
