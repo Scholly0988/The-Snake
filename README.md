@@ -1,5 +1,22 @@
 # The Snake
 
+## Lokales Roguelite
+
+- Keine Registrierung, keine Serververbindung. Fortschritt liegt im localStorage dieser Website.
+- 1 Münze pro zerstörtem Körperteil, 5 pro Upgrade-Teil; Gutschrift sofort.
+- Im Hauptmenü dauerhaft +1 Startschaden oder +10 % Basisfeuerrate kaufen.
+- Beide Verbesserungen haben 30 Stufen; Kosten: 20 × (nächste Stufe)² Münzen.
+- Runde-Upgrades verschwinden beim Neustart. Dauerhafte Käufe wirken ab der nächsten Runde.
+- Münzen, Käufe, Rekord, besiegte Teile, gestartete Runden und zuletzt gewählte Schwierigkeit werden gespeichert.
+- Eine laufende Runde wird beim Neuladen nicht fortgesetzt. Bereits verdiente Münzen bleiben erhalten.
+- Export als JSON oder Sicherungstext; Import im Hauptmenü mit Bestätigung vor dem Ersetzen.
+- Browserdaten löschen/Privatmodus kann Daten entfernen. Regelmäßig Sicherungen exportieren.
+- Bei beschädigten Daten oder Änderungen in einem anderen Tab wird nicht still überschrieben.
+- Bei Speicherfehlern Hinweis beachten und den aktuellen Fortschritt exportieren.
+
+Upload: index.html, style.css, game.js und NEU progress.js zusammen hochladen.
+Grafiken bleiben unverändert. Tests: node test-game.cjs und node test-progress.cjs.
+
 ## Neues Bewegungs- und Grafikupdate
 
 Finger aufsetzen aktiviert nur die Steuerung. Erst die relative Wischbewegung

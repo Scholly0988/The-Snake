@@ -15,10 +15,15 @@ const headSprite = new Image();
 headSprite.src = "snake-head.png";
 const bodySprite = new Image();
 bodySprite.src = "snake-body.png";
+const progress = SnakeProgress.open({
+  getItem: key => window.localStorage.getItem(key),
+  setItem: (key, value) => window.localStorage.setItem(key, value)
+});
 
 const state = {
   mode: "start",
   score: 0,
+  runCoins: 0,
   elapsed: 0,
   lastTime: 0,
   fireTimer: 0,
@@ -56,7 +61,9 @@ function resizeCanvas() {
 }
 
 function resetGame() {
+  releaseDrag();
   state.score = 0;
+  state.runCoins = 0;
   state.elapsed = 0;
   state.fireTimer = 0;
   state.bullets = [];
@@ -65,7 +72,7 @@ function resetGame() {
   state.headDistance = 0;
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
-  state.weapon = { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0 };
+  state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0 };
   createSnake(SEGMENTS_PER_SNAKE);
   refreshHud();
 }
@@ -93,6 +100,10 @@ function createSnake(count) {
 function startGame() {
   const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
   state.difficultyRate = Number(selectedDifficulty?.value || 0.15);
+  progress.data.difficulty = state.difficultyRate;
+  progress.data.runs = Math.min(1000000000, progress.data.runs + 1);
+  progress.save();
+  renderProfile();
   resetGame();
   state.mode = "playing";
   state.lastTime = performance.now();
@@ -173,6 +184,8 @@ function update(dt) {
     createSnake(SEGMENTS_PER_SNAKE);
     syncSnakePositions();
     state.score += 500;
+    progress.data.best = Math.max(progress.data.best, state.score);
+    progress.save();
     refreshHud();
   } else if (snakeHead().y + SEGMENT_RADIUS >= state.player.y - 22) {
     endGame();
@@ -216,6 +229,10 @@ function handleHits() {
 function destroySegment(index) {
   const [destroyed] = state.snake.splice(index, 1);
   state.score += destroyed.upgrade ? 100 : 25;
+  const coins = destroyed.upgrade ? 5 : 1;
+  state.runCoins += coins;
+  progress.reward(coins, state.score);
+  document.querySelector("#saveStatus").textContent = progress.message;
   burst(destroyed.x, destroyed.y, destroyed.upgrade ? "#ffe083" : "#75ffac", 16);
 
   // Nur der Abschnitt vor der Lücke (Richtung Kopf) fällt zurück.
@@ -258,7 +275,13 @@ function shuffle(items) {
 }
 
 function endGame() {
+  if (state.mode === "gameover") return;
+  releaseDrag();
   state.mode = "gameover";
+  progress.data.best = Math.max(progress.data.best, state.score);
+  progress.save();
+  renderProfile();
+  document.querySelector("#runSummary").textContent = state.runCoins + " Münzen verdient · bleiben erhalten";
   finalScore.textContent = state.score;
   gameOverScreen.classList.remove("hidden");
 }
@@ -268,6 +291,81 @@ function refreshHud() {
   damageEl.textContent = state.weapon.damage;
   fireRateEl.textContent = `${(state.weapon.shotsPerSecond / 2.7).toFixed(1)}×`;
 }
+
+function renderProfile() {
+  const p = progress.data;
+  document.querySelector("#profileStats").textContent =
+    p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
+  for (const [id, key, title] of [
+    ["buyDamage", "damageLevel", "+1 Startschaden"],
+    ["buyRate", "rateLevel", "+10 % Basisfeuerrate"]
+  ]) {
+    const button = document.querySelector("#" + id);
+    button.textContent = title + " · Stufe " + p[key] + "/30 · " +
+      (p[key] >= 30 ? "Maximum" : progress.cost(key) + " Münzen");
+    button.disabled = p[key] >= 30 || p.coins < progress.cost(key);
+  }
+  document.querySelector("#saveStatus").textContent = progress.message;
+}
+
+function showMenu() {
+  releaseDrag();
+  state.mode = "start";
+  gameOverScreen.classList.add("hidden");
+  upgradeScreen.classList.add("hidden");
+  startScreen.classList.remove("hidden");
+  renderProfile();
+}
+
+function restoreDifficulty() {
+  const radio = document.querySelector('input[name="difficulty"][value="' + progress.data.difficulty.toFixed(2) + '"]');
+  if (radio) radio.checked = true;
+}
+
+document.querySelector("#menuButton").addEventListener("click", showMenu);
+for (const [id, key] of [["buyDamage", "damageLevel"], ["buyRate", "rateLevel"]]) {
+  document.querySelector("#" + id).addEventListener("click", () => {
+    if (state.mode !== "start") return;
+    progress.buy(key);
+    renderProfile();
+  });
+}
+document.querySelector("#exportSave").addEventListener("click", () => {
+  const text = progress.export();
+  document.querySelector("#saveText").value = text;
+  const url = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+  const link = document.createElement("a");
+  link.href = url; link.download = "The-Snake-Spielstand.json";
+  document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  document.querySelector("#transferStatus").textContent = "Sicherung bereit. Alternativ den Text kopieren.";
+});
+document.querySelector("#saveFile").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    if (file.size > 20000) throw new Error("Datei ist zu groß.");
+    document.querySelector("#saveText").value = await file.text();
+    document.querySelector("#transferStatus").textContent = "Datei geladen. Zum Import auf „Sicherung übernehmen“ tippen.";
+  } catch {
+    document.querySelector("#transferStatus").textContent = "Datei konnte nicht gelesen werden.";
+  }
+});
+document.querySelector("#importSave").addEventListener("click", () => {
+  if (state.mode !== "start") return;
+  const text = document.querySelector("#saveText").value;
+  try {
+    if (text.length > 20000) throw new Error("Sicherung ist zu groß.");
+    SnakeProgress.validate(JSON.parse(text));
+    if (!window.confirm("Den lokalen Fortschritt durch diese Sicherung ersetzen? Vorher bei Bedarf exportieren.")) return;
+    progress.import(text);
+    restoreDifficulty();
+    renderProfile();
+    document.querySelector("#transferStatus").textContent = "Spielstand übernommen.";
+  } catch {
+    document.querySelector("#transferStatus").textContent = "Import fehlgeschlagen: ungültige Sicherung oder Speicher nicht verfügbar. Fortschritt wurde nicht ersetzt.";
+  }
+});
 
 function burst(x, y, color, count) {
   for (let i = 0; i < count; i++) {
@@ -448,4 +546,6 @@ function loop(time) {
 
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);
+restoreDifficulty();
+renderProfile();
 requestAnimationFrame(loop);

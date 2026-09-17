@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#07131b">
   <title>The Snake</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=local-1">
 </head>
 <body>
   <main class="game-shell">
@@ -20,9 +20,26 @@
 
       <div id="startScreen" class="overlay">
         <div class="panel start-panel">
-          <p class="eyebrow">MOBILE ARCADE</p>
+          <p class="eyebrow">ROGUELITE · LOKALER SPIELSTAND</p>
           <h1>THE SNAKE</h1>
-          <p>Halte den Finger auf dem Spielfeld und wische nach links oder rechts. Deine Pistole feuert automatisch.</p>
+          <p>Wischen zum Bewegen · Automatisches Feuer</p>
+          <p id="profileStats"></p>
+          <details class="meta-menu">
+            <summary>Dauerhafte Verbesserungen</summary>
+            <p>1 Münze pro Körperteil, 5 pro Upgrade-Teil. Käufe gelten ab der nächsten Runde.</p>
+            <button id="buyDamage"></button>
+            <button id="buyRate"></button>
+          </details>
+          <details class="meta-menu">
+            <summary>Spielstand sichern / übertragen</summary>
+            <p>Nur in diesem Browser gespeichert. Beim Löschen der Websitedaten geht der Fortschritt verloren. Sichere ihn als Datei oder kopiere den Sicherungstext.</p>
+            <button id="exportSave">Sicherung anzeigen / herunterladen</button>
+            <textarea id="saveText" rows="5" aria-label="Spielstand-Sicherung" placeholder="Sicherungstext zum Importieren einfügen"></textarea>
+            <label>Sicherungsdatei auswählen <input id="saveFile" type="file" accept=".json,application/json"></label>
+            <button id="importSave">Sicherung übernehmen</button>
+            <p id="transferStatus" role="status"></p>
+          </details>
+          <p>Gespeichert: Münzen, Käufe, Bestwert, Statistik und Schwierigkeit. Eine laufende Runde beginnt nach dem Neuladen neu.</p>
           <fieldset class="difficulty-picker">
             <legend>Schwierigkeit</legend>
             <label><input type="radio" name="difficulty" value="0.10"><span>Leicht<small>+10 % Leben</small></span></label>
@@ -47,13 +64,16 @@
           <p class="eyebrow">DIE SCHLANGE WAR SCHNELLER</p>
           <h2>Game Over</h2>
           <p>Erreichte Punkte: <strong id="finalScore">0</strong></p>
+          <p id="runSummary"></p>
           <button id="restartButton">NOCH EINMAL</button>
+          <button id="menuButton">HAUPTMENÜ & VERBESSERUNGEN</button>
         </div>
       </div>
     </section>
 
-    <p class="hint">Finger halten und seitlich wischen</p>
+    <p id="saveStatus" class="hint" role="status"></p>
   </main>
-  <script src="game.js"></script>
+  <script src="progress.js?v=local-1"></script>
+  <script src="game.js?v=local-1"></script>
 </body>
 </html>
