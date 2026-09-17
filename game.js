@@ -196,7 +196,11 @@ function fireWeapon() {
   const count = state.weapon.bullets;
   for (let i = 0; i < count; i++) {
     const offset = (i - (count - 1) / 2) * state.weapon.spread;
-    state.bullets.push({ x: state.player.x, y: state.player.y - 25, vx: offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
+    const spacing = count > 1 ? Math.min(10, (state.width - 12) / (count - 1)) : 0;
+    const halfWidth = (count - 1) * spacing / 2;
+    const center = Math.max(6 + halfWidth, Math.min(state.width - 6 - halfWidth, state.player.x));
+    const x = state.weapon.parallel ? center + (i - (count - 1) / 2) * spacing : state.player.x;
+    state.bullets.push({ x, y: state.player.y - 25, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
   }
 }
 
@@ -244,7 +248,7 @@ function destroySegment(index) {
 }
 
 function roundUpgradePool() {
-  return [
+  const pool = [
     { rarity: "grey", label: "Grau", damage: 1, rate: 10, pierce: 1 },
     { rarity: "green", label: "Grün", damage: 2, rate: 20, pierce: 2 },
     { rarity: "purple", label: "Lila", damage: 4, rate: 30, pierce: 3 }
@@ -259,18 +263,51 @@ function roundUpgradePool() {
       text: "Durchdringt " + tier.pierce + " zusätzliche Körperteile.",
       apply: () => state.weapon.pierce += tier.pierce }
   ]);
+  pool.push({
+    rarity: "grey", name: "+1 Mehrfachschuss", text: "Ein zusätzliches Geschoss bei jedem Schuss.",
+    apply: () => {
+      if (state.weapon.bullets === 1 && !state.weapon.parallel) state.weapon.spread = 24;
+      state.weapon.bullets++;
+    }
+  });
+  if (state.weapon.bullets > 1 && !state.weapon.parallel) {
+    pool.push({
+      rarity: "green", name: "Engerer Mehrfachschuss", text: "Halbiert die Streuung deiner Geschosse.",
+      apply: () => state.weapon.spread *= .5
+    }, {
+      rarity: "purple", name: "Paralleler Mehrfachschuss",
+      text: "Geschosse starten nebeneinander und fliegen ohne Streuung geradeaus.",
+      apply: () => { state.weapon.parallel = true; state.weapon.spread = 0; }
+    });
+  }
+  return pool;
+}
+
+function chooseUpgrades(random = Math.random) {
+  const remaining = roundUpgradePool();
+  const choices = [];
+  for (let i = 0; i < 3; i++) {
+    const roll = random();
+    const rarity = roll < .65 ? "grey" : roll < .90 ? "green" : "purple";
+    // Jede Stufe enthält mindestens drei Einträge; drei Angebote können
+    // deshalb ohne Neuwürfeln der Seltenheit eindeutig ausgewählt werden.
+    const candidates = remaining.filter(choice => choice.rarity === rarity);
+    const choice = candidates[Math.floor(random() * candidates.length)];
+    choices.push(choice);
+    remaining.splice(remaining.indexOf(choice), 1);
+  }
+  return choices;
 }
 
 function openUpgrade() {
   state.mode = "upgrade";
   releaseDrag();
-  const pool = roundUpgradePool();
-  const choices = shuffle(pool).slice(0, 3);
+  const choices = chooseUpgrades();
   upgradeChoices.replaceChildren();
   for (const choice of choices) {
     const button = document.createElement("button");
     button.className = "upgrade-choice rarity-" + choice.rarity;
-    button.innerHTML = `<small>${choice.label}</small>${choice.name}<span>${choice.text}</span>`;
+    button.innerHTML = `${choice.name}<span>${choice.text}</span>`;
     button.addEventListener("click", () => {
       if (state.mode !== "upgrade") return;
       choice.apply();

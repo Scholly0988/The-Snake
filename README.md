@@ -1,5 +1,27 @@
 # The Snake
 
+## Runden-Upgrades
+
+| Effekt | Grau | Grün | Lila |
+| --- | --- | --- | --- |
+| Schaden | +1 | +2 | +4 |
+| Feuerrate | +10 % | +20 % | +30 % |
+| Durchschlag | +1 | +2 | +3 |
+
+Jede der drei angebotenen Karten würfelt ihre Stufe unabhängig: 65 % Grau,
+25 % Grün, 10 % Lila. Innerhalb der Stufe werden verfügbare Effekte gleichmäßig
+und ohne doppelte Karten ausgewählt. Nur die Rahmenfarbe kennzeichnet die Stufe;
+Farbnamen stehen nicht auf den Karten.
+Feuerrate multipliziert die aktuelle Rate, Schaden und Durchschlag addieren sich.
+
+- Grau: +1 Mehrfachschuss fügt ein Geschoss hinzu.
+- Grün: Engerer Mehrfachschuss halbiert die aktuelle Streuung.
+- Lila: Paralleler Mehrfachschuss startet alle Geschosse nebeneinander in einer
+  horizontalen Reihe; alle fliegen geradeaus. Die Reihe bleibt im Spielfeld.
+- Streuungs-Upgrades erscheinen erst mit Mehrfachschuss und entfallen nach dem
+  parallelen Upgrade. Weitere Geschosse behalten den parallelen Modus.
+- Dauerhafte Käufe bleiben unverändert. Versionsanzeige: Multishot 3.
+
 ## Lokales Roguelite
 
 - Keine Registrierung, keine Serververbindung. Fortschritt liegt im localStorage dieser Website.
