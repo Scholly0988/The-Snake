@@ -17,11 +17,11 @@ const bodySprite = new Image();
 bodySprite.src = "snake-body.png";
 const playerSprite = new Image();
 playerSprite.src = "player-platform.png";
-// Centre pilot plus one 56px platform on either side, with docking space.
-const PLAYER_FORMATION_MARGIN = 90;
+// Keep only the 56px centre platform in bounds; side companions may overhang.
+const PLAYER_EDGE_MARGIN = 28;
 const PLAYER_MUZZLE_Y = -75;
 function clampPlayerX(x) {
-  const margin = Math.min(PLAYER_FORMATION_MARGIN, state.width / 2);
+  const margin = Math.min(PLAYER_EDGE_MARGIN, state.width / 2);
   return Math.max(margin, Math.min(state.width - margin, x));
 }
 const progress = SnakeProgress.open({
