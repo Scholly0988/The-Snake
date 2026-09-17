@@ -73,14 +73,12 @@ function createSnake(count) {
   state.snake = [];
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
-    // Der Kopf ist nur die Darstellung auf dem vordersten Körperteil und
-    // besitzt keine eigenen Lebenspunkte. Alle Körperteile starten daher
-    // mit derselben Basis; Upgrade-Teile bleiben widerstandsfähiger.
+    // Nur Körperteile speichern HP; Kopftreffer werden an das erste weitergeleitet.
     const baseHp = upgrade ? 3 : 2;
     const scaledHp = Number((baseHp * (1 + state.difficultyRate * i)).toFixed(2));
     state.snake.push({
       id: state.nextId++,
-      pathOffset: i * SEGMENT_SPACING,
+      pathOffset: (i + 1) * SEGMENT_SPACING,
       upgrade,
       hp: scaledHp,
       maxHp: scaledHp,
@@ -123,18 +121,24 @@ function pathPoint(distance) {
   };
 }
 
+function snakeHead() {
+  if (!state.snake.length) return null;
+  return pathPoint(state.headDistance - state.snake[0].pathOffset + SEGMENT_SPACING);
+}
+
+function syncSnakePositions() {
+  for (const segment of state.snake) {
+    Object.assign(segment, pathPoint(state.headDistance - segment.pathOffset));
+  }
+}
+
 function update(dt) {
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const speed = Math.min(22 + state.elapsed * .25, 45);
   state.headDistance += speed * dt;
 
-  for (let i = 0; i < state.snake.length; i++) {
-    const p = pathPoint(state.headDistance - state.snake[i].pathOffset);
-    state.snake[i].x = p.x;
-    state.snake[i].y = p.y;
-    state.snake[i].angle = p.angle;
-  }
+  syncSnakePositions();
 
   const dx = state.player.targetX - state.player.x;
   const maxStep = state.player.speed * dt;
@@ -163,10 +167,12 @@ function update(dt) {
   state.particles = state.particles.filter(p => p.life > 0);
 
   if (state.snake.length === 0) {
-    createSnake(28);
     state.headDistance = 0;
+    createSnake(28);
+    syncSnakePositions();
     state.score += 500;
-  } else if (state.snake[0].y + SEGMENT_RADIUS >= state.player.y - 22) {
+    refreshHud();
+  } else if (snakeHead().y + SEGMENT_RADIUS >= state.player.y - 22) {
     endGame();
   }
 }
@@ -185,14 +191,20 @@ function handleHits() {
     bullet.hitIds ||= new Set();
     for (let i = 0; i < state.snake.length; i++) {
       const segment = state.snake[i];
-      if (!bullet.hitIds.has(segment.id) && Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS) {
+      const head = i === 0 ? snakeHead() : null;
+      const hitsHead = head && Math.hypot(bullet.x - head.x, bullet.y - head.y) < SEGMENT_HIT_RADIUS;
+      if (!bullet.hitIds.has(segment.id) && (hitsHead || Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS)) {
         bullet.hitIds.add(segment.id);
         segment.hp -= state.weapon.damage;
         bullet.hitsLeft--;
         burst(segment.x, segment.y, segment.upgrade ? "#ffd35f" : "#63ef98", 5);
         if (bullet.hitsLeft <= 0) bullet.dead = true;
-        if (segment.hp <= 0) { destroySegment(i); i--; }
+        const destroyed = segment.hp <= 0;
+        if (destroyed) destroySegment(i);
         if (state.mode !== "playing") return;
+        // Ein Zurückrücken darf nicht dasselbe Geschoss auf weitere Teile
+        // teleportieren. Durchschlag läuft im nächsten Simulationsschritt weiter.
+        if (destroyed) continue outer;
         if (bullet.dead) continue outer;
       }
     }
@@ -204,8 +216,10 @@ function destroySegment(index) {
   state.score += destroyed.upgrade ? 100 : 25;
   burst(destroyed.x, destroyed.y, destroyed.upgrade ? "#ffe083" : "#75ffac", 16);
 
-  // Das erste noch intakte Segment wird sofort zum neuen Kopf.
-  // Alle verbleibenden Segmente rücken in der Pfadfolge lückenlos nach vorn.
+  // Nur der Abschnitt vor der Lücke (Richtung Kopf) fällt zurück.
+  // Größere Pfad-Offsets bedeuten weiter hinten auf derselben Bahn.
+  for (let i = 0; i < index; i++) state.snake[i].pathOffset += SEGMENT_SPACING;
+  syncSnakePositions();
   refreshHud();
   if (destroyed.upgrade) openUpgrade();
 }
@@ -264,7 +278,9 @@ function burst(x, y, color, count) {
 function draw() {
   ctx.clearRect(0, 0, state.width, state.height);
   drawBackground();
-  for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], i === 0);
+  for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], false);
+  const head = snakeHead();
+  if (head) drawSegment(head, true);
   drawBullets();
   drawPlayer();
   drawParticles();
@@ -332,8 +348,7 @@ function drawSegment(segment, isHead) {
       ctx.beginPath(); ctx.arc(-6, -4, 2.5, 0, Math.PI * 2); ctx.arc(6, -4, 2.5, 0, Math.PI * 2); ctx.fill();
     }
   }
-  // Der Kopf selbst hat keine HP-Anzeige. Treffer dort beschädigen das
-  // Körperteil, auf dem er gerade sitzt; nach dessen Zerstörung rückt er zurück.
+  // Nur Körperteile haben HP-Anzeigen; der separat gezeichnete Kopf hat keine.
   if (!isHead) {
     const ratio = Math.max(0, segment.hp / segment.maxHp);
     ctx.shadowBlur = 0;

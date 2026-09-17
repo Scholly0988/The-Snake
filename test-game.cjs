@@ -39,4 +39,26 @@ run('createSnake(3); state.headDistance=200');
 const offset=run('state.snake[1].pathOffset');
 run('destroySegment(0)');
 assert.equal(run('state.snake[0].pathOffset'),offset,'Head returns to surviving segment');
-console.log('PASS: path bounds, continuous turns, relative drag, release, head retreat');
+for (const index of [0, 2, 4]) {
+  run('state.mode="playing"; createSnake(5); state.headDistance=700; syncSnakePositions()');
+  const before=JSON.parse(run('JSON.stringify(state.snake)'));
+  const headBefore=run('state.snake[0].pathOffset');
+  run('destroySegment('+index+')');
+  const after=JSON.parse(run('JSON.stringify(state.snake)'));
+  for (let i=0;i<after.length;i++) {
+    const old=before[i<index?i:i+1];
+    assert.equal(after[i].pathOffset,old.pathOffset+(i<index?33:0));
+    if (i>=index) { assert.equal(after[i].x,old.x); assert.equal(after[i].y,old.y); }
+    if (i>0) assert.equal(after[i].pathOffset-after[i-1].pathOffset,33);
+  }
+  assert.equal(after[0].pathOffset,headBefore+33);
+}
+run('state.mode="playing"; createSnake(3); state.headDistance=150; syncSnakePositions(); state.weapon.damage=1; const h=snakeHead(); state.bullets=[{x:h.x,y:h.y,hitsLeft:2,dead:false}]');
+const initialHp=run('state.snake[0].hp');
+run('handleHits()');
+assert.equal(run('state.snake[0].hp'),initialHp-1,'Head redirects damage to first body');
+run('state.bullets[0].x=state.snake[0].x; state.bullets[0].y=state.snake[0].y; handleHits()');
+assert.equal(run('state.snake[0].hp'),initialHp-1,'Head and body cannot double-hit with same bullet');
+run('createSnake(1); destroySegment(0)');
+assert.equal(run('snakeHead()'),null,'No independent head remains after last body dies');
+console.log('PASS: bounds, drag, front/middle/tail collapse, head damage, no double damage, death');

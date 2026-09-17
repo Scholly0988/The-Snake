@@ -5,7 +5,8 @@
 Finger aufsetzen aktiviert nur die Steuerung. Erst die relative Wischbewegung
 verschiebt den Spieler; Loslassen stoppt ihn. Die Schlange läuft zeilenweise
 von links nach rechts, dreht innerhalb der Seitenränder 52 Pixel nach unten
-und läuft zurück. Überlebende Teile behalten ihre Position auf dem Pfad.
+und läuft zurück. Nach einer Zerstörung rücken alle Teile davor Richtung
+Schwanz zurück, bis die Lücke geschlossen ist. Der Abschnitt dahinter bleibt stehen.
 
 Die Dateien snake-head.png und snake-body.png müssen neben game.js liegen.
 Beide wurden mit der integrierten Bildgenerierung erstellt: grüner Schlangenkopf
@@ -21,12 +22,12 @@ Ein mobiles Browser-Arcade-Spiel: Eine segmentierte Schlange bewegt sich in Schl
 - Vor dem Start wird zwischen Leicht, Normal und Schwer gewählt.
 - Die Lebenspunkte jedes folgenden Segments steigen je nach Schwierigkeit um 10 %, 15 % oder 20 % des Grundwertes.
 - Die Trefferbereiche der Körperteile sind größer als ihre sichtbare Darstellung, damit das Zielen auf dem Handy zuverlässiger ist.
-- Der Kopf besitzt keine eigenen Lebenspunkte. Er sitzt auf dem vordersten intakten Körperteil und wandert nach dessen Zerstörung auf das nächste zurück.
+- Der Kopf ist separat sichtbar und besitzt keine eigenen Lebenspunkte. Kopftreffer beschädigen das erste Körperteil direkt dahinter.
 - Sobald alle Körperteile zerstört sind, ist die Schlange besiegt.
 - Die Schlange bewegt sich langsam in engen, kurzen Schlangenlinien nach unten.
-- Das erste Upgrade-Segment befindet sich an Position 2 der Schlange.
+- Das zweite Körperteil nach dem Kopf ist das erste Upgrade-Segment.
 - Danach erscheint alle fünf Segmente ein weiteres Upgrade-Segment.
-- Wird ein Segment zerstört, rückt das nächste intakte Segment nach vorn und übernimmt die Kopfposition.
+- Wird ein Segment zerstört, rücken alle Teile davor einschließlich Kopf um einen Segmentabstand auf der Bahn zurück. Die Teile Richtung Schwanz bleiben an ihrer Position.
 - Beim Zerstören eines Upgrade-Segments hält das Spiel vollständig an.
 - Upgrades verbessern Schaden, Feuerrate, Geschossanzahl oder Durchschlag.
 
