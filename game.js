@@ -15,6 +15,15 @@ const headSprite = new Image();
 headSprite.src = "snake-head.png";
 const bodySprite = new Image();
 bodySprite.src = "snake-body.png";
+const playerSprite = new Image();
+playerSprite.src = "player-platform.png";
+// Centre pilot plus one 56px platform on either side, with docking space.
+const PLAYER_FORMATION_MARGIN = 90;
+const PLAYER_MUZZLE_Y = -75;
+function clampPlayerX(x) {
+  const margin = Math.min(PLAYER_FORMATION_MARGIN, state.width / 2);
+  return Math.max(margin, Math.min(state.width - margin, x));
+}
 const progress = SnakeProgress.open({
   getItem: key => window.localStorage.getItem(key),
   setItem: (key, value) => window.localStorage.setItem(key, value)
@@ -56,7 +65,7 @@ function resizeCanvas() {
   state.width = rect.width;
   state.height = rect.height;
   state.player.y = rect.height - 50;
-  state.player.x = Math.min(state.player.x, rect.width - 22);
+  state.player.x = clampPlayerX(state.player.x);
   state.player.targetX = state.player.x;
 }
 
@@ -156,7 +165,7 @@ function update(dt) {
   const dx = state.player.targetX - state.player.x;
   const maxStep = state.player.speed * dt;
   state.player.x += Math.sign(dx) * Math.min(Math.abs(dx), maxStep);
-  state.player.x = Math.max(20, Math.min(state.width - 20, state.player.x));
+  state.player.x = clampPlayerX(state.player.x);
 
   state.fireTimer -= dt;
   if (state.fireTimer <= 0) {
@@ -200,7 +209,7 @@ function fireWeapon() {
     const halfWidth = (count - 1) * spacing / 2;
     const center = Math.max(6 + halfWidth, Math.min(state.width - 6 - halfWidth, state.player.x));
     const x = state.weapon.parallel ? center + (i - (count - 1) / 2) * spacing : state.player.x;
-    state.bullets.push({ x, y: state.player.y - 25, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
+    state.bullets.push({ x, y: state.player.y + PLAYER_MUZZLE_Y, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
   }
 }
 
@@ -541,9 +550,21 @@ function drawBullets() {
 function drawPlayer() {
   const { x, y } = state.player;
   ctx.save(); ctx.translate(x, y);
-  ctx.fillStyle = "#4bc5ee";
-  ctx.beginPath(); ctx.moveTo(0, -24); ctx.lineTo(17, 18); ctx.lineTo(7, 14); ctx.lineTo(0, 20); ctx.lineTo(-7, 14); ctx.lineTo(-17, 18); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = "#d5f6ff"; ctx.fillRect(-3, -31, 6, 15);
+  // Unoccupied docking connectors; future companions use x +/- 60.
+  ctx.fillStyle = "#8ca9b9";
+  ctx.fillRect(-32, 10, 9, 8);
+  ctx.fillRect(23, 10, 9, 8);
+  if (playerSprite.complete && playerSprite.naturalWidth) {
+    // Source crop excludes transparent padding without changing the artwork.
+    ctx.drawImage(playerSprite, 340, 65, 576, 1092, -28, -75, 56, 106);
+  } else {
+    ctx.fillStyle = "#344c62";
+    ctx.fillRect(-25, 0, 50, 27);
+    ctx.fillStyle = "#4bc5ee";
+    ctx.fillRect(-10, -35, 20, 40);
+    ctx.fillStyle = "#d5f6ff";
+    ctx.fillRect(-3, -75, 6, 40);
+  }
   ctx.restore();
 }
 
@@ -559,7 +580,7 @@ function drawParticles() {
 function setPointer(clientX) {
   const delta = clientX - state.lastPointerX;
   state.lastPointerX = clientX;
-  state.player.targetX = Math.max(20, Math.min(state.width - 20, state.player.targetX + delta));
+  state.player.targetX = clampPlayerX(state.player.targetX + delta);
 }
 
 function releaseDrag() {
