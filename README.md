@@ -136,3 +136,18 @@ Upload: index.html, style.css, game.js sowie neue arena-background.png.
 Bildmotiv mit integrierter Bildgenerierung erstellt: „Vertical fantasy stone
 arena, ivy and amber lanterns at perimeter, blue banners, distant waterfall,
 empty navy centre, gold trim; no text, characters, snakes, bullets or UI.“
+
+## Helden 11
+
+Helden-Menü mit aktivem Schützen und zwei leeren Andockplätzen vorbereitet.
+Noch keine Heldenrekrutierung oder Ausrüstung. Orange Rahmen und Zielverteilung
+60/25/10/5 sind vorbereitet. Da orange Effekte noch nicht festgelegt wurden,
+bleiben aktive Runden-Angebote vorerst bei 65/25/10. Erst mit mindestens drei
+orangen Karten wird die neue Verteilung aktiviert (drei eindeutige Angebote).
+
+## Paladin 12 – aktueller Stand
+
+Aldric ist für 100 Münzen dauerhaft freischaltbar und links/rechts ausrüstbar.
+Alle vereinbarten Paladin-Karten, Licht-Hammer, Flächentreffer und Göttliches
+Urteil sind implementiert. Frühere Hinweise auf nur vorbereitete Helden/Orange
+sind damit überholt. Regeln, Anfangswerte und Installation: [PALADIN.md](PALADIN.md).

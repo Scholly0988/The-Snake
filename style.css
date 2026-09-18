@@ -270,3 +270,26 @@ body { padding: 0; background: #111c21; }
   .game-shell { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .game-wrap { height: auto; min-height: 0; }
 }
+
+/* Prepared team slots: no recruitment or equipment changes yet. */
+.menu-nav { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.hero-formation { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin: 22px 0; align-items: end; }
+.hero-slot { min-width: 0; text-align: center; padding: 10px 3px; border: 1px solid #c5a563; border-radius: 10px; background: #193144; }
+.hero-slot strong, .hero-slot small { display: block; }
+.hero-slot strong { font-size: 12px; } .hero-slot small { font-size: 10px; color: #bdd0db; }
+.hero-slot img { display: block; width: 100%; height: 104px; object-fit: contain; margin-bottom: 8px; }
+.hero-slot.empty { border-style: dashed; background: #102332; }
+.hero-slot.empty > span { display: block; font-size: 30px; padding: 18px 0; color: #91a8b7; }
+.rarity-preview { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
+.rarity-preview span { border: 2px solid; border-radius: 7px; padding: 9px 2px; text-align: center; font-size: 13px; background: #173b4d; }
+.rarity-preview .rarity-grey { border-color: #9ba3ad; }
+.rarity-preview .rarity-green { border-color: #65dc94; }
+.rarity-preview .rarity-purple { border-color: #c990ff; }
+.rarity-preview .rarity-orange, .upgrade-choice.rarity-orange { border: 2px solid #ff9b38; background: #173b4d; color: #f5fbff; }
+
+.paladin-card { text-align:center; background:#132e43; border:1px solid #d6b76b; border-radius:12px; padding:12px; }
+.paladin-card img { height:160px; width:150px; object-fit:contain; }
+.paladin-card h3 { margin:4px; color:#ffdf91; font: bold 24px Georgia,serif; }
+.paladin-card p { margin:6px 0; }
+.hero-equip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+#paladinStats { font-size:9px; }

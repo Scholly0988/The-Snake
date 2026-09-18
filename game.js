@@ -17,6 +17,10 @@ const bodySprite = new Image();
 bodySprite.src = "snake-body.png";
 const playerSprite = new Image();
 playerSprite.src = "player-platform.png";
+const paladinSprite = new Image();
+paladinSprite.src = "paladin-platform.png";
+const hammerSprite = new Image();
+hammerSprite.src = "holy-hammer.png";
 // Keep only the 32px centre platform in bounds; side companions may overhang.
 const PLAYER_EDGE_MARGIN = 16;
 const PLAYER_MUZZLE_Y = -20;
@@ -45,6 +49,7 @@ const state = {
   headDistance: 0,
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
+  paladin: null, holyEffects: [], pendingUpgrades: 0, upgradeOfferId: 0,
   pointerDown: false
 };
 
@@ -70,6 +75,9 @@ function resizeCanvas() {
 
 function resetGame() {
   releaseDrag();
+  state.paladin = newPaladin(progress.data.paladinSlot);
+  state.holyEffects = [];
+  state.pendingUpgrades = 0;
   state.score = 0;
   state.runCoins = 0;
   state.elapsed = 0;
@@ -154,6 +162,7 @@ function syncSnakePositions() {
 }
 
 function update(dt) {
+  if (state.mode !== "playing") return;
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const speed = Math.min(22 + state.elapsed * .25, 45);
@@ -172,7 +181,14 @@ function update(dt) {
     state.fireTimer += 1 / state.weapon.shotsPerSecond;
   }
 
+  updatePaladin(dt);
+  if (state.mode !== "playing") return;
+  for (const effect of state.holyEffects) effect.life -= dt;
+  state.holyEffects = state.holyEffects.filter(effect => effect.life > 0);
+  refreshPaladinHud();
   for (const bullet of state.bullets) {
+    bullet.previousX = bullet.x;
+    bullet.previousY = bullet.y;
     bullet.x += bullet.vx * dt;
     bullet.y += bullet.vy * dt;
   }
@@ -212,39 +228,55 @@ function fireWeapon() {
   }
 }
 
-function rollHit(random = Math.random) {
+function rollHit(random = Math.random, damage = state.weapon.damage) {
   const critical = random() * 100 < (state.weapon.critChance || 0);
-  return { critical, damage: state.weapon.damage * (critical ? (state.weapon.critDamage ?? 150) / 100 : 1) };
+  return { critical, damage: damage * (critical ? (state.weapon.critDamage ?? 150) / 100 : 1) };
 }
 
+// Swept collision prevents fast hammers from skipping segments between frames.
+function projectileHits(bullet, target) {
+  const ax = bullet.previousX ?? bullet.x, ay = bullet.previousY ?? bullet.y;
+  const dx = bullet.x-ax, dy = bullet.y-ay;
+  const t = dx*dx+dy*dy ? Math.max(0,Math.min(1,((target.x-ax)*dx+(target.y-ay)*dy)/(dx*dx+dy*dy))) : 0;
+  const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : 0);
+  return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
+}
+function applyDamageBatch(batch) {
+  // All targets are determined before any segment retreats or upgrade pauses.
+  for (const segment of state.snake) {
+    if (batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id))*1e10)/1e10;
+  }
+  for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
+  if (state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
+}
 function handleHits(random = Math.random) {
   outer: for (const bullet of state.bullets) {
     if (bullet.dead) continue;
     bullet.hitIds ||= new Set();
-    for (let i = 0; i < state.snake.length; i++) {
-      const segment = state.snake[i];
-      const head = i === 0 ? snakeHead() : null;
-      const hitsHead = head && Math.hypot(bullet.x - head.x, bullet.y - head.y) < SEGMENT_HIT_RADIUS;
-      if (!bullet.hitIds.has(segment.id) && (hitsHead || Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS)) {
-        bullet.hitIds.add(segment.id);
-        const hit = rollHit(random);
-        segment.hp = Math.round((segment.hp - hit.damage) * 1e10) / 1e10;
-        bullet.hitsLeft--;
-        burst(segment.x, segment.y, hit.critical ? "#ff7954" : segment.upgrade ? "#ffd35f" : "#63ef98", hit.critical ? 12 : 5);
-        if (bullet.hitsLeft <= 0) bullet.dead = true;
-        const destroyed = segment.hp <= 0;
-        if (destroyed) destroySegment(i);
-        if (state.mode !== "playing") return;
-        // Ein Zurückrücken darf nicht dasselbe Geschoss auf weitere Teile
-        // teleportieren. Durchschlag läuft im nächsten Simulationsschritt weiter.
-        if (destroyed) continue outer;
-        if (bullet.dead) continue outer;
-      }
+    // Projectiles enter from below: resolve the nearest crossed target first.
+    const targets = state.snake.map((segment,i)=>({segment,head:i===0?snakeHead():null}))
+      .filter(({segment,head})=>!bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
+      .sort((a,b)=>Math.max(b.segment.y,b.head?.y??-Infinity)-Math.max(a.segment.y,a.head?.y??-Infinity));
+    for (const {segment} of targets) {
+      if (!state.snake.includes(segment)) continue;
+      bullet.hitIds.add(segment.id);
+      const isPaladin = bullet.owner === "paladin" && state.paladin;
+      const hit = rollHit(random,isPaladin ? paladinDamage() : state.weapon.damage);
+      const batch = new Map([[segment.id,hit.damage]]);
+      if (isPaladin) paladinHit(batch,segment,hit,random);
+      bullet.hitsLeft--;
+      if (bullet.hitsLeft<=0) bullet.dead=true;
+      burst(segment.x,segment.y,hit.critical?"#ff7954":isPaladin?"#ffe49b":"#63ef98",hit.critical?12:5);
+      const oldCount=state.snake.length;
+      applyDamageBatch(batch);
+      if (state.mode!=="playing") return;
+      if (state.snake.length!==oldCount) continue outer;
+      if (bullet.dead) continue outer;
     }
   }
 }
 
-function destroySegment(index) {
+function destroySegment(index, offerUpgrade = true) {
   const [destroyed] = state.snake.splice(index, 1);
   state.score += destroyed.upgrade ? 100 : 25;
   const coins = destroyed.upgrade ? 5 : 1;
@@ -258,7 +290,10 @@ function destroySegment(index) {
   for (let i = 0; i < index; i++) state.snake[i].pathOffset += SEGMENT_SPACING;
   syncSnakePositions();
   refreshHud();
-  if (destroyed.upgrade) openUpgrade();
+  if (destroyed.upgrade) {
+    state.pendingUpgrades++;
+    if (offerUpgrade) openUpgrade();
+  }
 }
 
 function roundUpgradePool() {
@@ -310,26 +345,28 @@ function roundUpgradePool() {
       apply: () => { state.weapon.parallel = true; state.weapon.spread = 0; }
     });
   }
-  return pool;
+  return pool.concat(paladinUpgradePool());
 }
 
+const RARITY_CHANCES = Object.freeze({grey:.60,green:.25,purple:.10,orange:.05});
 function chooseUpgrades(random = Math.random) {
-  const remaining = roundUpgradePool();
-  const choices = [];
-  for (let i = 0; i < 3; i++) {
-    const roll = random();
-    const rarity = roll < .65 ? "grey" : roll < .90 ? "green" : "purple";
-    // Jede Stufe enthält mindestens drei Einträge; drei Angebote können
-    // deshalb ohne Neuwürfeln der Seltenheit eindeutig ausgewählt werden.
-    const candidates = remaining.filter(choice => choice.rarity === rarity);
-    const choice = candidates[Math.floor(random() * candidates.length)];
-    choices.push(choice);
-    remaining.splice(remaining.indexOf(choice), 1);
+  const remaining = roundUpgradePool(), choices=[];
+  for (let i=0;i<3 && remaining.length;i++) {
+    // Only eligible rarities participate; missing/exhausted tiers redistribute
+    // proportionally. Orange unlock can appear once, without duplicate cards.
+    const available=Object.keys(RARITY_CHANCES).filter(r=>remaining.some(c=>c.rarity===r));
+    const total=available.reduce((sum,r)=>sum+RARITY_CHANCES[r],0);
+    let roll=random()*total;
+    const rarity=available.find(r=>(roll-=RARITY_CHANCES[r])<0) || available[available.length-1];
+    const candidates=remaining.filter(c=>c.rarity===rarity);
+    const choice=candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))];
+    choices.push(choice);remaining.splice(remaining.indexOf(choice),1);
   }
   return choices;
 }
 
 function openUpgrade() {
+  const offerId = ++state.upgradeOfferId;
   state.mode = "upgrade";
   releaseDrag();
   const choices = chooseUpgrades();
@@ -339,9 +376,12 @@ function openUpgrade() {
     button.className = "upgrade-choice rarity-" + choice.rarity;
     button.innerHTML = `${choice.name}<span>${choice.text}</span>`;
     button.addEventListener("click", () => {
-      if (state.mode !== "upgrade") return;
+      if (state.mode !== "upgrade" || state.upgradeOfferId !== offerId) return;
+      state.upgradeOfferId++;
       choice.apply();
       refreshHud();
+      state.pendingUpgrades = Math.max(0,state.pendingUpgrades-1);
+      if (state.pendingUpgrades>0) { openUpgrade(); return; }
       upgradeScreen.classList.add("hidden");
       state.mode = "playing";
       state.lastTime = performance.now();
@@ -373,6 +413,7 @@ function endGame() {
 }
 
 function refreshHud() {
+  refreshPaladinHud();
   document.querySelector("#critStats").textContent = "Krit-Chance: " + String(state.weapon.critChance || 0).replace(".", ",") + " % · Krit-Schaden: " + (state.weapon.critDamage ?? 150) + " %";
   scoreEl.textContent = state.score;
   damageEl.textContent = state.weapon.damage;
@@ -381,6 +422,7 @@ function refreshHud() {
 
 function renderProfile() {
   const p = progress.data;
+  renderPaladinProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
@@ -407,7 +449,7 @@ function showMenu() {
 }
 
 function selectMenuPage(page) {
-  for (const name of ["Home", "Upgrades", "Options"]) {
+  for (const name of ["Home", "Upgrades", "Heroes", "Options"]) {
     const active = name === page;
     const panel = document.querySelector("#menu" + name);
     const button = document.querySelector("#nav" + name);
@@ -416,7 +458,7 @@ function selectMenuPage(page) {
     button.setAttribute("aria-pressed", String(active));
   }
 }
-for (const page of ["Home", "Upgrades", "Options"]) {
+for (const page of ["Home", "Upgrades", "Heroes", "Options"]) {
   document.querySelector("#nav" + page).addEventListener("click", () => {
     if (state.mode === "start") selectMenuPage(page);
   });
@@ -425,6 +467,21 @@ for (const page of ["Home", "Upgrades", "Options"]) {
 function restoreDifficulty() {
   const radio = document.querySelector('input[name="difficulty"][value="' + progress.data.difficulty.toFixed(2) + '"]');
   if (radio) radio.checked = true;
+}
+
+document.querySelector("#unlockPaladin").addEventListener("click",()=>{
+  if(state.mode!=="start")return;
+  const success=progress.unlockPaladin();
+  document.querySelector("#heroStatus").textContent=success?"Aldric ist freigeschaltet. Wähle links oder rechts.":progress.message;
+  renderProfile();
+});
+for(const slot of ["left","right",null]) {
+  document.querySelector(slot?"#equipPaladin"+slot:"#unequipPaladin").addEventListener("click",()=>{
+    if(state.mode!=="start")return;
+    const success=progress.equipPaladin(slot);
+    document.querySelector("#heroStatus").textContent=success?(slot?"Aldric kämpft ab der nächsten Runde "+(slot==="left"?"links":"rechts")+".":"Aldric wurde aus dem Team genommen."):progress.message;
+    renderProfile();
+  });
 }
 
 document.querySelector("#menuButton").addEventListener("click", showMenu);
@@ -490,6 +547,8 @@ function draw() {
   for (const segment of state.snake) drawHpLabel(segment);
   drawBullets();
   drawPlayer();
+  drawPaladin();
+  drawHolyEffects();
   drawParticles();
 }
 
@@ -587,7 +646,18 @@ function drawSegment(segment, isHead) {
 function drawBullets() {
   ctx.fillStyle = "#ffda70";
   ctx.shadowColor = "#ffc84a"; ctx.shadowBlur = 10;
-  for (const bullet of state.bullets) ctx.fillRect(bullet.x - 2, bullet.y - 8, 4, 12);
+  for (const bullet of state.bullets) {
+    if (bullet.owner === "paladin") {
+      const size=12*(bullet.size||1.4);
+      ctx.shadowColor = bullet.charged ? "#fff5c2" : "#ffc84a";
+      ctx.shadowBlur = bullet.charged ? 20 : 10;
+      if (hammerSprite.complete && hammerSprite.naturalWidth) ctx.drawImage(hammerSprite,180,140,880,1000,bullet.x-size/2,bullet.y-size/2,size,size);
+      else { ctx.fillRect(bullet.x-size/2,bullet.y-size/2,size,size*.4);ctx.fillRect(bullet.x-2,bullet.y,4,size*.5); }
+    } else {
+      ctx.shadowColor = "#ffc84a"; ctx.shadowBlur = 10;
+      ctx.fillRect(bullet.x - 2, bullet.y - 8, 4, 12);
+    }
+  }
   ctx.shadowBlur = 0;
 }
 
@@ -656,6 +726,7 @@ window.addEventListener("blur", releaseDrag);
 document.querySelector("#startButton").addEventListener("click", startGame);
 document.querySelector("#restartButton").addEventListener("click", startGame);
 window.addEventListener("resize", resizeCanvas);
+if (typeof ResizeObserver !== "undefined") new ResizeObserver(resizeCanvas).observe(wrap);
 
 function loop(time) {
   const dt = Math.min((time - (state.lastTime || time)) / 1000, .033);

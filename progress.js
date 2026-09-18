@@ -5,7 +5,8 @@ const SnakeProgress = (() => {
   const KEY = "the-snake.progress.v1";
   const fresh = () => ({
     game: "the-snake", version: 1, coins: 0, best: 0, defeated: 0,
-    runs: 0, damageLevel: 0, rateLevel: 0, difficulty: 0.10
+    runs: 0, damageLevel: 0, rateLevel: 0, difficulty: 0.10,
+    paladinUnlocked: false, paladinSlot: null
   });
   function validate(value) {
     if (!value || value.game !== "the-snake" || value.version !== 1)
@@ -20,6 +21,13 @@ const SnakeProgress = (() => {
     if (![0.10, 0.15, 0.20].includes(value.difficulty))
       throw new Error("Ungültige Schwierigkeit.");
     result.difficulty = value.difficulty;
+    // Version 1 saves made before heroes migrate without losing progress.
+    if (value.paladinUnlocked !== undefined && typeof value.paladinUnlocked !== "boolean")
+      throw new Error("Ungültige Heldenfreischaltung.");
+    result.paladinUnlocked = value.paladinUnlocked ?? false;
+    result.paladinSlot = value.paladinSlot ?? null;
+    if (![null, "left", "right"].includes(result.paladinSlot) || (!result.paladinUnlocked && result.paladinSlot !== null))
+      throw new Error("Ungültiger Heldenplatz.");
     return result;
   }
   function open(storage) {
@@ -71,6 +79,21 @@ const SnakeProgress = (() => {
         return true;
       },
       export() { return JSON.stringify(validate(data), null, 2); },
+      unlockPaladin() {
+        if (data.paladinUnlocked || data.coins < 100) return false;
+        const old = {...data};
+        data.coins -= 100;
+        data.paladinUnlocked = true;
+        if (!save()) { data = old; return false; }
+        return true;
+      },
+      equipPaladin(slot) {
+        if (!data.paladinUnlocked || ![null, "left", "right"].includes(slot)) return false;
+        const old = {...data};
+        data.paladinSlot = slot;
+        if (!save()) { data = old; return false; }
+        return true;
+      },
       import(text) {
         if (text.length > 20000) throw new Error("Die Sicherung ist zu groß.");
         const next = validate(JSON.parse(text));
