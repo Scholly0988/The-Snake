@@ -381,6 +381,7 @@ function refreshHud() {
 
 function renderProfile() {
   const p = progress.data;
+  document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
   for (const [id, key, title] of [
@@ -401,7 +402,24 @@ function showMenu() {
   gameOverScreen.classList.add("hidden");
   upgradeScreen.classList.add("hidden");
   startScreen.classList.remove("hidden");
+  selectMenuPage("Home");
   renderProfile();
+}
+
+function selectMenuPage(page) {
+  for (const name of ["Home", "Upgrades", "Options"]) {
+    const active = name === page;
+    const panel = document.querySelector("#menu" + name);
+    const button = document.querySelector("#nav" + name);
+    panel.classList[active ? "remove" : "add"]("hidden");
+    button.classList[active ? "add" : "remove"]("selected");
+    button.setAttribute("aria-pressed", String(active));
+  }
+}
+for (const page of ["Home", "Upgrades", "Options"]) {
+  document.querySelector("#nav" + page).addEventListener("click", () => {
+    if (state.mode === "start") selectMenuPage(page);
+  });
 }
 
 function restoreDifficulty() {

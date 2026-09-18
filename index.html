@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#07131b">
   <title>The Snake</title>
-  <link rel="stylesheet" href="style.css?v=crit-8">
+  <link rel="stylesheet" href="style.css?v=menu-9">
 </head>
 <body>
   <main class="game-shell">
@@ -19,37 +19,44 @@
     <section id="gameWrap" class="game-wrap" aria-label="Spielfeld">
       <canvas id="game" width="420" height="720"></canvas>
 
-      <div id="startScreen" class="overlay">
-        <div class="panel start-panel">
-          <p class="eyebrow">ROGUELITE · LOKALER SPIELSTAND</p>
-          <h1>THE SNAKE</h1>
-          <p>Version: Krit 8</p>
-          <p>Wischen zum Bewegen · Automatisches Feuer</p>
-          <p id="profileStats"></p>
-          <details class="meta-menu">
-            <summary>Dauerhafte Verbesserungen</summary>
-            <p>1 Münze pro Körperteil, 5 pro Upgrade-Teil. Käufe gelten ab der nächsten Runde.</p>
-            <button id="buyDamage"></button>
-            <button id="buyRate"></button>
-          </details>
-          <details class="meta-menu">
-            <summary>Spielstand sichern / übertragen</summary>
-            <p>Nur in diesem Browser gespeichert. Beim Löschen der Websitedaten geht der Fortschritt verloren. Sichere ihn als Datei oder kopiere den Sicherungstext.</p>
-            <button id="exportSave">Sicherung anzeigen / herunterladen</button>
-            <textarea id="saveText" rows="5" aria-label="Spielstand-Sicherung" placeholder="Sicherungstext zum Importieren einfügen"></textarea>
-            <label>Sicherungsdatei auswählen <input id="saveFile" type="file" accept=".json,application/json"></label>
-            <button id="importSave">Sicherung übernehmen</button>
-            <p id="transferStatus" role="status"></p>
-          </details>
-          <p>Gespeichert: Münzen, Käufe, Bestwert, Statistik und Schwierigkeit. Eine laufende Runde beginnt nach dem Neuladen neu.</p>
+      <div id="startScreen" class="overlay fantasy-menu">
+        <div class="menu-topbar"><span class="menu-profile">❖ <span>DEIN ABENTEUER<small>Lokaler Spielstand</small></span></span><span class="coin-counter">◉ <strong id="menuCoins">0</strong></span></div>
+        <section id="menuHome" class="menu-page home-page" aria-label="Hauptmenü">
+          <div class="menu-title"><span>VERTEIDIGE DEINE WELT</span><h1>The Snake</h1><p>Dein nächstes Abenteuer wartet.</p></div>
+          <div class="home-actions">
           <fieldset class="difficulty-picker">
             <legend>Schwierigkeit</legend>
             <label><input type="radio" name="difficulty" value="0.10"><span>Leicht<small>+10 % Leben</small></span></label>
             <label><input type="radio" name="difficulty" value="0.15" checked><span>Normal<small>+15 % Leben</small></span></label>
             <label><input type="radio" name="difficulty" value="0.20"><span>Schwer<small>+20 % Leben</small></span></label>
           </fieldset>
-          <button id="startButton">SPIEL STARTEN</button>
-        </div>
+          <button id="startButton" class="play-button"><span aria-hidden="true">⚔</span> SPIELEN <small>Stell dich der Schlange ›</small></button>
+          <p id="profileStats" class="menu-records"></p>
+          </div>
+        </section>
+        <section id="menuUpgrades" class="menu-page menu-sheet hidden" aria-label="Dauerhafte Upgrades">
+          <p class="eyebrow">BEREIT FÜR DIE NÄCHSTE RUNDE</p><h2>Upgrades</h2>
+          <p>Verbessere deinen Start mit den gesammelten Münzen. Diese Käufe bleiben nach einer Niederlage erhalten.</p>
+          <button id="buyDamage"></button><button id="buyRate"></button>
+          <p class="menu-note">1 Münze pro Körperteil · 5 pro Upgrade-Teil</p>
+        </section>
+        <section id="menuOptions" class="menu-page menu-sheet hidden" aria-label="Optionen">
+          <p class="eyebrow">DEIN FORTSCHRITT</p><h2>Optionen</h2>
+          <h3>Spielstand sichern / übertragen</h3>
+            <p>Nur in diesem Browser gespeichert. Beim Löschen der Websitedaten geht der Fortschritt verloren. Sichere ihn als Datei oder kopiere den Sicherungstext.</p>
+            <button id="exportSave">Sicherung anzeigen / herunterladen</button>
+            <textarea id="saveText" rows="5" aria-label="Spielstand-Sicherung" placeholder="Sicherungstext zum Importieren einfügen"></textarea>
+            <label>Sicherungsdatei auswählen <input id="saveFile" type="file" accept=".json,application/json"></label>
+            <button id="importSave">Sicherung übernehmen</button>
+            <p id="transferStatus" role="status"></p>
+          <p class="menu-note">Münzen, Käufe, Rekord und Schwierigkeit werden gespeichert. Eine laufende Runde startet nach dem Neuladen neu.</p>
+        </section>
+        <nav class="menu-nav" aria-label="Hauptnavigation">
+          <button id="navUpgrades" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 3 7 7-4 4-3-3L5 21l-3-3 10-9-2-2z"/></svg><span>Upgrades</span></button>
+          <button id="navHome" class="selected" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8M5 10v11h5v-7h4v7h5V10"/></svg><span>Hauptmenü</span></button>
+          <button id="navOptions" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 4 4 1 1 6-4 2-1 5h-6l-2-4-5-1V9l4-2z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></svg><span>Optionen</span></button>
+        </nav>
+        <p class="menu-version">Version: Menü 9</p>
       </div>
 
       <div id="upgradeScreen" class="overlay hidden">
@@ -76,6 +83,6 @@
     <p id="saveStatus" class="hint" role="status"></p>
   </main>
   <script src="progress.js?v=local-1"></script>
-  <script src="game.js?v=crit-8"></script>
+  <script src="game.js?v=menu-9"></script>
 </body>
 </html>
