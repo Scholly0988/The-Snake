@@ -177,3 +177,5 @@ button:active { transform: scale(.98); }
   .game-wrap { min-height: 410px; height: 78svh; }
   .hint { display: none; }
 }
+
+.crit-stats { margin: 0 0 7px; text-align: center; color: #b9d2df; font-size: 11px; overflow-wrap: anywhere; }

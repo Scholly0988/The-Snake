@@ -97,3 +97,15 @@ Grid-Spalten und Menü dürfen unter ihre Inhaltsbreite schrumpfen. Canvas liegt
 absolut im Spielfeld und erhält nur seine Bitmap-Auflösung aus JavaScript;
 CSS bestimmt dauerhaft die sichtbare Größe. So vergrößern Canvas, Punktestand
 und Menütexte nicht das Spielfeld bei Rückkehr ins Hauptmenü.
+
+## Kritische Treffer (Krit 8)
+
+Start pro Runde: 0 % Krit-Chance, Krit-Schaden 150 % des normalen Schadens.
+Chance-Upgrades: +2,5 / +5 / +7,5 Prozentpunkte (grau/grün/lila), maximal 100 %.
+Krit-Schaden: +15 / +30 / +50 Prozentpunkte, z. B. 150 → 165 %.
+Jeder neue gültige Segmenttreffer würfelt unabhängig, auch mit Durchschlag.
+Kopftreffer leiten diesen Schaden an das erste Körperteil weiter, ohne Doppelhit.
+Bruchteile beim Schaden bleiben erhalten; HP-Anzeige rundet weiterhin auf.
+Kritische Treffer erzeugen orange Trefferpartikel. Aktuelle Krit-Werte stehen
+unter den Hauptwerten. Chance-Karten entfallen bei 100 %, Krit-Schaden bleibt.
+Die Seltenheitschancen 65/25/10 bleiben unverändert.

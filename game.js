@@ -44,7 +44,7 @@ const state = {
   trail: [],
   headDistance: 0,
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
-  weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0 },
+  weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   pointerDown: false
 };
 
@@ -80,7 +80,7 @@ function resetGame() {
   state.headDistance = 0;
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
-  state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0 };
+  state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 };
   createSnake(SEGMENTS_PER_SNAKE);
   refreshHud();
 }
@@ -212,7 +212,12 @@ function fireWeapon() {
   }
 }
 
-function handleHits() {
+function rollHit(random = Math.random) {
+  const critical = random() * 100 < (state.weapon.critChance || 0);
+  return { critical, damage: state.weapon.damage * (critical ? (state.weapon.critDamage ?? 150) / 100 : 1) };
+}
+
+function handleHits(random = Math.random) {
   outer: for (const bullet of state.bullets) {
     if (bullet.dead) continue;
     bullet.hitIds ||= new Set();
@@ -222,9 +227,10 @@ function handleHits() {
       const hitsHead = head && Math.hypot(bullet.x - head.x, bullet.y - head.y) < SEGMENT_HIT_RADIUS;
       if (!bullet.hitIds.has(segment.id) && (hitsHead || Math.hypot(bullet.x - segment.x, bullet.y - segment.y) < SEGMENT_HIT_RADIUS)) {
         bullet.hitIds.add(segment.id);
-        segment.hp -= state.weapon.damage;
+        const hit = rollHit(random);
+        segment.hp = Math.round((segment.hp - hit.damage) * 1e10) / 1e10;
         bullet.hitsLeft--;
-        burst(segment.x, segment.y, segment.upgrade ? "#ffd35f" : "#63ef98", 5);
+        burst(segment.x, segment.y, hit.critical ? "#ff7954" : segment.upgrade ? "#ffd35f" : "#63ef98", hit.critical ? 12 : 5);
         if (bullet.hitsLeft <= 0) bullet.dead = true;
         const destroyed = segment.hp <= 0;
         if (destroyed) destroySegment(i);
@@ -271,6 +277,22 @@ function roundUpgradePool() {
       text: "Durchdringt " + tier.pierce + " zusätzliche Körperteile.",
       apply: () => state.weapon.pierce += tier.pierce }
   ]);
+  for (const tier of [
+    { rarity: "grey", chance: 2.5, damage: 15 },
+    { rarity: "green", chance: 5, damage: 30 },
+    { rarity: "purple", chance: 7.5, damage: 50 }
+  ]) {
+    if ((state.weapon.critChance || 0) < 100) pool.push({
+      rarity: tier.rarity, name: "+" + String(tier.chance).replace(".", ",") + " % Krit-Chance",
+      text: "Erhöht die kritische Trefferchance um " + String(tier.chance).replace(".", ",") + " Prozentpunkte (maximal 100 %).",
+      apply: () => state.weapon.critChance = Math.min(100, (state.weapon.critChance || 0) + tier.chance)
+    });
+    pool.push({
+      rarity: tier.rarity, name: "+" + tier.damage + " % Krit-Schaden",
+      text: "Erhöht den Krit-Schaden um " + tier.damage + " Prozentpunkte des normalen Schadens.",
+      apply: () => state.weapon.critDamage = (state.weapon.critDamage ?? 150) + tier.damage
+    });
+  }
   pool.push({
     rarity: "grey", name: "+1 Mehrfachschuss", text: "Ein zusätzliches Geschoss bei jedem Schuss.",
     apply: () => {
@@ -351,6 +373,7 @@ function endGame() {
 }
 
 function refreshHud() {
+  document.querySelector("#critStats").textContent = "Krit-Chance: " + String(state.weapon.critChance || 0).replace(".", ",") + " % · Krit-Schaden: " + (state.weapon.critDamage ?? 150) + " %";
   scoreEl.textContent = state.score;
   damageEl.textContent = state.weapon.damage;
   fireRateEl.textContent = `${(state.weapon.shotsPerSecond / 2.7).toFixed(1)}×`;
