@@ -494,9 +494,13 @@ function draw() {
 }
 
 function drawBackground() {
-  ctx.fillStyle = "#06141d";
+  const field = ctx.createLinearGradient(0, 0, state.width, state.height);
+  field.addColorStop(0, "#142e48");
+  field.addColorStop(.5, "#0c2036");
+  field.addColorStop(1, "#142c43");
+  ctx.fillStyle = field;
   ctx.fillRect(0, 0, state.width, state.height);
-  ctx.strokeStyle = "rgba(70, 160, 190, .08)";
+  ctx.strokeStyle = "rgba(88, 154, 192, .18)";
   ctx.lineWidth = 1;
   for (let y = 20; y < state.height; y += 40) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(state.width, y); ctx.stroke();
@@ -505,7 +509,7 @@ function drawBackground() {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, state.height); ctx.stroke();
   }
   const danger = state.player.y - 34;
-  ctx.strokeStyle = "rgba(255, 80, 80, .3)";
+  ctx.strokeStyle = "rgba(245, 115, 105, .75)";
   ctx.setLineDash([8, 9]);
   ctx.beginPath(); ctx.moveTo(0, danger); ctx.lineTo(state.width, danger); ctx.stroke();
   ctx.setLineDash([]);

@@ -109,3 +109,30 @@ Bruchteile beim Schaden bleiben erhalten; HP-Anzeige rundet weiterhin auf.
 Kritische Treffer erzeugen orange Trefferpartikel. Aktuelle Krit-Werte stehen
 unter den Hauptwerten. Chance-Karten entfallen bei 100 %, Krit-Schaden bleibt.
 Die Seltenheitschancen 65/25/10 bleiben unverändert.
+
+## Hauptmenü (Menü 9)
+
+Helle Fantasy-Hauskulisse mit goldenem The-Snake-Titel, aktuellem Münzstand,
+grünem Spielknopf und drei bedienbaren Navigationspunkten: Upgrades, Hauptmenü,
+Optionen. Schwierigkeit bleibt auf der Startseite, permanente Käufe im
+Upgrade-Bereich, vorhandener Export/Import unter Optionen. Nach einer Runde
+führt Hauptmenü zurück zur Hausansicht. Keine zusätzlichen Währungen oder Konten.
+
+Neue Datei menu-background.png muss mit index.html, style.css und game.js
+hochgeladen werden. Hintergrund mit integrierter Bildgenerierung erstellt:
+„Vertical 9:16 bright painted fantasy cottage, blue slate roof, warm windows,
+flower garden, stone path, distant castle and waterfalls; open sky for title,
+darker foreground for controls; no text, logos or UI.“
+
+## Arena 10
+
+Spieloberfläche im Fantasy-Stil: Steinmauern und Laternen als Hintergrund,
+goldene Rahmen, dunkelblaue Wertanzeigen mit Krone/Schwert/Pfeilen und eine
+kompakte Krit-Leiste. Das Canvas zeigt einen blauen Verlauf, ein deutlicheres
+Raster und die rote Verteidigungslinie. Spielfeldhöhe passt in den verfügbaren
+Bildschirm; Spielmechanik und lokale Fortschrittsdaten bleiben erhalten.
+
+Upload: index.html, style.css, game.js sowie neue arena-background.png.
+Bildmotiv mit integrierter Bildgenerierung erstellt: „Vertical fantasy stone
+arena, ivy and amber lanterns at perimeter, blue banners, distant waterfall,
+empty navy centre, gold trim; no text, characters, snakes, bullets or UI.“

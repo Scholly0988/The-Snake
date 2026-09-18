@@ -234,3 +234,39 @@ button:active { transform: scale(.98); }
   .menu-nav svg { width: 30px; height: 30px; padding: 4px; }
   .play-button { font-size: 23px; padding: 7px; }
 }
+
+/* Arena 10: stone scenery, gold borders, clear blue combat surface. */
+body { padding: 0; background: #111c21; }
+.game-shell {
+  width: min(100%, 480px); height: 100svh; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: max(36px, 6svh, env(safe-area-inset-top)) 22px max(32px, 6svh, env(safe-area-inset-bottom));
+  background: #183044 url('arena-background.png') center / 100% 100% no-repeat;
+}
+.hud { flex-shrink: 0; gap: 5px; margin: 0 -9px 6px; }
+.hud div {
+  position: relative; padding: 8px 3px 7px; border: 2px solid #d6ac58;
+  border-radius: 5px; background: linear-gradient(135deg,#17334f,#091b2e);
+  box-shadow: inset 0 0 0 1px #634821, inset 0 0 0 3px #b98e42, 0 3px 5px #0008;
+}
+.hud div::before, .hud div::after { content: ''; position: absolute; width: 7px; height: 7px; border: 1px solid #f4ce78; background: #8f6b31; transform: rotate(45deg); top: -5px; }
+.hud div::before { left: 6px; } .hud div::after { right: 6px; }
+.hud span { color: #f8e6b4; font: bold 9px Georgia,serif; letter-spacing: .02em; }
+.hud strong { display: block; color: #fff7df; font: bold 23px Georgia,serif; margin-top: 2px; text-shadow: 0 2px 3px #000; }
+.stat-icon { float: left; width: 25px; height: 25px; padding: 4px; margin: 7px 1px 0 2px; fill: #e4b951; stroke: #ffdf88; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; border: 1px solid #d6ac58; border-radius: 50%; background: #091b2e; }
+.crit-stats { flex-shrink: 0; margin: 0 0 7px; padding: 5px 3px; color: #fff0c8; background: #10253bed; border: 1px solid #cba65f; font: 10px Georgia,serif; box-shadow: 0 2px 5px #0006; }
+.game-wrap { flex: 1; height: auto; min-height: 0; border: 3px solid #dab05e; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 2px #6a4a29, 0 0 0 4px #b18a49, 0 8px 20px #0008; background: #10253b; }
+.hint { flex-shrink: 0; color: #fff0c9; text-shadow: 0 1px 3px #000; font-size: 9px; margin: 8px 0 0; }
+.overlay:not(.fantasy-menu) .panel { border: 2px solid #dfbb72; background: linear-gradient(145deg,#18314a,#0a192b); box-shadow: inset 0 0 0 2px #6f532c, 0 14px 35px #0008; }
+.overlay:not(.fantasy-menu) h2 { color: #ffe5a2; font-family: Georgia,serif; }
+#gameOverScreen button { background: linear-gradient(#e6c884,#b98b46); color: #302417; }
+@media (max-width: 350px) {
+  .game-shell { padding-left: 16px; padding-right: 16px; }
+  .stat-icon { width: 20px; height: 20px; padding: 3px; }
+  .hud span { font-size: 8px; }
+  .hud strong { font-size: 20px; }
+}
+@media (max-height: 620px) {
+  .game-shell { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .game-wrap { height: auto; min-height: 0; }
+}
