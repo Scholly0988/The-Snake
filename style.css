@@ -17,21 +17,24 @@ html, body {
 
 body {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   min-height: 100svh;
   padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
 }
 
-.game-shell { width: min(100%, 430px); }
+.game-shell { width: min(100%, 430px); min-width: 0; max-width: 100%; }
 
 .hud {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-bottom: 7px;
 }
 
 .hud div {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 7px 5px;
   text-align: center;
   border: 1px solid #275269;
@@ -55,13 +58,14 @@ body {
   touch-action: none;
 }
 
-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
 
 .overlay {
   position: absolute;
   inset: 0;
   z-index: 5;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 20px;
   background: rgba(2, 8, 12, .78);
@@ -85,6 +89,9 @@ button:disabled { opacity: .45; cursor: default; }
 
 .panel {
   width: min(100%, 355px);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 25px 20px;
   text-align: center;
   border: 1px solid #367b99;
@@ -101,7 +108,8 @@ button:disabled { opacity: .45; cursor: default; }
 
 .difficulty-picker {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin: 18px 0 5px;
   padding: 0;

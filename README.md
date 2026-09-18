@@ -90,3 +90,10 @@ Neue Grafik: player-platform.png muss neben index.html hochgeladen werden.
 Plattform 6: Spieler auf 32 × 61 Pixel verkleinert. Pistolenmündung und
 Geschossstart liegen 14 Pixel unter der unteren Linie; auch nahe Körperteile
 liegen dadurch vor dem Geschoss und können getroffen werden.
+
+## Layout 7
+
+Grid-Spalten und Menü dürfen unter ihre Inhaltsbreite schrumpfen. Canvas liegt
+absolut im Spielfeld und erhält nur seine Bitmap-Auflösung aus JavaScript;
+CSS bestimmt dauerhaft die sichtbare Größe. So vergrößern Canvas, Punktestand
+und Menütexte nicht das Spielfeld bei Rückkehr ins Hauptmenü.

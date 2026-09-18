@@ -55,12 +55,11 @@ const UPGRADE_INTERVAL = 5;
 const SEGMENTS_PER_SNAKE = 100;
 
 function resizeCanvas() {
-  const rect = wrap.getBoundingClientRect();
+  // CSS owns layout; bitmap resolution must never enlarge the grid or canvas.
+  const rect = canvas.getBoundingClientRect();
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(rect.width * ratio);
   canvas.height = Math.round(rect.height * ratio);
-  canvas.style.width = `${rect.width}px`;
-  canvas.style.height = `${rect.height}px`;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   state.width = rect.width;
   state.height = rect.height;
