@@ -17,9 +17,9 @@ const bodySprite = new Image();
 bodySprite.src = "snake-body.png";
 const playerSprite = new Image();
 playerSprite.src = "player-platform.png";
-// Keep only the 56px centre platform in bounds; side companions may overhang.
-const PLAYER_EDGE_MARGIN = 28;
-const PLAYER_MUZZLE_Y = -75;
+// Keep only the 32px centre platform in bounds; side companions may overhang.
+const PLAYER_EDGE_MARGIN = 16;
+const PLAYER_MUZZLE_Y = -20;
 function clampPlayerX(x) {
   const margin = Math.min(PLAYER_EDGE_MARGIN, state.width / 2);
   return Math.max(margin, Math.min(state.width - margin, x));
@@ -550,20 +550,20 @@ function drawBullets() {
 function drawPlayer() {
   const { x, y } = state.player;
   ctx.save(); ctx.translate(x, y);
-  // Unoccupied docking connectors; future companions use x +/- 60.
+  // Unoccupied docking connectors; future companions use x +/- 36.
   ctx.fillStyle = "#8ca9b9";
-  ctx.fillRect(-32, 10, 9, 8);
-  ctx.fillRect(23, 10, 9, 8);
+  ctx.fillRect(-20, 28, 6, 5);
+  ctx.fillRect(14, 28, 6, 5);
   if (playerSprite.complete && playerSprite.naturalWidth) {
     // Source crop excludes transparent padding without changing the artwork.
-    ctx.drawImage(playerSprite, 340, 65, 576, 1092, -28, -75, 56, 106);
+    ctx.drawImage(playerSprite, 340, 65, 576, 1092, -16, PLAYER_MUZZLE_Y, 32, 61);
   } else {
     ctx.fillStyle = "#344c62";
-    ctx.fillRect(-25, 0, 50, 27);
+    ctx.fillRect(-14, 25, 28, 16);
     ctx.fillStyle = "#4bc5ee";
-    ctx.fillRect(-10, -35, 20, 40);
+    ctx.fillRect(-6, 3, 12, 25);
     ctx.fillStyle = "#d5f6ff";
-    ctx.fillRect(-3, -75, 6, 40);
+    ctx.fillRect(-2, PLAYER_MUZZLE_Y, 4, 26);
   }
   ctx.restore();
 }

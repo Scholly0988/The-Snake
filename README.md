@@ -77,12 +77,16 @@ Ein mobiles Browser-Arcade-Spiel: Eine segmentierte Schlange bewegt sich in Schl
 
 `index.html` im Browser öffnen oder das Repository über GitHub Pages veröffentlichen.
 
-## Spielerplattform (Version Plattform 5)
+## Spielerplattform (Version Plattform 6)
 
 Anime-Pilot mit Pistole auf einer Metallplattform. Die mittlere Plattform ist
-56 Pixel breit; links und rechts sind Andockplätze bei -60/+60 Pixeln vorgesehen.
-28 Pixel Randabstand halten nur die mittlere Plattform im Bild. Seitliche
+32 Pixel breit; links und rechts sind Andockplätze bei -36/+36 Pixeln vorgesehen.
+16 Pixel Randabstand halten nur die mittlere Plattform im Bild. Seitliche
 Begleiter dürfen über den Rand ragen, damit die Schlange außen erreichbar bleibt.
 Aktuell sind nur der Pilot und zwei kleine Anschlussstücke sichtbar.
 Die Geschosse starten an der Pistolenmündung; Drag-Steuerung bleibt relativ.
 Neue Grafik: player-platform.png muss neben index.html hochgeladen werden.
+
+Plattform 6: Spieler auf 32 × 61 Pixel verkleinert. Pistolenmündung und
+Geschossstart liegen 14 Pixel unter der unteren Linie; auch nahe Körperteile
+liegen dadurch vor dem Geschoss und können getroffen werden.
