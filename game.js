@@ -231,10 +231,18 @@ function update(dt) {
   for (const bullet of state.bullets) {
     bullet.previousX = bullet.x;
     bullet.previousY = bullet.y;
-    bullet.x += bullet.vx * dt;
-    bullet.y += bullet.vy * dt;
+    if(bullet.owner==="paladin" && bullet.hammerPhase)advanceHammer(bullet,dt);
+    else if(bullet.owner==="necromancer") {
+      const target=state.snake[0];
+      if(target)moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);
+      else bullet.dead=true;
+    } else {
+      bullet.x += bullet.vx * dt;
+      bullet.y += bullet.vy * dt;
+    }
   }
   handleHits();
+  for(const bullet of state.bullets)if(bullet.returnAfterHits){bullet.hammerPhase="return";bullet.returnAfterHits=false;}
   state.bullets = state.bullets.filter(b => b.y > -25 && !b.dead);
   if (state.mode !== "playing") return;
 
@@ -288,11 +296,11 @@ function applyDamageBatch(batch) {
 }
 function handleHits(random = Math.random) {
   outer: for (const bullet of state.bullets) {
-    if (bullet.dead) continue;
+    if (bullet.dead || bullet.hammerPhase==="return") continue;
     bullet.hitIds ||= new Set();
     // Projectiles enter from below: resolve the nearest crossed target first.
     const targets = state.snake.map((segment,i)=>({segment,head:i===0?snakeHead():null}))
-      .filter(({segment,head})=>!bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
+      .filter(({segment,head})=>(bullet.owner!=="necromancer" || segment===state.snake[0]) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
       .sort((a,b)=>Math.max(b.segment.y,b.head?.y??-Infinity)-Math.max(a.segment.y,a.head?.y??-Infinity));
     for (const {segment} of targets) {
       if (!state.snake.includes(segment)) continue;
@@ -304,7 +312,7 @@ function handleHits(random = Math.random) {
       const batch = new Map([[segment.id,hit.damage]]);
       if (isPaladin) paladinHit(batch,segment,hit,random);
       bullet.hitsLeft--;
-      if (bullet.hitsLeft<=0) bullet.dead=true;
+      if (bullet.hitsLeft<=0 || isNecro) bullet.dead=true;
       burst(segment.x,segment.y,hit.critical?"#ff7954":isPaladin?"#ffe49b":"#63ef98",hit.critical?12:5);
       const oldCount=state.snake.length;
       applyDamageBatch(batch);
@@ -785,7 +793,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 15.3 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

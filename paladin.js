@@ -45,7 +45,7 @@ function updatePaladin(dt) {
     const x = paladinX();
     // Side platform may overhang; its projectile does not teleport into the arena.
     state.bullets.push({owner:"paladin",x,y:state.player.y+PLATFORM_SHOT_Y,vx:0,
-      vy:-510*p.speed,size:p.size,hitsLeft:1+state.weapon.pierce+p.pierce,dead:false,
+      vy:-510*p.speed,size:p.size,hitsLeft:Infinity,dead:false,hammerPhase:"approach",
       charged:p.hits % p.impactEvery === p.impactEvery-1});
     p.fireTimer += 1 / (state.weapon.shotsPerSecond * .65);
     p.swing = .18;
@@ -68,6 +68,39 @@ function updatePaladin(dt) {
     p.remaining = Math.max(0, p.remaining - dt);
     if (p.remaining === 0 && visibleTargets().length) p.charge = .45;
   }
+}
+function moveHeroProjectile(bullet,x,y,speed,dt) {
+  const dx=x-bullet.x,dy=y-bullet.y,d=Math.hypot(dx,dy),step=Math.min(d,speed*dt);
+  if(d){bullet.x+=dx/d*step;bullet.y+=dy/d*step;}
+  return d<=step;
+}
+function advanceHammer(bullet,dt) {
+  const p=state.paladin;
+  if(!p){bullet.dead=true;return;}
+  const speed=510*p.speed;
+  if(bullet.hammerPhase==="return"){
+    if(moveHeroProjectile(bullet,paladinX(),state.player.y+PLATFORM_SHOT_Y,speed,dt))bullet.dead=true;
+    return;
+  }
+  if(!bullet.arc){
+    const targets=visibleTargets();
+    if(!targets.length){bullet.hammerPhase="return";return;}
+    const lowest=targets.reduce((a,b)=>a.y>b.y?a:b);
+    const leftToRight=bullet.x<=state.width/2;
+    bullet.arc={startX:leftToRight?24:state.width-24,endX:leftToRight?state.width-24:24,
+      y:lowest.y+16,controlY:Math.max(10,lowest.y-48),t:0};
+  }
+  const a=bullet.arc;
+  if(bullet.hammerPhase==="approach"){
+    if(moveHeroProjectile(bullet,a.startX,a.y,speed,dt))bullet.hammerPhase="sweep";
+    return;
+  }
+  a.t=Math.min(1,a.t+dt*speed/Math.max(80,Math.abs(a.endX-a.startX)));
+  const t=a.t;
+  bullet.x=a.startX+(a.endX-a.startX)*t;
+  bullet.y=(1-t)*(1-t)*a.y+2*(1-t)*t*a.controlY+t*t*a.y;
+  // Process the final outbound collision before disabling return-flight damage.
+  if(t===1)bullet.returnAfterHits=true;
 }
 function paladinUpgradePool() {
   const p = state.paladin;
