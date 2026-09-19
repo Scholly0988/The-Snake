@@ -23,7 +23,8 @@ const hammerSprite = new Image();
 hammerSprite.src = "holy-hammer.png";
 // Keep only the 32px centre platform in bounds; side companions may overhang.
 const PLAYER_EDGE_MARGIN = 16;
-const PLAYER_MUZZLE_Y = -20;
+const PLAYER_MUZZLE_Y = -20; // Sprite placement, independent of projectile origin.
+const PLATFORM_SHOT_Y = 28; // Centre of the platform below the character.
 function clampPlayerX(x) {
   const margin = Math.min(PLAYER_EDGE_MARGIN, state.width / 2);
   return Math.max(margin, Math.min(state.width - margin, x));
@@ -224,7 +225,7 @@ function fireWeapon() {
     const halfWidth = (count - 1) * spacing / 2;
     const center = Math.max(6 + halfWidth, Math.min(state.width - 6 - halfWidth, state.player.x));
     const x = state.weapon.parallel ? center + (i - (count - 1) / 2) * spacing : state.player.x;
-    state.bullets.push({ x, y: state.player.y + PLAYER_MUZZLE_Y, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
+    state.bullets.push({ x, y: state.player.y + PLATFORM_SHOT_Y, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
   }
 }
 

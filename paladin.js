@@ -44,7 +44,7 @@ function updatePaladin(dt) {
   if (p.fireTimer <= 0) {
     const x = paladinX();
     // Side platform may overhang; its projectile does not teleport into the arena.
-    state.bullets.push({owner:"paladin",x,y:state.player.y+PLAYER_MUZZLE_Y,vx:0,
+    state.bullets.push({owner:"paladin",x,y:state.player.y+PLATFORM_SHOT_Y,vx:0,
       vy:-510*p.speed,size:p.size,hitsLeft:1+state.weapon.pierce+p.pierce,dead:false,
       charged:p.hits % p.impactEvery === p.impactEvery-1});
     p.fireTimer += 1 / (state.weapon.shotsPerSecond * .65);

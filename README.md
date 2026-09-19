@@ -167,3 +167,11 @@ Dauerhafte Krit-Chance (+1 Prozentpunkt pro Kauf) und Krit-Schaden
 Stufen, Kosten 20 × nächste Stufe². Wirkung ab nächster Runde für Schützen und
 Aldric. Alte Spielstände erhalten Stufe 0; Export/Import enthält die neuen Werte.
 Ersetzen: index.html, game.js, progress.js.
+
+## Plattformschüsse 13.1
+
+Pistole und Paladin-Hämmer starten nun am Mittelpunkt ihrer jeweiligen Plattform
+(Spieler-Y + 28) statt an der Mündung (Spieler-Y - 20). Die Sprites bleiben an
+bisheriger Position. Paralleler Mehrfachschuss bleibt nebeneinander angeordnet.
+Gezielte Tests prüfen Treffer nahe der unteren Verlustgrenze für den Schützen
+sowie Aldric links und rechts. Ersetzen: index.html, game.js, paladin.js.
