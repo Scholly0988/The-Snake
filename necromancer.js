@@ -69,6 +69,40 @@ function resolveNecroDeaths() {
     }
   } finally { n.resolving=false; }
 }
+// Earliest contact along this frame's flight, independent of snake order.
+function soulContactTime(soul, target) {
+  const ax=soul.previousX??soul.x, ay=soul.previousY??soul.y;
+  const dx=soul.x-ax, dy=soul.y-ay;
+  const ox=ax-target.x, oy=ay-target.y;
+  const c=ox*ox+oy*oy-SEGMENT_HIT_RADIUS**2;
+  if(c<=0)return 0;
+  const a=dx*dx+dy*dy;
+  if(!a)return Infinity;
+  const b=2*(ox*dx+oy*dy), discriminant=b*b-4*a*c;
+  if(discriminant<0)return Infinity;
+  const t=(-b-Math.sqrt(discriminant))/(2*a);
+  return t>=0&&t<=1?t:Infinity;
+}
+function hitVortexSoul(soul) {
+  if(soul.dead)return;
+  const head=snakeHead();
+  const contacts=state.snake.map((segment,index)=>({
+    segment,
+    time:Math.min(soulContactTime(soul,segment),
+      index===0&&head?soulContactTime(soul,head):Infinity)
+  })).filter(c=>Number.isFinite(c.time)&&!soul.hitIds.has(c.segment.id))
+    .sort((a,b)=>a.time-b.time);
+  const batch=new Map(), damage=soulDamage(soul);
+  for(const {segment} of contacts) {
+    if(soul.hits>=3)break;
+    soul.hitIds.add(segment.id);
+    addDamage(batch,segment,necroDamage(segment,damage));
+    state.soulEffects.push({x:segment.x,y:segment.y,radius:12,life:.4});
+    soul.hits++;
+  }
+  if(soul.hits>=3)soul.dead=true;
+  if(batch.size)applyDamageBatch(batch);
+}
 function updateNecromancer(dt) {
   const n=state.necromancer;
   if (!n) return;
@@ -117,14 +151,8 @@ function updateNecromancer(dt) {
     if (s.swirl) {
       s.radius+=speed*.65*dt;s.angle+=1.5*dt;
       s.x=s.originX+Math.cos(s.angle)*s.radius;s.y=s.originY+Math.sin(s.angle)*s.radius;
-      const batch=new Map();
-      for (const target of visibleTargets()) {
-        if (s.hitIds.has(target.id)||!projectileHits(s,target)) continue;
-        s.hitIds.add(target.id);addDamage(batch,target,necroDamage(target,soulDamage(s)));
-        if (++s.hits===3) {s.dead=true;break;}
-      }
+      hitVortexSoul(s);
       if (s.radius>Math.hypot(state.width,state.height)+50) s.dead=true;
-      if(batch.size) applyDamageBatch(batch);
     } else {
       let target=state.snake.find(t=>t.id===s.targetId&&t.y>=0&&!s.hitIds.has(t.id));
       if (!target) target=visibleTargets().filter(t=>!s.hitIds.has(t.id)).sort((a,b)=>Math.hypot(a.x-s.x,a.y-s.y)-Math.hypot(b.x-s.x,b.y-s.y))[0];
