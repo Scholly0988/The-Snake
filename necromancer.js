@@ -26,7 +26,7 @@ function spawnSoul(center,options={}) {
   const n=state.necromancer;
   if (!n || (!options.temporary&&!options.swirl&&regularSoulCount()>=n.limit)) return null;
   const soul={x:center.x,y:center.y,originX:center.x,originY:center.y,age:0,wait:.3,
-    angle:0,radius:0,hitIds:new Set(),jumps:0,hits:0,dead:false,...options};
+    phase:"attack",attacks:0,rest:0,angle:0,radius:0,hitIds:new Set(),jumps:0,hits:0,dead:false,...options};
   if (soul.strong && !soul.swirl) { soul.orbitTime=0; soul.wait=0; }
   state.souls.push(soul);
   // Each successful creation counts, including temporary and vortex souls.
@@ -103,6 +103,33 @@ function hitVortexSoul(soul) {
   if(soul.hits>=3)soul.dead=true;
   if(batch.size)applyDamageBatch(batch);
 }
+function chooseSoulTarget(soul, random=Math.random) {
+  const candidates=visibleTargets().filter(t=>t.hp>0&&!soul.hitIds.has(t.id));
+  const marked=candidates.filter(t=>t.soulMark);
+  if(marked.length)return marked[Math.min(marked.length-1,Math.floor(random()*marked.length))];
+  return candidates.sort((a,b)=>Math.hypot(a.x-soul.x,a.y-soul.y)-Math.hypot(b.x-soul.x,b.y-soul.y))[0];
+}
+function finishSoulAttack(soul) {
+  soul.attacks++;
+  soul.targetId=null;
+  if(soul.attacks>=3+state.necromancer.endless)soul.dead=true;
+  else {soul.phase="return";soul.rest=0;soul.angle=0;}
+}
+function moveSoulTo(soul,x,y,speed,dt) {
+  const dx=x-soul.x,dy=y-soul.y,d=Math.hypot(dx,dy),step=Math.min(d,speed*dt);
+  if(d){soul.x+=dx/d*step;soul.y+=dy/d*step;}
+  return d<=step;
+}
+function restSoul(soul,speed,dt) {
+  const x=Math.min(30,state.width/2),y=Math.max(20,state.height-32),radius=12;
+  if(soul.phase==="return") {
+    if(moveSoulTo(soul,x+radius,y,speed,dt)){soul.phase="rest";soul.rest=5;soul.angle=0;}
+  } else {
+    soul.rest=Math.max(0,soul.rest-dt);soul.angle+=dt*Math.PI*2;
+    soul.x=x+radius*Math.cos(soul.angle);soul.y=y+radius*Math.sin(soul.angle);
+    if(soul.rest===0){soul.phase="attack";soul.targetId=null;soul.hitIds.clear();}
+  }
+}
 function updateNecromancer(dt) {
   const n=state.necromancer;
   if (!n) return;
@@ -119,9 +146,8 @@ function updateNecromancer(dt) {
       n.charge=Math.max(0,n.charge-dt);
       if (!n.charge) {
         n.remaining=22;
-        const targets=visibleTargets();
         for (let i=0;i<2+n.choir;i++) spawnSoul({x:necromancerX(),y:state.player.y+PLATFORM_SHOT_Y},{temporary:true,wait:0});
-        state.souls.forEach((s,i)=>{if(!s.swirl){s.wait=0;s.targetId=targets[i%targets.length]?.id;}});
+        state.souls.forEach(s=>{if(!s.swirl&&s.phase==="attack"){s.wait=0;s.targetId=null;}});
       }
     } else {
       n.remaining=Math.max(0,n.remaining-dt);
@@ -135,7 +161,7 @@ function updateNecromancer(dt) {
     if (s.dead) continue;
     if (n.charge>0) continue;
     s.age+=dt;
-    if ((s.swirl&&s.age>12)||(s.temporary&&!s.swirl&&s.age>8)) {s.dead=true;continue;}
+    if (s.swirl&&s.age>12) {s.dead=true;continue;}
     // Marked souls complete one small circle before targeting or dealing damage.
     // A separate timer keeps Totenruf and upgrades from skipping the entrance.
     if (s.orbitTime !== undefined && s.orbitTime < .65) {
@@ -147,6 +173,7 @@ function updateNecromancer(dt) {
     }
     if (s.wait>0) {s.wait-=dt;continue;}
     const speed=180*(1+n.speedBonus)*(n.storm&&state.souls.filter(t=>!t.dead).length>=5?1.25:1);
+    if(!s.swirl&&s.phase!=="attack"){restSoul(s,speed,dt);continue;}
     s.previousX=s.x;s.previousY=s.y;
     if (s.swirl) {
       s.radius+=speed*.65*dt;s.angle+=1.5*dt;
@@ -154,8 +181,8 @@ function updateNecromancer(dt) {
       hitVortexSoul(s);
       if (s.radius>Math.hypot(state.width,state.height)+50) s.dead=true;
     } else {
-      let target=state.snake.find(t=>t.id===s.targetId&&t.y>=0&&!s.hitIds.has(t.id));
-      if (!target) target=visibleTargets().filter(t=>!s.hitIds.has(t.id)).sort((a,b)=>Math.hypot(a.x-s.x,a.y-s.y)-Math.hypot(b.x-s.x,b.y-s.y))[0];
+      let target=visibleTargets().find(t=>t.id===s.targetId&&t.hp>0&&!s.hitIds.has(t.id));
+      if (!target) target=chooseSoulTarget(s);
       if (!target) continue;
       s.targetId=target.id;
       const dx=target.x-s.x,dy=target.y-s.y,d=Math.hypot(dx,dy),step=Math.min(d,speed*dt);
@@ -164,8 +191,9 @@ function updateNecromancer(dt) {
         s.hitIds.add(target.id);s.hits++;s.targetId=null;
         const extra=s.jumps===0&&Math.random()<n.binding;
         if(extra)s.jumps++;
-        if (!extra&&Math.random()>=n.endless) s.dead=true;
-        const batch=new Map([[target.id,necroDamage(target,soulDamage(s))]]);
+        const damage=soulDamage(s);
+        if (!extra || !chooseSoulTarget(s)) finishSoulAttack(s);
+        const batch=new Map([[target.id,necroDamage(target,damage)]]);
         state.soulEffects.push({x:target.x,y:target.y,radius:15,life:.4});
         applyDamageBatch(batch);
       }
@@ -191,7 +219,7 @@ function necromancerUpgradePool() {
   ];
   const once=[
     ["markChance","Dunkles Mal",[.10,.20,.35]],
-    ["endless","Endlose Diener",[.10,.20,.35]],
+    ["endless","Endlose Diener",[1,2,3]],
     ["harvest","Unheilige Ernte",[.05,.10,.20]]
   ];
   const highest=[
@@ -207,7 +235,7 @@ function necromancerUpgradePool() {
     }
     for (const [key,name,values] of once) {
       const id=key+"-"+rarity,v=values[i];
-      if(!n.taken[id]) card(id,rarity,name,"+"+Math.round(v*100)+" Prozentpunkte. Jede Seltenheit einmal.",()=>{if(!n.taken[id]){n[key]+=v;n.taken[id]=true;}});
+      if(!n.taken[id]) card(id,rarity,name,(key==="endless"?"+"+v+" zusätzliche Angriffe pro Seele; dazwischen 5 s kreisen.":"+"+Math.round(v*100)+" Prozentpunkte.")+" Jede Seltenheit einmal.",()=>{if(!n.taken[id]){n[key]+=v;n.taken[id]=true;}});
     }
     for (const [key,name,values,unit] of highest) {
       if(key==="siphon"&&!n.ultimate)continue;
