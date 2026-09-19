@@ -17,7 +17,14 @@ function necroDamage(segment,damage) {
 }
 function prepareNecroHit(segment,hit,random) {
   const n=state.necromancer;
-  if (random()<n.markChance) segment.soulMark=true;
+  if (segment===state.snake[0] && random()<n.markChance) {
+    const candidates=state.snake.filter(s=>s.hp>0&&!s.soulMark &&
+      s.x>=0&&s.x<=state.width&&s.y>=0&&s.y<=state.height);
+    if(candidates.length) {
+      const target=candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))];
+      target.soulMark=true;
+    }
+  }
   hit.damage=necroDamage(segment,hit.damage);
   if (hit.critical && random()<n.harvest) spawnSoul(segment,{small:true});
 }
@@ -247,7 +254,7 @@ function necromancerUpgradePool() {
       const id=key+"-"+rarity,v=values[i];
       if(!n.taken[id]) card(id,rarity,name,{
         endless:"Jede Seele führt "+v+" zusätzliche Angriffszyklen aus. Dazwischen kehrt sie zurück und kreist 5 Sekunden unten links.",
-        markChance:"Erhöht die Chance, dass ein Stabgeschoss ein Segment markiert, um "+Math.round(v*100)+" Prozentpunkte. Markierte Segmente hinterlassen stärkere Seelen.",
+        markChance:"Jeder Stabtreffer auf das erste Segment kann ein zufälliges unmarkiertes Segment im sichtbaren Spielfeld markieren. Erhöht diese Chance um "+Math.round(v*100)+" Prozentpunkte. Markierte Segmente hinterlassen stärkere Seelen.",
         harvest:"Erhöht die Chance, bei einem kritischen Stabtreffer eine kleine Seele zu beschwören, um "+Math.round(v*100)+" Prozentpunkte."
       }[key],()=>{if(!n.taken[id]){n[key]+=v;n.taken[id]=true;}});
     }
