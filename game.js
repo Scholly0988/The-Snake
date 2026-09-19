@@ -120,6 +120,7 @@ function resetGame() {
   state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
   state.holyEffects = [];
   state.pendingUpgrades = 0;
+  state.lastUpgrade=null;
   state.score = 0;
   state.runCoins = 0;
   state.elapsed = 0;
@@ -417,6 +418,7 @@ function openUpgrade() {
     button.addEventListener("click", () => {
       if (state.mode !== "upgrade" || state.upgradeOfferId !== offerId) return;
       state.upgradeOfferId++;
+      state.lastUpgrade=choice.name+" ("+choice.rarity+")";
       choice.apply();
       refreshHud();
       state.pendingUpgrades = Math.max(0,state.pendingUpgrades-1);
@@ -778,12 +780,44 @@ document.querySelector("#restartButton").addEventListener("click", startGame);
 window.addEventListener("resize", resizeCanvas);
 if (typeof ResizeObserver !== "undefined") new ResizeObserver(resizeCanvas).observe(wrap);
 
+function reportGameError(error) {
+  if(state.mode==="error")return;
+  state.errorResumeMode=state.mode;
+  state.mode="error";
+  state.pointerDown=false;state.pointerId=null;
+  const details="Version 15.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+    "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
+  state.lastError=details;
+  document.querySelector("#gameErrorDetails").textContent=details;
+  document.querySelector("#gameErrorScreen").classList.remove("hidden");
+  try {window.localStorage.setItem("the-snake.last-error",details);}catch{}
+}
+function resumeAfterError() {
+  if(state.mode!=="error")return;
+  document.querySelector("#gameErrorScreen").classList.add("hidden");
+  state.mode=state.errorResumeMode||"playing";
+  state.lastTime=performance.now();
+  resizeCanvas(); // Reset canvas state if drawing was interrupted.
+}
+document.querySelector("#resumeAfterError").addEventListener("click",resumeAfterError);
+document.querySelector("#menuAfterError").addEventListener("click",()=>{
+  document.querySelector("#gameErrorScreen").classList.add("hidden");
+  showMenu();
+});
+window.addEventListener("error",event=>reportGameError(event.error||event.message));
 function loop(time) {
-  const dt = Math.min((time - (state.lastTime || time)) / 1000, .033);
-  state.lastTime = time;
-  if (state.mode === "playing") update(dt);
-  draw();
-  requestAnimationFrame(loop);
+  try {
+    if(state.mode==="error")return;
+    const dt = Math.min((time - (state.lastTime || time)) / 1000, .033);
+    state.lastTime = time;
+    if (state.mode === "playing") update(dt);
+    draw();
+  } catch(error) {
+    reportGameError(error);
+  } finally {
+    // A runtime exception must never silently cancel all future frames.
+    requestAnimationFrame(loop);
+  }
 }
 
 document.querySelector("#previousLevel").addEventListener("click",()=>changeLevel(-1));

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#07131b">
   <title>The Snake</title>
-  <link rel="stylesheet" href="style.css?v=levels-15">
+  <link rel="stylesheet" href="style.css?v=recovery-15-1">
 </head>
 <body>
   <main class="game-shell">
@@ -85,7 +85,7 @@
           <button id="navHeroes" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10a7 7 0 0 1 14 0v10l-5-3V11h-4v6z M5 10l5 2m4 0 5-2M12 3v5"/></svg><span>Helden</span></button>
           <button id="navOptions" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 4 4 1 1 6-4 2-1 5h-6l-2-4-5-1V9l4-2z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></svg><span>Optionen</span></button>
         </nav>
-        <p class="menu-version">Version: Level 15</p>
+        <p class="menu-version">Version: Fehlerhilfe 15.1</p>
       </div>
 
       <div id="upgradeScreen" class="overlay hidden">
@@ -94,6 +94,16 @@
           <h2>Upgrade wählen</h2>
           <p>Das Spiel läuft erst nach deiner Auswahl weiter.</p>
           <div id="upgradeChoices" class="upgrade-choices"></div>
+        </div>
+      </div>
+
+      <div id="gameErrorScreen" class="overlay hidden" style="z-index:100">
+        <div class="panel" role="alert">
+          <h2>Spiel unterbrochen</h2>
+          <p>Ein Fehler hat die Runde angehalten. Du kannst versuchen, sie fortzusetzen. Falls der Fehler erneut erscheint, schicke bitte einen Screenshot dieser Meldung.</p>
+          <pre id="gameErrorDetails" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto;font-size:11px;text-align:left"></pre>
+          <button id="resumeAfterError">RUNDE FORTSETZEN</button>
+          <button id="menuAfterError">ZUM HAUPTMENÜ</button>
         </div>
       </div>
 
@@ -111,9 +121,9 @@
 
     <p id="saveStatus" class="hint" role="status"></p>
   </main>
-  <script src="progress.js?v=levels-15"></script>
-  <script src="paladin.js?v=levels-15"></script>
-  <script src="necromancer.js?v=levels-15"></script>
-  <script src="game.js?v=levels-15"></script>
+  <script src="progress.js?v=recovery-15-1"></script>
+  <script src="paladin.js?v=recovery-15-1"></script>
+  <script src="necromancer.js?v=recovery-15-1"></script>
+  <script src="game.js?v=recovery-15-1"></script>
 </body>
 </html>
