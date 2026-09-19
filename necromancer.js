@@ -207,12 +207,6 @@ function bindNecromancerMenu() {
     progress.equipHero("necromancer",side);renderProfile();
   });
 }
-function refreshNecromancerHud() {
-  const n=state.necromancer;if(!n)return;
-  const el=document.querySelector("#paladinStats");
-  el.classList.remove("hidden");
-  el.textContent+=(state.paladin?" | ":"")+"Vaelric: "+regularSoulCount()+"/"+n.limit+" Seelen · Krit "+Math.min(100,state.weapon.critChance+5)+" %"+(n.ultimate?" · Ruf "+(n.charge?"lädt":Math.ceil(n.remaining)+" s"):"");
-}
 function drawSoulOrb(x,y,size,elite) {
   ctx.save();ctx.shadowColor="#a264ff";ctx.shadowBlur=10;
   ctx.fillStyle=elite?"#f4dbff":"#8fffd0";ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();

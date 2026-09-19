@@ -294,3 +294,19 @@ body { padding: 0; background: #111c21; }
 .paladin-card p { margin:6px 0; }
 .hero-equip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 #paladinStats { font-size:9px; }
+
+
+/* Compact five-column main HUD and physically ordered companion panels. */
+.hud { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; margin: 0 -9px 5px; }
+.hud div { padding: 5px 1px 4px; border-width: 1px; }
+.hud div::before, .hud div::after { width: 4px; height: 4px; top: -3px; }
+.hud span { font: bold clamp(6px,1.8vw,9px) system-ui,sans-serif; letter-spacing: 0; white-space: nowrap; }
+.hud strong { font: bold clamp(12px,3.8vw,19px) Georgia,serif; margin-top: 3px; line-height: 1.15; }
+.companion-hud { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; flex-shrink:0; margin:0 -9px 6px; }
+.platform-stats { min-width:0; padding:5px; border:1px solid #cba65f; border-radius:4px; background:linear-gradient(135deg,#17334fed,#091b2ef2); color:#fff0c8; }
+.platform-stats strong { display:block; color:#f5d68f; font:700 10px system-ui,sans-serif; margin-bottom:3px; }
+.platform-stats span { display:block; font:clamp(8px,2.25vw,10px)/1.4 system-ui,sans-serif; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+@media(max-height:620px) {
+  .platform-stats { padding:3px; }
+  .platform-stats span { line-height:1.25; }
+}

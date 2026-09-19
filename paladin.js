@@ -92,12 +92,37 @@ function paladinUpgradePool() {
   return pool;
 }
 
+function hudNumber(value) {
+  return value.toLocaleString("de-DE",{maximumFractionDigits:2});
+}
+function companionHudContent(side) {
+  const label=side==="left"?"LINKS":"RECHTS";
+  const p=state.paladin,n=state.necromancer;
+  let title="",lines=[];
+  if(p?.slot===side) {
+    title="Aldric";
+    lines=[
+      "Angriff "+hudNumber(paladinDamage())+" · Rate "+hudNumber(state.weapon.shotsPerSecond*.65/2.7)+"×",
+      "Krit "+hudNumber(state.weapon.critChance)+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
+      "Einschlag "+(p.hits%p.impactEvery)+"/"+p.impactEvery+" · Durchschlag "+(state.weapon.pierce+p.pierce),
+      p.ultimate?"Urteil: "+(p.charge>0?"lädt":Math.ceil(p.remaining)+" s"):"Urteil: gesperrt"
+    ];
+  } else if(n?.slot===side) {
+    title="Vaelric";
+    const special=state.souls.filter(s=>!s.dead&&(s.temporary||s.swirl)).length;
+    lines=[
+      "Angriff "+hudNumber(necromancerDamage())+" · Rate "+hudNumber(state.weapon.shotsPerSecond*.85/2.7)+"×",
+      "Krit "+hudNumber(Math.min(100,state.weapon.critChance+5))+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
+      "Seelen "+regularSoulCount()+"/"+n.limit+(special?" +"+special:"")+" · Mal "+hudNumber(n.markChance*100)+" %",
+      (n.ultimate?"Totenruf: "+(n.charge>0?"lädt":Math.ceil(n.remaining)+" s"):"Totenruf: gesperrt")+(n.seal?" · Siegel "+n.sealCount+"/5":"")
+    ];
+  }
+  return "<strong>"+label+" · "+(title||"Frei")+"</strong>"+
+    (title?lines.map(line=>"<span>"+line+"</span>").join(""):"<span>Kein Held ausgerüstet</span>");
+}
 function refreshPaladinHud() {
-  const el=document.querySelector('#paladinStats');
-  if (!state.paladin) { el.textContent='';el.classList.add('hidden');return; }
-  el.classList.remove('hidden');
-  const p=state.paladin;
-  el.textContent='Aldric: '+paladinDamage().toLocaleString('de-DE',{maximumFractionDigits:1})+' Schaden · '+(state.weapon.shotsPerSecond*.65/2.7).toFixed(2).replace('.',',')+'× · Einschlag '+(p.hits%p.impactEvery)+'/'+p.impactEvery+(p.ultimate?' · Urteil '+(p.charge>0?'lädt':Math.ceil(p.remaining)+' s'):'');
+  for(const side of ["left","right"])
+    document.querySelector("#platformStats"+side).innerHTML=companionHudContent(side);
 }
 function renderPaladinProfile() {
   const p=progress.data;

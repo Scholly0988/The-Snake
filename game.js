@@ -193,7 +193,6 @@ function update(dt) {
   for (const effect of state.holyEffects) effect.life -= dt;
   state.holyEffects = state.holyEffects.filter(effect => effect.life > 0);
   refreshPaladinHud();
-  refreshNecromancerHud();
   for (const bullet of state.bullets) {
     bullet.previousX = bullet.x;
     bullet.previousY = bullet.y;
@@ -426,8 +425,8 @@ function endGame() {
 
 function refreshHud() {
   refreshPaladinHud();
-  refreshNecromancerHud();
-  document.querySelector("#critStats").textContent = "Krit-Chance: " + String(state.weapon.critChance || 0).replace(".", ",") + " % · Krit-Schaden: " + (state.weapon.critDamage ?? 150) + " %";
+  document.querySelector("#critChance").textContent = hudNumber(state.weapon.critChance || 0) + " %";
+  document.querySelector("#critDamage").textContent = hudNumber(state.weapon.critDamage ?? 150) + " %";
   scoreEl.textContent = state.score;
   damageEl.textContent = state.weapon.damage;
   fireRateEl.textContent = `${(state.weapon.shotsPerSecond / 2.7).toFixed(1)}×`;
