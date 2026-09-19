@@ -88,7 +88,7 @@ function resetGame() {
   state.headDistance = 0;
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
-  state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 };
+  state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   createSnake(SEGMENTS_PER_SNAKE);
   refreshHud();
 }
@@ -428,7 +428,9 @@ function renderProfile() {
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
   for (const [id, key, title] of [
     ["buyDamage", "damageLevel", "+1 Startschaden"],
-    ["buyRate", "rateLevel", "+10 % Basisfeuerrate"]
+    ["buyRate", "rateLevel", "+10 % Basisfeuerrate"],
+    ["buyCritChance", "critChanceLevel", "+1 % Krit-Chance"],
+    ["buyCritDamage", "critDamageLevel", "+25 % Krit-Schaden"]
   ]) {
     const button = document.querySelector("#" + id);
     button.textContent = title + " · Stufe " + p[key] + "/30 · " +
@@ -485,7 +487,7 @@ for(const slot of ["left","right",null]) {
 }
 
 document.querySelector("#menuButton").addEventListener("click", showMenu);
-for (const [id, key] of [["buyDamage", "damageLevel"], ["buyRate", "rateLevel"]]) {
+for (const [id, key] of [["buyDamage", "damageLevel"], ["buyRate", "rateLevel"], ["buyCritChance", "critChanceLevel"], ["buyCritDamage", "critDamageLevel"]]) {
   document.querySelector("#" + id).addEventListener("click", () => {
     if (state.mode !== "start") return;
     progress.buy(key);

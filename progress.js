@@ -5,7 +5,7 @@ const SnakeProgress = (() => {
   const KEY = "the-snake.progress.v1";
   const fresh = () => ({
     game: "the-snake", version: 1, coins: 0, best: 0, defeated: 0,
-    runs: 0, damageLevel: 0, rateLevel: 0, difficulty: 0.10,
+    runs: 0, damageLevel: 0, rateLevel: 0, critChanceLevel: 0, critDamageLevel: 0, difficulty: 0.10,
     paladinUnlocked: false, paladinSlot: null
   });
   function validate(value) {
@@ -17,6 +17,12 @@ const SnakeProgress = (() => {
           value[key] > (key.endsWith("Level") ? 30 : 1000000000))
         throw new Error("Ungültiger Wert im Spielstand: " + key);
       result[key] = value[key];
+    }
+    for (const key of ["critChanceLevel", "critDamageLevel"]) {
+      const level = value[key] === undefined ? 0 : value[key];
+      if (!Number.isSafeInteger(level) || level < 0 || level > 30)
+        throw new Error("Ungültiger Wert im Spielstand: " + key);
+      result[key] = level;
     }
     if (![0.10, 0.15, 0.20].includes(value.difficulty))
       throw new Error("Ungültige Schwierigkeit.");
@@ -70,7 +76,7 @@ const SnakeProgress = (() => {
       },
       cost(key) { return 20 * (data[key] + 1) ** 2; },
       buy(key) {
-        if (!["damageLevel", "rateLevel"].includes(key) || data[key] >= 30) return false;
+        if (!["damageLevel", "rateLevel", "critChanceLevel", "critDamageLevel"].includes(key) || data[key] >= 30) return false;
         const cost = this.cost(key);
         if (data.coins < cost) return false;
         const old = {...data};

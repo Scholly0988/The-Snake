@@ -151,3 +151,19 @@ Aldric ist für 100 Münzen dauerhaft freischaltbar und links/rechts ausrüstbar
 Alle vereinbarten Paladin-Karten, Licht-Hammer, Flächentreffer und Göttliches
 Urteil sind implementiert. Frühere Hinweise auf nur vorbereitete Helden/Orange
 sind damit überholt. Regeln, Anfangswerte und Installation: [PALADIN.md](PALADIN.md).
+
+## Arena 12.2
+
+Dekorative Außenabstände oben um 30 und unten um 50 CSS-Pixel reduziert.
+Sicherheitsabstände des Geräts begrenzen die Erweiterung, wenn weniger Platz
+vorhanden ist. Bei kleinen Displays bleiben mindestens 4 Pixel Rand.
+Canvas und Spielerposition passen sich über den bestehenden ResizeObserver an.
+Nur index.html und style.css müssen ersetzt werden.
+
+## Upgrades 13
+
+Dauerhafte Krit-Chance (+1 Prozentpunkt pro Kauf) und Krit-Schaden
+(+25 Prozentpunkte pro Kauf) im Hauptmenü. Wie die bestehenden Käufe je 30
+Stufen, Kosten 20 × nächste Stufe². Wirkung ab nächster Runde für Schützen und
+Aldric. Alte Spielstände erhalten Stufe 0; Export/Import enthält die neuen Werte.
+Ersetzen: index.html, game.js, progress.js.
