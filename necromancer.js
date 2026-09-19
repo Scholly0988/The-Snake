@@ -231,28 +231,42 @@ function necromancerUpgradePool() {
     for (const [key,name,values,unit] of repeat) {
       if(key==="choir"&&!n.ultimate || key==="explosion"&&n.seal)continue;
       const v=values[i],percent=["soulBonus","speedBonus","curse"].includes(key);
-      card(key+"-"+rarity,rarity,name,"+"+(percent?Math.round(v*100)+" %":v)+" "+unit+". Wiederholbar; addiert sich.",()=>n[key]+=v);
+      const amount=String(v).replace(".",",");
+      const description={
+        limit:"Erhöht die Anzahl gleichzeitig gebundener Seelen um "+v+".",
+        soulBonus:"Erhöht den Schaden aller beschworenen Seelen um "+Math.round(v*100)+" %.",
+        speedBonus:"Deine Seelen fliegen "+Math.round(v*100)+" % schneller.",
+        explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 42 Pixeln.",
+        strongDamage:"Seelen aus markierten Segmenten verursachen "+amount+" zusätzlichen Basisschaden.",
+        choir:"Totenruf beschwört "+v+" zusätzliche Seelen.",
+        curse:"Markierte Segmente erleiden "+Math.round(v*100)+" % mehr Schaden durch Vaelrics Angriffe und Seelen."
+      }[key];
+      card(key+"-"+rarity,rarity,name,description,()=>n[key]+=v);
     }
     for (const [key,name,values] of once) {
       const id=key+"-"+rarity,v=values[i];
-      if(!n.taken[id]) card(id,rarity,name,(key==="endless"?"+"+v+" zusätzliche Angriffe pro Seele; dazwischen 5 s kreisen.":"+"+Math.round(v*100)+" Prozentpunkte.")+" Jede Seltenheit einmal.",()=>{if(!n.taken[id]){n[key]+=v;n.taken[id]=true;}});
+      if(!n.taken[id]) card(id,rarity,name,{
+        endless:"Jede Seele führt "+v+" zusätzliche Angriffszyklen aus. Dazwischen kehrt sie zurück und kreist 5 Sekunden unten links.",
+        markChance:"Erhöht die Chance, dass ein Stabgeschoss ein Segment markiert, um "+Math.round(v*100)+" Prozentpunkte. Markierte Segmente hinterlassen stärkere Seelen.",
+        harvest:"Erhöht die Chance, bei einem kritischen Stabtreffer eine kleine Seele zu beschwören, um "+Math.round(v*100)+" Prozentpunkte."
+      }[key],()=>{if(!n.taken[id]){n[key]+=v;n.taken[id]=true;}});
     }
     for (const [key,name,values,unit] of highest) {
       if(key==="siphon"&&!n.ultimate)continue;
       const v=values[i];
-      if((n.tiers[key]??-1)<i)card(key+"-"+rarity,rarity,name,(key==="siphon"?v:Math.round(v*100)+" %")+" "+unit+". Ersetzt die niedrigere Stufe.",()=>{n[key]=Math.max(n[key],v);n.tiers[key]=Math.max(n.tiers[key]??-1,i);});
+      if((n.tiers[key]??-1)<i)card(key+"-"+rarity,rarity,name,(key==="siphon"?"Jede neu beschworene Seele verkürzt die verbleibende Abklingzeit von Totenruf um "+String(v).replace(".",",")+" Sekunden.":"Stirbt ein markiertes Segment, springt seine Marke mit "+Math.round(v*100)+" % Chance auf ein benachbartes Segment über."),()=>{n[key]=Math.max(n[key],v);n.tiers[key]=Math.max(n.tiers[key]??-1,i);});
     }
   }
   for(const [rarity,jumps] of [["grey",1],["green",2],["purple",3],["orange",5]]) {
     if(n.binding<jumps)card("binding-"+rarity,rarity,"Verdammte Bindung",
-      jumps+" garantierte zusätzliche Sprünge je Angriff. Nur die höchste Stufe zählt."+
+      "Nach dem ersten Treffer springt jede Seele zu "+jumps+" weiteren Zielen und fügt ihnen Schaden zu. Danach kehrt sie zurück."+
       (jumps===5?" Beim 5. Sprung: zusätzlich 200 % Seelenschaden im Radius von 64 px.":""),
       ()=>n.binding=Math.max(n.binding,jumps));
   }
-  if(!n.storm)card("storm","green","Seelensturm","Ab 5 aktiven Seelen: +25 % Geschwindigkeit, +20 % Schaden. Einmal.",()=>n.storm=true);
-  if(n.elite<3)card("elite","purple","Letzter Fluch",[2.2,3.3,4.4][n.elite]+" Basisschaden für Elite-Seelen. Benötigt Fluch des Todes. Maximal 3 Stufen.",()=>n.elite=Math.min(3,n.elite+1));
-  if(!n.legion)card("legion","purple","Seelenlegion","+5 maximale Seelen; −20 % Seelenschaden. Einmal.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
-  if(!n.seal)card("seal","orange","Todessiegel","Nach 5 markierten Toden: 50 Wirbelseelen mit 2 Basisschaden und je 3 Treffern. Ersetzt Todesexplosionen.",()=>n.seal=true);
+  if(!n.storm)card("storm","green","Seelensturm","Solange mindestens 5 Seelen aktiv sind, fliegen sie 25 % schneller und verursachen 20 % mehr Schaden.",()=>n.storm=true);
+  if(n.elite<3)card("elite","purple","Letzter Fluch","Mit Fluch des Todes hinterlassen zerstörte markierte Segmente Elite-Seelen mit "+String([2.2,3.3,4.4][n.elite]).replace(".",",")+" Basisschaden.",()=>n.elite=Math.min(3,n.elite+1));
+  if(!n.legion)card("legion","purple","Seelenlegion","Du kannst 5 weitere Seelen gleichzeitig binden. Dafür verursachen alle Seelen 20 % weniger Schaden.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
+  if(!n.seal)card("seal","orange","Todessiegel","Nach 5 zerstörten markierten Segmenten brechen 50 Seelen spiralförmig hervor. Jede verursacht 2 Basisschaden pro Treffer und trifft bis zu 3 Segmente. Ersetzt die Explosion beim Tod markierter Segmente.",()=>n.seal=true);
   if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=22;});
   return pool;
 }
