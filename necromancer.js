@@ -36,7 +36,7 @@ function spawnSoul(center,options={}) {
 function soulDamage(soul) {
   const n=state.necromancer;
   const base=soul.swirl?2:soul.elite?[2.2,3.3,4.4][Math.max(0,Math.min(2,n.elite-1))]:soul.strong?n.strongDamage:soul.small?1.5:2;
-  return base*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
+  return (base+(state.weapon.soulDamageBonus || 0))*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
 }
 function necroArea(batch,center,radius,damage) {
   for (const s of state.snake) if (s.hp>0&&Math.hypot(s.x-center.x,s.y-center.y)<=radius)
