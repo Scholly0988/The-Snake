@@ -38,6 +38,7 @@ const progress = SnakeProgress.open({
 
 const state = {
   mode: "start",
+  selectedLevel: progress.data.selectedLevel, level: 1,
   score: 0,
   runCoins: 0,
   elapsed: 0,
@@ -62,6 +63,41 @@ const SEGMENT_HIT_RADIUS = 25;
 const UPGRADE_INTERVAL = 5;
 const SEGMENTS_PER_SNAKE = 100;
 
+const LEVELS=[{first:5,last:5500},{first:15,last:9000},{first:32,last:14500}];
+function levelSegmentHp(level,index,count) {
+  const {first,last}=LEVELS[level-1];
+  if(count<=1)return first;
+  return Math.min(last-(count-1-index),Math.max(first+index,Math.round(first*(last/first)**(index/(count-1)))));
+}
+function renderLevelPicker() {
+  const level=state.selectedLevel, config=LEVELS[level-1];
+  const locked=level>progress.data.completedLevels+1;
+  document.querySelector("#levelName").textContent="Level "+level+(locked?" · Gesperrt":level<=progress.data.completedLevels?" · Abgeschlossen":"");
+  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":config.first+"–"+config.last.toLocaleString("de-DE")+" Leben · 100 Segmente";
+  document.querySelector("#previousLevel").disabled=level===1;
+  document.querySelector("#nextLevel").disabled=level===3;
+  document.querySelector("#startButton").disabled=locked;
+}
+function changeLevel(delta) {
+  if(state.mode!=="start")return;
+  state.selectedLevel=Math.max(1,Math.min(3,state.selectedLevel+delta));
+  if(state.selectedLevel<=progress.data.completedLevels+1){
+    progress.data.selectedLevel=state.selectedLevel;progress.save();
+  }
+  renderLevelPicker();
+}
+function completeLevel() {
+  if(state.mode!=="playing"||state.snake.length)return;
+  releaseDrag();state.mode="victory";state.pendingUpgrades=0;
+  state.score+=500;progress.data.best=Math.max(progress.data.best,state.score);
+  progress.completeLevel(state.level);
+  upgradeScreen.classList.add("hidden");
+  document.querySelector("#resultEyebrow").textContent="SCHLANGE BESIEGT";
+  document.querySelector("#resultTitle").textContent="Level "+state.level+" abgeschlossen!";
+  document.querySelector("#runSummary").textContent=state.runCoins+" Münzen verdient · "+(state.level<3?"Level "+(state.level+1)+" freigeschaltet":"Alle drei Level abgeschlossen");
+  finalScore.textContent=state.score;
+  gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();
+}
 function resizeCanvas() {
   // CSS owns layout; bitmap resolution must never enlarge the grid or canvas.
   const rect = canvas.getBoundingClientRect();
@@ -78,6 +114,7 @@ function resizeCanvas() {
 
 function resetGame() {
   releaseDrag();
+  state.level=state.selectedLevel;
   state.paladin = newPaladin(progress.data.paladinSlot);
   state.necromancer = newNecromancer(progress.data.necromancerSlot);
   state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
@@ -102,10 +139,7 @@ function createSnake(count) {
   state.snake = [];
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
-    // Nur Körperteile speichern HP; Kopftreffer werden an das erste weitergeleitet.
-    // Runde erst den Endwert: 5 * 1.1^i ergibt auf Leicht 5, 6, 6, 7 …
-    // Upgrade-Teile folgen derselben HP-Kurve.
-    const scaledHp = Math.round(5 * (1 + state.difficultyRate) ** i);
+    const scaledHp = levelSegmentHp(state.level,i,count);
     state.snake.push({
       id: state.nextId++,
       pathOffset: (i + 1) * SEGMENT_SPACING,
@@ -119,9 +153,8 @@ function createSnake(count) {
 }
 
 function startGame() {
-  const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
-  state.difficultyRate = Number(selectedDifficulty?.value || 0.15);
-  progress.data.difficulty = state.difficultyRate;
+  if(state.selectedLevel>progress.data.completedLevels+1)return;
+  progress.data.selectedLevel=state.selectedLevel;
   progress.data.runs = Math.min(1000000000, progress.data.runs + 1);
   progress.save();
   renderProfile();
@@ -168,6 +201,7 @@ function syncSnakePositions() {
 
 function update(dt) {
   if (state.mode !== "playing") return;
+  if(!state.snake.length){completeLevel();return;}
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const speed = Math.min(22 + state.elapsed * .25, 45);
@@ -211,13 +245,7 @@ function update(dt) {
   state.particles = state.particles.filter(p => p.life > 0);
 
   if (state.snake.length === 0) {
-    state.headDistance = 0;
-    createSnake(SEGMENTS_PER_SNAKE);
-    syncSnakePositions();
-    state.score += 500;
-    progress.data.best = Math.max(progress.data.best, state.score);
-    progress.save();
-    refreshHud();
+    completeLevel();
   } else if (snakeHead().y + SEGMENT_RADIUS >= state.player.y - 22) {
     endGame();
   }
@@ -255,7 +283,7 @@ function applyDamageBatch(batch) {
   }
   for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
   resolveNecroDeaths();
-  if (state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
+  if (state.snake.length && state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
 }
 function handleHits(random = Math.random) {
   outer: for (const bullet of state.bullets) {
@@ -303,7 +331,7 @@ function destroySegment(index, offerUpgrade = true) {
   refreshHud();
   if (destroyed.upgrade) {
     state.pendingUpgrades++;
-    if (offerUpgrade) openUpgrade();
+    if (offerUpgrade && state.snake.length) openUpgrade();
   }
 }
 
@@ -315,7 +343,7 @@ function roundUpgradePool() {
   ].flatMap(tier => [
     { rarity: tier.rarity, label: tier.label, name: "+" + tier.damage + " Schaden",
       text: "Zusätzlicher Schaden pro Geschoss.",
-      apply: () => state.weapon.damage += tier.damage },
+      apply: () => { state.weapon.damage += tier.damage; state.weapon.soulDamageBonus = (state.weapon.soulDamageBonus || 0) + tier.damage; } },
     { rarity: tier.rarity, label: tier.label, name: "+" + tier.rate + " % Feuerrate",
       text: "Erhöht deine aktuelle Feuerrate um " + tier.rate + " %.",
       apply: () => state.weapon.shotsPerSecond *= 1 + tier.rate / 100 },
@@ -415,6 +443,8 @@ function endGame() {
   if (state.mode === "gameover") return;
   releaseDrag();
   state.mode = "gameover";
+  document.querySelector("#resultEyebrow").textContent="DIE SCHLANGE WAR SCHNELLER";
+  document.querySelector("#resultTitle").textContent="Game Over";
   progress.data.best = Math.max(progress.data.best, state.score);
   progress.save();
   renderProfile();
@@ -434,6 +464,7 @@ function refreshHud() {
 
 function renderProfile() {
   const p = progress.data;
+  renderLevelPicker();
   renderPaladinProfile();
   renderNecromancerProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
@@ -536,6 +567,7 @@ document.querySelector("#importSave").addEventListener("click", () => {
     SnakeProgress.validate(JSON.parse(text));
     if (!window.confirm("Den lokalen Fortschritt durch diese Sicherung ersetzen? Vorher bei Bedarf exportieren.")) return;
     progress.import(text);
+    state.selectedLevel=progress.data.selectedLevel;
     restoreDifficulty();
     renderProfile();
     document.querySelector("#transferStatus").textContent = "Spielstand übernommen.";
@@ -754,6 +786,8 @@ function loop(time) {
   requestAnimationFrame(loop);
 }
 
+document.querySelector("#previousLevel").addEventListener("click",()=>changeLevel(-1));
+document.querySelector("#nextLevel").addEventListener("click",()=>changeLevel(1));
 bindNecromancerMenu();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);

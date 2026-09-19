@@ -310,3 +310,9 @@ body { padding: 0; background: #111c21; }
   .platform-stats { padding:3px; }
   .platform-stats span { line-height:1.25; }
 }
+
+.level-picker { display:grid; grid-template-columns:40px minmax(0,1fr) 40px; align-items:center; gap:8px; margin-bottom:10px; background:#10253bed; border:1px solid #cba65f; border-radius:8px; padding:8px; color:#fff0c8; text-align:center; }
+.level-picker button { padding:10px 0; margin:0; background:#23415a; color:#ffdc91; border:1px solid #cba65f; }
+.level-picker strong,.level-picker small { display:block; }
+.level-picker small { font-size:11px; margin-top:4px; }
+button:disabled { opacity:.5; cursor:default; }

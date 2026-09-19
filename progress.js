@@ -4,7 +4,7 @@
 const SnakeProgress = (() => {
   const KEY = "the-snake.progress.v1";
   const fresh = () => ({
-    game: "the-snake", version: 1, coins: 0, best: 0, defeated: 0,
+    game: "the-snake", version: 1, completedLevels: 0, selectedLevel: 1, coins: 0, best: 0, defeated: 0,
     runs: 0, damageLevel: 0, rateLevel: 0, critChanceLevel: 0, critDamageLevel: 0, difficulty: 0.10,
     paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null
   });
@@ -18,6 +18,11 @@ const SnakeProgress = (() => {
         throw new Error("Ungültiger Wert im Spielstand: " + key);
       result[key] = value[key];
     }
+    result.completedLevels=value.completedLevels===undefined?0:value.completedLevels;
+    result.selectedLevel=value.selectedLevel===undefined?1:value.selectedLevel;
+    if(!Number.isInteger(result.completedLevels)||result.completedLevels<0||result.completedLevels>3 ||
+       !Number.isInteger(result.selectedLevel)||result.selectedLevel<1||result.selectedLevel>Math.min(3,result.completedLevels+1))
+      throw new Error("Ungültiger Levelfortschritt.");
     for (const key of ["critChanceLevel", "critDamageLevel"]) {
       const level = value[key] === undefined ? 0 : value[key];
       if (!Number.isSafeInteger(level) || level < 0 || level > 30)
@@ -77,6 +82,11 @@ const SnakeProgress = (() => {
         data.defeated = Math.min(1000000000, data.defeated + 1);
         data.best = Math.min(1000000000, Math.max(data.best, score));
         save();
+      },
+      completeLevel(level) {
+        if(!Number.isInteger(level)||level<1||level>3||level>data.completedLevels+1)return false;
+        data.completedLevels=Math.max(data.completedLevels,level);
+        return save();
       },
       cost(key) { return 20 * (data[key] + 1) ** 2; },
       buy(key) {
