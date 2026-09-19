@@ -785,7 +785,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 15.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -808,7 +808,7 @@ window.addEventListener("error",event=>reportGameError(event.error||event.messag
 function loop(time) {
   try {
     if(state.mode==="error")return;
-    const dt = Math.min((time - (state.lastTime || time)) / 1000, .033);
+    const dt = Math.max(0, Math.min((time - (state.lastTime || time)) / 1000, .033));
     state.lastTime = time;
     if (state.mode === "playing") update(dt);
     draw();

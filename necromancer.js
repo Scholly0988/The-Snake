@@ -311,6 +311,10 @@ function drawNecromancer() {
     ctx.fillStyle="#edcaff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText("☠",s.x,s.y+4);
   }
   for(const s of state.souls)drawSoulOrb(s.x,s.y,s.elite?7:s.small?3:5,s.elite);
-  for(const e of state.soulEffects){ctx.globalAlpha=e.life/.4;ctx.strokeStyle="#ad81ff";ctx.beginPath();ctx.arc(e.x,e.y,e.radius*(1-e.life/.4),0,Math.PI*2);ctx.stroke();}
+  for(const e of state.soulEffects){
+    const remaining=Math.max(0,Math.min(1,e.life/.4));
+    ctx.globalAlpha=remaining;ctx.strokeStyle="#ad81ff";ctx.beginPath();
+    ctx.arc(e.x,e.y,Math.max(0,e.radius)*(1-remaining),0,Math.PI*2);ctx.stroke();
+  }
   ctx.restore();
 }
