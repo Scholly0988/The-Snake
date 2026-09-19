@@ -1,7 +1,7 @@
 "use strict";
 function newNecromancer(slot) {
   return slot ? {slot,fireTimer:0,pulse:0,limit:3,soulBonus:0,speedBonus:0,markChance:.2,
-    binding:0,endless:0,explosion:0,strongDamage:1,choir:0,siphon:0,curse:0,chain:0,harvest:0,
+    binding:0,endless:0,explosion:0,strongDamage:3,choir:0,siphon:0,curse:0,chain:0,harvest:0,
     storm:false,legion:false,elite:0,seal:false,sealCount:0,ultimate:false,remaining:22,charge:0,
     taken:{},tiers:{}} : null;
 }
@@ -27,6 +27,7 @@ function spawnSoul(center,options={}) {
   if (!n || (!options.temporary&&!options.swirl&&regularSoulCount()>=n.limit)) return null;
   const soul={x:center.x,y:center.y,originX:center.x,originY:center.y,age:0,wait:.3,
     angle:0,radius:0,hitIds:new Set(),jumps:0,hits:0,dead:false,...options};
+  if (soul.strong && !soul.swirl) { soul.orbitTime=0; soul.wait=0; }
   state.souls.push(soul);
   // Each successful creation counts, including temporary and vortex souls.
   if (n.ultimate) n.remaining=Math.max(0,n.remaining-n.siphon);
@@ -34,7 +35,7 @@ function spawnSoul(center,options={}) {
 }
 function soulDamage(soul) {
   const n=state.necromancer;
-  const base=soul.swirl?.9:soul.elite?.6*(n.elite+1):soul.strong?n.strongDamage:soul.small?.3:.6;
+  const base=soul.swirl?2:soul.elite?[2.2,3.3,4.4][Math.max(0,Math.min(2,n.elite-1))]:soul.strong?n.strongDamage:soul.small?1.5:2;
   return base*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
 }
 function necroArea(batch,center,radius,damage) {
@@ -101,6 +102,15 @@ function updateNecromancer(dt) {
     if (n.charge>0) continue;
     s.age+=dt;
     if ((s.swirl&&s.age>12)||(s.temporary&&!s.swirl&&s.age>8)) {s.dead=true;continue;}
+    // Marked souls complete one small circle before targeting or dealing damage.
+    // A separate timer keeps Totenruf and upgrades from skipping the entrance.
+    if (s.orbitTime !== undefined && s.orbitTime < .65) {
+      s.orbitTime=Math.min(.65,s.orbitTime+dt);
+      const angle=s.orbitTime/.65*Math.PI*2;
+      s.x=s.originX+14*Math.sin(angle);
+      s.y=s.originY+14*(1-Math.cos(angle));
+      continue;
+    }
     if (s.wait>0) {s.wait-=dt;continue;}
     const speed=180*(1+n.speedBonus)*(n.storm&&state.souls.filter(t=>!t.dead).length>=5?1.25:1);
     s.previousX=s.x;s.previousY=s.y;
@@ -178,9 +188,9 @@ function necromancerUpgradePool() {
     }
   }
   if(!n.storm)card("storm","green","Seelensturm","Ab 5 aktiven Seelen: +25 % Geschwindigkeit, +20 % Schaden. Einmal.",()=>n.storm=true);
-  if(n.elite<3)card("elite","purple","Letzter Fluch",(n.elite+2)*100+" % normalen Seelenschaden für Elite-Seelen. Benötigt Fluch des Todes. Maximal 3 Stufen.",()=>n.elite=Math.min(3,n.elite+1));
+  if(n.elite<3)card("elite","purple","Letzter Fluch",[2.2,3.3,4.4][n.elite]+" Basisschaden für Elite-Seelen. Benötigt Fluch des Todes. Maximal 3 Stufen.",()=>n.elite=Math.min(3,n.elite+1));
   if(!n.legion)card("legion","purple","Seelenlegion","+5 maximale Seelen; −20 % Seelenschaden. Einmal.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
-  if(!n.seal)card("seal","orange","Todessiegel","Nach 5 markierten Toden: 50 Wirbelseelen mit 150 % Seelenschaden und je 3 Treffern. Ersetzt Todesexplosionen.",()=>n.seal=true);
+  if(!n.seal)card("seal","orange","Todessiegel","Nach 5 markierten Toden: 50 Wirbelseelen mit 2 Basisschaden und je 3 Treffern. Ersetzt Todesexplosionen.",()=>n.seal=true);
   if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=22;});
   return pool;
 }
