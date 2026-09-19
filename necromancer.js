@@ -127,7 +127,7 @@ function restSoul(soul,speed,dt) {
   } else {
     soul.rest=Math.max(0,soul.rest-dt);soul.angle+=dt*Math.PI*2;
     soul.x=x+radius*Math.cos(soul.angle);soul.y=y+radius*Math.sin(soul.angle);
-    if(soul.rest===0){soul.phase="attack";soul.targetId=null;soul.hitIds.clear();}
+    if(soul.rest===0){soul.phase="attack";soul.targetId=null;soul.hitIds.clear();soul.jumps=0;}
   }
 }
 function updateNecromancer(dt) {
@@ -189,11 +189,12 @@ function updateNecromancer(dt) {
       if(d){s.x+=dx/d*step;s.y+=dy/d*step;}
       if (projectileHits(s,target)) {
         s.hitIds.add(target.id);s.hits++;s.targetId=null;
-        const extra=s.jumps===0&&Math.random()<n.binding;
-        if(extra)s.jumps++;
+        // First contact is the initial attack; subsequent contacts are jumps.
+        s.jumps=s.hitIds.size-1;
         const damage=soulDamage(s);
-        if (!extra || !chooseSoulTarget(s)) finishSoulAttack(s);
         const batch=new Map([[target.id,necroDamage(target,damage)]]);
+        if(n.binding===5 && s.jumps===5) necroArea(batch,target,64,damage*2);
+        if (s.jumps>=n.binding || !chooseSoulTarget(s)) finishSoulAttack(s);
         state.soulEffects.push({x:target.x,y:target.y,radius:15,life:.4});
         applyDamageBatch(batch);
       }
@@ -223,7 +224,6 @@ function necromancerUpgradePool() {
     ["harvest","Unheilige Ernte",[.05,.10,.20]]
   ];
   const highest=[
-    ["binding","Verdammte Bindung",[.20,.40,.70],"Chance auf ein weiteres Ziel"],
     ["siphon","Seelensog",[.3,.5,.8],"s kürzere Totenruf-Abklingzeit je erzeugter Seele"],
     ["chain","Kettenfluch",[.20,.35,.55],"Chance, eine Marke weiterzugeben"]
   ];
@@ -242,6 +242,12 @@ function necromancerUpgradePool() {
       const v=values[i];
       if((n.tiers[key]??-1)<i)card(key+"-"+rarity,rarity,name,(key==="siphon"?v:Math.round(v*100)+" %")+" "+unit+". Ersetzt die niedrigere Stufe.",()=>{n[key]=Math.max(n[key],v);n.tiers[key]=Math.max(n.tiers[key]??-1,i);});
     }
+  }
+  for(const [rarity,jumps] of [["grey",1],["green",2],["purple",3],["orange",5]]) {
+    if(n.binding<jumps)card("binding-"+rarity,rarity,"Verdammte Bindung",
+      jumps+" garantierte zusätzliche Sprünge je Angriff. Nur die höchste Stufe zählt."+
+      (jumps===5?" Beim 5. Sprung: zusätzlich 200 % Seelenschaden im Radius von 64 px.":""),
+      ()=>n.binding=Math.max(n.binding,jumps));
   }
   if(!n.storm)card("storm","green","Seelensturm","Ab 5 aktiven Seelen: +25 % Geschwindigkeit, +20 % Schaden. Einmal.",()=>n.storm=true);
   if(n.elite<3)card("elite","purple","Letzter Fluch",[2.2,3.3,4.4][n.elite]+" Basisschaden für Elite-Seelen. Benötigt Fluch des Todes. Maximal 3 Stufen.",()=>n.elite=Math.min(3,n.elite+1));
