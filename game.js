@@ -19,6 +19,8 @@ const playerSprite = new Image();
 playerSprite.src = "player-platform.png";
 const paladinSprite = new Image();
 paladinSprite.src = "paladin-platform.png";
+const necromancerSprite = new Image();
+necromancerSprite.src = "necromancer-platform.png";
 const hammerSprite = new Image();
 hammerSprite.src = "holy-hammer.png";
 // Keep only the 32px centre platform in bounds; side companions may overhang.
@@ -50,7 +52,7 @@ const state = {
   headDistance: 0,
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
-  paladin: null, holyEffects: [], pendingUpgrades: 0, upgradeOfferId: 0,
+  necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [], pendingUpgrades: 0, upgradeOfferId: 0,
   pointerDown: false
 };
 
@@ -77,6 +79,8 @@ function resizeCanvas() {
 function resetGame() {
   releaseDrag();
   state.paladin = newPaladin(progress.data.paladinSlot);
+  state.necromancer = newNecromancer(progress.data.necromancerSlot);
+  state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
   state.holyEffects = [];
   state.pendingUpgrades = 0;
   state.score = 0;
@@ -184,9 +188,12 @@ function update(dt) {
 
   updatePaladin(dt);
   if (state.mode !== "playing") return;
+  updateNecromancer(dt);
+  if (state.mode !== "playing") return;
   for (const effect of state.holyEffects) effect.life -= dt;
   state.holyEffects = state.holyEffects.filter(effect => effect.life > 0);
   refreshPaladinHud();
+  refreshNecromancerHud();
   for (const bullet of state.bullets) {
     bullet.previousX = bullet.x;
     bullet.previousY = bullet.y;
@@ -248,6 +255,7 @@ function applyDamageBatch(batch) {
     if (batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id))*1e10)/1e10;
   }
   for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
+  resolveNecroDeaths();
   if (state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
 }
 function handleHits(random = Math.random) {
@@ -262,7 +270,9 @@ function handleHits(random = Math.random) {
       if (!state.snake.includes(segment)) continue;
       bullet.hitIds.add(segment.id);
       const isPaladin = bullet.owner === "paladin" && state.paladin;
-      const hit = rollHit(random,isPaladin ? paladinDamage() : state.weapon.damage);
+      const isNecro = bullet.owner === "necromancer" && state.necromancer;
+      const hit = isNecro ? necromancerHitRoll(random) : rollHit(random,isPaladin ? paladinDamage() : state.weapon.damage);
+      if (isNecro) prepareNecroHit(segment,hit,random);
       const batch = new Map([[segment.id,hit.damage]]);
       if (isPaladin) paladinHit(batch,segment,hit,random);
       bullet.hitsLeft--;
@@ -279,6 +289,7 @@ function handleHits(random = Math.random) {
 
 function destroySegment(index, offerUpgrade = true) {
   const [destroyed] = state.snake.splice(index, 1);
+  if (state.necromancer) state.necroDeaths.push({segment:destroyed,neighbors:[state.snake[index-1],state.snake[index]].filter(Boolean)});
   state.score += destroyed.upgrade ? 100 : 25;
   const coins = destroyed.upgrade ? 5 : 1;
   state.runCoins += coins;
@@ -346,7 +357,7 @@ function roundUpgradePool() {
       apply: () => { state.weapon.parallel = true; state.weapon.spread = 0; }
     });
   }
-  return pool.concat(paladinUpgradePool());
+  return pool.concat(paladinUpgradePool(),necromancerUpgradePool());
 }
 
 const RARITY_CHANCES = Object.freeze({grey:.60,green:.25,purple:.10,orange:.05});
@@ -415,6 +426,7 @@ function endGame() {
 
 function refreshHud() {
   refreshPaladinHud();
+  refreshNecromancerHud();
   document.querySelector("#critStats").textContent = "Krit-Chance: " + String(state.weapon.critChance || 0).replace(".", ",") + " % · Krit-Schaden: " + (state.weapon.critDamage ?? 150) + " %";
   scoreEl.textContent = state.score;
   damageEl.textContent = state.weapon.damage;
@@ -424,6 +436,7 @@ function refreshHud() {
 function renderProfile() {
   const p = progress.data;
   renderPaladinProfile();
+  renderNecromancerProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
@@ -552,6 +565,7 @@ function draw() {
   drawPlayer();
   drawPaladin();
   drawHolyEffects();
+  drawNecromancer();
   drawParticles();
 }
 
@@ -650,7 +664,9 @@ function drawBullets() {
   ctx.fillStyle = "#ffda70";
   ctx.shadowColor = "#ffc84a"; ctx.shadowBlur = 10;
   for (const bullet of state.bullets) {
-    if (bullet.owner === "paladin") {
+    if (bullet.owner === "necromancer") {
+      drawSoulOrb(bullet.x,bullet.y,4,false);
+    } else if (bullet.owner === "paladin") {
       const size=12*(bullet.size||1.4);
       ctx.shadowColor = bullet.charged ? "#fff5c2" : "#ffc84a";
       ctx.shadowBlur = bullet.charged ? 20 : 10;
@@ -739,6 +755,7 @@ function loop(time) {
   requestAnimationFrame(loop);
 }
 
+bindNecromancerMenu();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);
 restoreDifficulty();

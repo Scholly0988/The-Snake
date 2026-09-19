@@ -102,8 +102,8 @@ function refreshPaladinHud() {
 function renderPaladinProfile() {
   const p=progress.data;
   const unlock=document.querySelector('#unlockPaladin');
-  unlock.disabled=p.paladinUnlocked || p.coins<100;
-  unlock.textContent=p.paladinUnlocked?'Aldric freigeschaltet':'Aldric freischalten · 100 Münzen';
+  unlock.disabled=p.paladinUnlocked || p.coins<progress.heroCost();
+  unlock.textContent=p.paladinUnlocked?'Aldric freigeschaltet':'Aldric freischalten · '+progress.heroCost()+' Münzen';
   for (const side of ['left','right']) {
     const button=document.querySelector('#equipPaladin'+side);
     button.disabled=!p.paladinUnlocked;
