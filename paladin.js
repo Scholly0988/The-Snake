@@ -165,7 +165,8 @@ function companionHudContent(side) {
     lines=[
       "Angriff "+hudNumber(necromancerDamage())+" · Rate "+hudNumber(state.weapon.shotsPerSecond*.85/2.7)+"×",
       "Krit "+hudNumber(Math.min(100,state.weapon.critChance+5))+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
-      "Seelen "+regularSoulCount()+"/"+n.limit+(special?" +"+special:"")+" · Mal "+hudNumber(n.markChance*100)+" %",
+      "Seelen "+regularSoulCount()+"/"+n.limit+" · Kleine "+smallSoulCount()+"/"+smallSoulLimit(),
+      "Mal "+hudNumber(n.markChance*100)+" %"+(special?" · Spezialseelen "+special:""),
       (n.ultimate?"Totenruf: "+(n.charge>0?"lädt":Math.ceil(n.remaining)+" s"):"Totenruf: gesperrt")+(n.seal?" · Siegel "+n.sealCount+"/5":"")
     ];
   }

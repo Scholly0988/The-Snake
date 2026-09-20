@@ -31,10 +31,16 @@ function prepareNecroHit(segment,hit,random) {
   hit.damage=necroDamage(segment,hit.damage);
   if (hit.critical && random()<n.harvest) spawnSoul(segment,{small:true});
 }
-function regularSoulCount() { return state.souls.filter(s=>!s.dead&&!s.temporary&&!s.swirl).length; }
+function regularSoulCount() { return state.souls.filter(s=>!s.dead&&!s.temporary&&!s.swirl&&!s.small).length; }
+function smallSoulCount() { return state.souls.filter(s=>!s.dead&&!s.temporary&&!s.swirl&&s.small).length; }
+// Both pools share all capacity bonuses: normal base 3, small base 5.
+function smallSoulLimit() { return state.necromancer ? state.necromancer.limit + 2 : 0; }
 function spawnSoul(center,options={}) {
   const n=state.necromancer;
-  if (!n || (!options.temporary&&!options.swirl&&regularSoulCount()>=n.limit)) return null;
+  if (!n) return null;
+  if (!options.temporary&&!options.swirl) {
+    if (options.small ? smallSoulCount()>=smallSoulLimit() : regularSoulCount()>=n.limit) return null;
+  }
   const soul={x:center.x,y:center.y,originX:center.x,originY:center.y,age:0,wait:.3,
     phase:"attack",attacks:0,rest:0,angle:0,radius:0,hitIds:new Set(),jumps:0,hits:0,dead:false,...options};
   if (soul.strong && !soul.swirl) { soul.orbitTime=0; soul.wait=0; }
@@ -246,7 +252,7 @@ function necromancerUpgradePool() {
       const v=values[i]+necroSkillDelta(key),percent=["soulBonus","speedBonus","curse"].includes(key);
       const amount=String(v).replace(".",",");
       const description={
-        limit:"Erhöht die Anzahl gleichzeitig gebundener Seelen um "+v+".",
+        limit:"Erhöht beide Seelenspeicher um jeweils "+v+" Plätze.",
         soulBonus:"Erhöht den Schaden aller beschworenen Seelen um "+Math.round(v*100)+" %.",
         speedBonus:"Deine Seelen fliegen "+Math.round(v*100)+" % schneller.",
         explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 52,5 Pixeln. Der aktuelle Standardwaffenschaden wird vor Prozentboni addiert.",
@@ -278,7 +284,7 @@ function necromancerUpgradePool() {
   }
   if(!n.storm)card("storm","green","Seelensturm","Solange mindestens 5 Seelen aktiv sind, fliegen sie 25 % schneller und verursachen 20 % mehr Schaden.",()=>n.storm=true);
   if(n.elite<3)card("elite","purple","Letzter Fluch","Mit Fluch des Todes hinterlassen zerstörte markierte Segmente Elite-Seelen mit "+String([2.2,3.3,4.4][n.elite]).replace(".",",")+" Basisschaden.",()=>n.elite=Math.min(3,n.elite+1));
-  if(!n.legion)card("legion","purple","Seelenlegion","Du kannst 5 weitere Seelen gleichzeitig binden. Dafür verursachen alle Seelen 20 % weniger Schaden. Seelenexplosion ist davon ausgenommen.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
+  if(!n.legion)card("legion","purple","Seelenlegion","Beide Seelenspeicher erhalten jeweils 5 zusätzliche Plätze. Dafür verursachen alle Seelen 20 % weniger Schaden. Seelenexplosion ist davon ausgenommen.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
   if(!n.seal)card("seal","orange","Todessiegel","Nach 5 zerstörten markierten Segmenten brechen 50 Seelen spiralförmig hervor. Jede verursacht 2 Basisschaden plus Standardwaffenschaden pro Treffer und trifft bis zu 3 Segmente. Ersetzt die Explosion beim Tod markierter Segmente.",()=>n.seal=true);
   if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=skillValue("necromancer","call",22,20);});
   return pool;

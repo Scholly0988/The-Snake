@@ -26,7 +26,7 @@ const HERO_SKILLS = [
   ["paladin","wrath","upgrade","Göttlicher Zorn",["orange","purple"],"Orange: Urteil freischalten (20 s). Lila: 20 % kürzere Abklingzeit.","Orange: 18 s Grundabklingzeit. Lila: 25 % kürzere Abklingzeit."],
   ["necromancer","attack","attack","Seelenstab",[],"Zielsuchender Angriff auf das vorderste Segment.","+20 % direkter Stabschaden."],
   ["necromancer","soul","attack","Gebundene Seele",[],"Normale Seelen: 2 Basisschaden; markierte: 3. Drei Angriffszyklen.","+20 % Schaden normaler und markierter Seelen; auch bei Totenruf."],
-  ["necromancer","limit","upgrade","Ruhelose Seelen",["grey","green","purple"],"+1 / +2 / +3 Seelenplätze.","+2 / +3 / +4 Plätze je Auswahl."],
+  ["necromancer","limit","upgrade","Ruhelose Seelen",["grey","green","purple"],"Beide Speicher: +1 / +2 / +3 Plätze (Basis: 3 normale, 5 kleine).","Beide Speicher: +2 / +3 / +4 Plätze je Auswahl."],
   ["necromancer","soulBonus","upgrade","Seelenhunger",["grey","green","purple"],"+15 / +30 / +50 % Seelenschaden.","+20 / +35 / +55 % je Auswahl."],
   ["necromancer","markChance","upgrade","Dunkles Mal",["grey","green","purple"],"5 % Grundchance; +5 / +10 / +15 Prozentpunkte. Ein Versuch pro Sekunde.","Wartezeit zwischen Versuchen: 0,75 statt 1 Sekunde."],
   ["necromancer","speedBonus","upgrade","Geisterflug",["grey","green","purple"],"+20 / +40 / +70 % Seelengeschwindigkeit.","+30 / +50 / +80 % je Auswahl."],
@@ -39,9 +39,9 @@ const HERO_SKILLS = [
   ["necromancer","curse","upgrade","Fluch des Todes",["grey","green","purple"],"Markierte Segmente erleiden +10 / +20 / +35 % Schaden von allen Helden.","+15 / +25 / +40 % je Auswahl."],
   ["necromancer","chain","upgrade","Kettenfluch",["grey","green","purple"],"20 / 35 / 55 % Chance auf eine neue zufällige sichtbare Marke.","30 / 45 / 65 % Chance."],
   ["necromancer","storm","upgrade","Seelensturm",["green"],"Ab 5 Seelen: +20 % Schaden und +25 % Geschwindigkeit.","Wird bereits ab 4 Seelen aktiv."],
-  ["necromancer","harvest","upgrade","Unheilige Ernte",["grey","green","purple"],"Kritische Treffer erzeugen mit 5 / 10 / 20 % Chance kleine Seelen (1,5 Basis).","Kleine Seelen: 2 statt 1,5 Basisschaden."],
+  ["necromancer","harvest","upgrade","Unheilige Ernte",["grey","green","purple"],"Kritische Treffer erzeugen mit 5 / 10 / 20 % Chance kleine Seelen (1,5 Basis). Eigener Speicher mit 5 Grundplätzen.","Kleine Seelen: 2 statt 1,5 Basisschaden."],
   ["necromancer","elite","upgrade","Letzter Fluch",["purple"],"Mit Fluch des Todes: markierte Segmente hinterlassen Elite-Seelen (2,2 / 3,3 / 4,4 Basis).","+20 % Schaden der Elite-Seelen."],
-  ["necromancer","legion","upgrade","Seelenlegion",["purple"],"+5 Seelenplätze, aber −20 % Seelenschaden. Seelenexplosion ausgenommen.","Nur −10 % statt −20 % Seelenschaden."],
+  ["necromancer","legion","upgrade","Seelenlegion",["purple"],"Beide Speicher: +5 Plätze, aber −20 % Seelenschaden. Seelenexplosion ausgenommen.","Nur −10 % statt −20 % Seelenschaden."],
   ["necromancer","seal","upgrade","Todessiegel",["orange"],"Nach 5 markierten Toden: 50 Wirbelseelen, je 3 Treffer; ersetzt Seelenexplosion.","Wirbelseelen: 2,5 statt 2 Basisschaden, jeweils plus Waffenschaden."],
   ["necromancer","call","upgrade","Totenruf",["orange"],"Alle 22 s zwei temporäre Seelen und gemeinsamer Angriff.","20 statt 22 s Grundabklingzeit."]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
