@@ -2,7 +2,7 @@
 
 function newAlchemist(slot) {
   return slot ? {
-    slot, fireTimer:0, throws:0, pulse:0,
+    slot, fireTimer:0, throws:0, pulse:0, targetId:null,
     poisonDamage:.20, poisonBonus:0, poisonDuration:4, maxStacks:3,
     transferChance:.25, transferStacks:1,
     explosion:0, explosionRadius:42, corrosive:0, slow:0,
@@ -27,6 +27,25 @@ function poisonLimit() {
   return a.maxStacks+(a.experimentActive>0?2:0);
 }
 function poisonStacks(segment) { return (segment.poisonStacks||[]).length; }
+function alchemistTarget() {
+  const a=state.alchemist;if(!a)return null;
+  const visible=visibleTargets();
+  if(!visible.length){a.targetId=null;return null;}
+  const current=visible.find(segment=>segment.id===a.targetId);
+  if(current&&poisonStacks(current)<poisonLimit())return current;
+  const target=visible.find(segment=>poisonStacks(segment)<poisonLimit())||visible[0];
+  a.targetId=target.id;
+  return target;
+}
+function alchemistProjectileTarget(bullet) {
+  const visible=visibleTargets();
+  if(!visible.length)return null;
+  const current=visible.find(segment=>segment.id===bullet.targetId);
+  if(current&&poisonStacks(current)<poisonLimit())return current;
+  const target=alchemistTarget()||current||visible[0];
+  bullet.targetId=target.id;
+  return target;
+}
 function addPoison(segment,count=1,duration=null) {
   const a=state.alchemist;
   if(!a||!isSegmentVisible(segment)||segment.hp<=0)return 0;
@@ -83,12 +102,12 @@ function resolveAlchemistDeath(segment,neighbors,random=Math.random){
   }
 }
 function throwAlchemistBottle(options={}){
-  const a=state.alchemist,target=state.snake[0];if(!a||!target)return;
+  const a=state.alchemist,target=alchemistTarget();if(!a||!target)return;
   a.throws++;
   let mixture=null;
   if(a.cocktail&&a.throws%5===0)mixture=["fire","frost","acid","plague"][Math.floor(Math.random()*4)];
   state.bullets.push({owner:"alchemist",x:alchemistX(),y:state.player.y+PLATFORM_SHOT_Y,
-    vx:0,vy:-510*.9,hitsLeft:1,dead:false,mixture,...options});
+    vx:0,vy:-510*.9,hitsLeft:1,dead:false,targetId:target.id,mixture,...options});
   if(a.rain&&a.throws%10===0){
     const targets=[...visibleTargets()].sort(()=>Math.random()-.5).slice(0,5),batch=new Map();
     for(const s of targets){addDamage(batch,s,alchemistDamage()*skillValue("alchemist","rain",.5,.6));addPoison(s,1);a.effects.push({x:s.x,y:s.y,radius:12,life:.35,maxLife:.35,color:"#b8ff64"});}

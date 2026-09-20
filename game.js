@@ -22,7 +22,7 @@ paladinSprite.src = "paladin-front.png";
 const necromancerSprite = new Image();
 necromancerSprite.src = "necromancer-platform.png";
 const alchemistSprite = new Image();
-alchemistSprite.src = "selvara-front.png";
+alchemistSprite.src = "selvara-front.png?v=18-2";
 const hammerSprite = new Image();
 hammerSprite.src = "holy-hammer.png";
 // Keep only the 32px centre platform in bounds; side companions may overhang.
@@ -260,7 +260,7 @@ function update(dt) {
       if(target)moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);
       else bullet.dead=true;
     } else if(bullet.owner==="alchemist") {
-      const target=state.snake[0];
+      const target=alchemistProjectileTarget(bullet);
       if(target)moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);
       else bullet.dead=true;
     } else {
@@ -330,7 +330,7 @@ function handleHits(random = Math.random) {
     bullet.hitIds ||= new Set();
     // Projectiles enter from below: resolve the nearest crossed target first.
     const targets = state.snake.map((segment,i)=>({segment,head:i===0?snakeHead():null}))
-      .filter(({segment,head})=>isSegmentVisible(segment) && (!["necromancer","alchemist"].includes(bullet.owner) || segment===state.snake[0]) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
+      .filter(({segment,head})=>isSegmentVisible(segment) && (bullet.owner!=="necromancer" || segment===state.snake[0]) && (bullet.owner!=="alchemist" || segment.id===bullet.targetId) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
       .sort((a,b)=>Math.max(b.segment.y,b.head?.y??-Infinity)-Math.max(a.segment.y,a.head?.y??-Infinity));
     for (const {segment} of targets) {
       if (!state.snake.includes(segment)) continue;
@@ -869,7 +869,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 18.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 18.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

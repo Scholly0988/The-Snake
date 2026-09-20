@@ -1,5 +1,11 @@
 # The Snake
 
+## Version 18.2
+
+- Selvaras Charakterbild besitzt jetzt einen echten transparenten Hintergrund.
+- Selvara fokussiert ein sichtbares Segment, bis dessen Giftstapel voll sind.
+- Danach wechseln ihre homing Fläschchen automatisch zum nächsten sichtbaren Segment mit freien Giftstapeln.
+
 ## Runden-Upgrades
 
 | Effekt | Grau | Grün | Lila |

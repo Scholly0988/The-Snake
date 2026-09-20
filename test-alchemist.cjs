@@ -11,6 +11,12 @@ console.log('PASS: Selvara base damage, independent timed poison stacks and stac
 setup();run('alchemistHit(state.snake[0],{damage:.8,critical:false},{},()=>1)');near(run('state.snake[0].hp'),99.2);assert.equal(run('poisonStacks(state.snake[0])'),1);
 run('state.alchemist.explosion=.5;alchemistHit(state.snake[0],{damage:.8,critical:false},{},()=>1)');near(run('state.snake[1].hp'),99.6);near(run('state.snake[2].hp'),100);
 console.log('PASS: flask homes to the first target and visible AoE hits every segment inside its radius');
+setup();run('state.snake[0].y=-20;throwAlchemistBottle()');assert.equal(run('state.bullets[0].targetId'),2,'first visible target');
+run('addPoison(state.snake[1],3);throwAlchemistBottle()');assert.equal(run('state.bullets[1].targetId'),3,'switch after target reaches its poison cap');
+run('state.snake[2].poisonStacks=[4,4,4];state.bullets[1].targetId=3');assert.equal(run('alchemistProjectileTarget(state.bullets[1]).id'),2,'all-full fallback remains visible');
+run('state.snake[1].poisonStacks=[];state.snake[2].poisonStacks=[];state.bullets=[];throwAlchemistBottle();state.bullets[0].x=state.snake[1].x;state.bullets[0].y=state.snake[1].y;state.bullets[0].previousX=state.snake[1].x;state.bullets[0].previousY=state.snake[1].y;handleHits(()=>1)');
+assert.equal(run('poisonStacks(state.snake[1])'),1,'targeted non-head segment receives poison');
+console.log('PASS: Selvara focuses a visible segment until full, then retargets another visible segment');
 setup();run('addPoison(state.snake[0],3);state.alchemist.transferChance=1;state.alchemist.transferStacks=2;var dead=state.snake.shift();resolveAlchemistDeath(dead,[state.snake[0]],()=>0)');assert.equal(run('poisonStacks(state.snake[0])'),2);
 setup();card('strength-grey');card('strength-green');near(run('state.alchemist.poisonBonus'),.45);card('inheritance-purple');assert.equal(run('state.alchemist.transferStacks'),4);card('nerve-purple');near(run('alchemistSlow()'),0);run('addPoison(state.snake[0],1)');near(run('alchemistSlow()'),.2);
 console.log('PASS: death transfer, additive poison upgrades and strongest-tier utility');
