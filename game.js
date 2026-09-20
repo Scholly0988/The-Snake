@@ -57,7 +57,8 @@ const state = {
   pointerDown: false
 };
 
-const SEGMENT_SPACING = 33;
+const SNAKE_SCALE = .9;
+const SEGMENT_SPACING = 33 * SNAKE_SCALE;
 const SEGMENT_RADIUS = 14;
 const SEGMENT_HIT_RADIUS = 25;
 const UPGRADE_INTERVAL = 5;
@@ -167,7 +168,7 @@ function startGame() {
 }
 
 function pathPoint(distance) {
-  const radius = 26;
+  const radius = 26 * SNAKE_SCALE;
   const left = 54;
   const right = Math.max(left + 20, state.width - 54);
   const width = right - left;
@@ -255,7 +256,7 @@ function update(dt) {
 
   if (state.snake.length === 0) {
     completeLevel();
-  } else if (snakeHead().y + SEGMENT_RADIUS >= state.player.y - 22) {
+  } else if (snakeHead().y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22) {
     endGame();
   }
 }
@@ -645,8 +646,8 @@ function drawHpLabel(segment) {
   ctx.lineWidth = 3;
   ctx.strokeStyle = "#031019";
   ctx.fillStyle = segment.upgrade ? "#ffe083" : "#ffffff";
-  ctx.strokeText(label, segment.x, segment.y - 23, 31);
-  ctx.fillText(label, segment.x, segment.y - 23, 31);
+  ctx.strokeText(label, segment.x, segment.y - 23 * SNAKE_SCALE, 31 * SNAKE_SCALE);
+  ctx.fillText(label, segment.x, segment.y - 23 * SNAKE_SCALE, 31 * SNAKE_SCALE);
   ctx.restore();
 }
 
@@ -654,6 +655,7 @@ function drawSegment(segment, isHead) {
   if (segment.y < -30 || segment.y > state.height + 30) return;
   ctx.save();
   ctx.translate(segment.x, segment.y);
+  ctx.scale(SNAKE_SCALE, SNAKE_SCALE);
   const sprite = isHead ? headSprite : bodySprite;
   if (sprite.complete && sprite.naturalWidth) {
     ctx.save();
@@ -796,7 +798,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.9 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 15.10 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
