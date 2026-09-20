@@ -8,8 +8,8 @@
 | Feuerrate | +10 % | +20 % | +30 % |
 | Durchschlag | +1 | +2 | +3 |
 
-Jede der drei angebotenen Karten würfelt ihre Stufe unabhängig: 65 % Grau,
-25 % Grün, 10 % Lila. Innerhalb der Stufe werden verfügbare Effekte gleichmäßig
+Jede der drei angebotenen Karten würfelt ihre Stufe unabhängig: 60 % Grau,
+25 % Grün, 10 % Lila und 5 % Orange. Innerhalb der Stufe werden verfügbare Effekte gleichmäßig
 und ohne doppelte Karten ausgewählt. Nur die Rahmenfarbe kennzeichnet die Stufe;
 Farbnamen stehen nicht auf den Karten.
 Feuerrate multipliziert die aktuelle Rate, Schaden und Durchschlag addieren sich.
@@ -36,8 +36,9 @@ Feuerrate multipliziert die aktuelle Rate, Schaden und Durchschlag addieren sich
 - Bei beschädigten Daten oder Änderungen in einem anderen Tab wird nicht still überschrieben.
 - Bei Speicherfehlern Hinweis beachten und den aktuellen Fortschritt exportieren.
 
-Upload: index.html, style.css, game.js und NEU progress.js zusammen hochladen.
-Grafiken bleiben unverändert. Tests: node test-game.cjs und node test-progress.cjs.
+Für die aktuelle Fassung müssen alle HTML-, CSS-, JavaScript- und Bilddateien
+gemeinsam hochgeladen werden. Tests: `node test-game.cjs`, `node test-progress.cjs`,
+`node test-skills.cjs` und `node test-alchemist.cjs`.
 
 ## Neues Bewegungs- und Grafikupdate
 
@@ -183,3 +184,12 @@ Angriffe und Upgrade-Skills sind getrennt, Seltenheiten werden angezeigt.
 Einmalige Aufwertungen kosten jeweils 50 Münzen und gelten ab dem nächsten Run.
 Die vollständige Liste und Upload-Anleitung stehen in [SKILLS.md](SKILLS.md).
 Neu erforderlich: **skills.js**; es wird vor progress.js geladen.
+
+## Version 18.0 – Selvara
+
+Selvara, die Meisterin der toxischen Essenzen, ist als dritter freischaltbarer
+Begleitheld vollständig eingebaut. Sie besitzt ein eigenes Frontbild, zielsuchende
+Seuchenfläschchen, unabhängige Giftstapel, Giftübertragung, Giftwolken,
+Meisterexperiment sowie die vereinbarten lila und orangen Build-Fähigkeiten.
+Heldenauswahl, Plattformwechsel, HUD, lokaler Spielstand und dauerhafte
+50-Münzen-Skills unterstützen Selvara. Details: [SELVARA.md](SELVARA.md).

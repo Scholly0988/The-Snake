@@ -149,7 +149,7 @@ function hudNumber(value) {
 }
 function companionHudContent(side) {
   const label=side==="left"?"LINKS":"RECHTS";
-  const p=state.paladin,n=state.necromancer;
+  const p=state.paladin,n=state.necromancer,a=state.alchemist;
   let title="",lines=[];
   if(p?.slot===side) {
     title="Aldric";
@@ -168,6 +168,15 @@ function companionHudContent(side) {
       "Seelen "+regularSoulCount()+"/"+n.limit+" · Kleine "+smallSoulCount()+"/"+smallSoulLimit(),
       "Mal "+hudNumber(n.markChance*100)+" %"+(special?" · Spezialseelen "+special:""),
       (n.ultimate?"Totenruf: "+(n.charge>0?"lädt":Math.ceil(n.remaining)+" s"):"Totenruf: gesperrt")+(n.seal?" · Siegel "+n.sealCount+"/5":"")
+    ];
+  } else if(a?.slot===side) {
+    title="Selvara";
+    lines=[
+      "Angriff "+hudNumber(alchemistDamage())+" · Rate "+hudNumber(state.weapon.shotsPerSecond*.9/2.7)+"×",
+      "Krit "+hudNumber(state.weapon.critChance)+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
+      "Gift "+hudNumber(poisonDamagePerStack({poisonStacks:[],poisonAge:0}))+"/s · "+hudNumber(a.poisonDuration)+" s · Max "+poisonLimit(),
+      "Übertragung "+hudNumber(a.transferChance*100)+" % · Wurf "+(a.throws%10)+"/10",
+      (a.cloud?"Wolke: "+Math.ceil(a.cloudRemaining)+" s":"Wolke: gesperrt")+" · "+(a.experiment?(a.experimentActive>0?"Experiment aktiv":"Experiment "+Math.ceil(a.experimentRemaining)+" s"):"Experiment gesperrt")
     ];
   }
   return "<strong>"+label+" · "+(title||"Frei")+"</strong>"+

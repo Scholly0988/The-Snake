@@ -21,6 +21,8 @@ const paladinSprite = new Image();
 paladinSprite.src = "paladin-front.png";
 const necromancerSprite = new Image();
 necromancerSprite.src = "necromancer-platform.png";
+const alchemistSprite = new Image();
+alchemistSprite.src = "selvara-front.png";
 const hammerSprite = new Image();
 hammerSprite.src = "holy-hammer.png";
 // Keep only the 32px centre platform in bounds; side companions may overhang.
@@ -53,7 +55,8 @@ const state = {
   headDistance: 0,
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
-  necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [], pendingUpgrades: 0, upgradeOfferId: 0,
+  necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
+  alchemist: null, pendingUpgrades: 0, upgradeOfferId: 0,
   pointerDown: false
 };
 
@@ -129,6 +132,7 @@ function resetGame() {
   state.runDifficulty=progress.data.difficulty;
   state.paladin = newPaladin(progress.data.paladinSlot);
   state.necromancer = newNecromancer(progress.data.necromancerSlot);
+  state.alchemist = newAlchemist(progress.data.alchemistSlot);
   state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
   state.holyEffects = [];
   state.pendingUpgrades = 0;
@@ -217,7 +221,7 @@ function update(dt) {
   if(!state.snake.length){completeLevel();return;}
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
-  const speed = Math.min(22 + state.elapsed * .25, 45);
+  const speed = Math.min(22 + state.elapsed * .25, 45) * (1-alchemistSlow());
   state.headDistance += speed * dt;
 
   syncSnakePositions();
@@ -237,6 +241,8 @@ function update(dt) {
   if (state.mode !== "playing") return;
   updateNecromancer(dt);
   if (state.mode !== "playing") return;
+  updateAlchemist(dt);
+  if (state.mode !== "playing") return;
   for (const effect of state.holyEffects) effect.life -= dt;
   state.holyEffects = state.holyEffects.filter(effect => effect.life > 0);
   refreshPaladinHud();
@@ -245,6 +251,10 @@ function update(dt) {
     bullet.previousY = bullet.y;
     if(bullet.owner==="paladin" && bullet.hammerPhase)advanceHammer(bullet,dt);
     else if(bullet.owner==="necromancer") {
+      const target=state.snake[0];
+      if(target)moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);
+      else bullet.dead=true;
+    } else if(bullet.owner==="alchemist") {
       const target=state.snake[0];
       if(target)moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);
       else bullet.dead=true;
@@ -315,13 +325,20 @@ function handleHits(random = Math.random) {
     bullet.hitIds ||= new Set();
     // Projectiles enter from below: resolve the nearest crossed target first.
     const targets = state.snake.map((segment,i)=>({segment,head:i===0?snakeHead():null}))
-      .filter(({segment,head})=>isSegmentVisible(segment) && (bullet.owner!=="necromancer" || segment===state.snake[0]) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
+      .filter(({segment,head})=>isSegmentVisible(segment) && (!["necromancer","alchemist"].includes(bullet.owner) || segment===state.snake[0]) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
       .sort((a,b)=>Math.max(b.segment.y,b.head?.y??-Infinity)-Math.max(a.segment.y,a.head?.y??-Infinity));
     for (const {segment} of targets) {
       if (!state.snake.includes(segment)) continue;
       bullet.hitIds.add(segment.id);
       const isPaladin = bullet.owner === "paladin" && state.paladin;
       const isNecro = bullet.owner === "necromancer" && state.necromancer;
+      const isAlchemist = bullet.owner === "alchemist" && state.alchemist;
+      if(isAlchemist){
+        const hit=alchemistHitRoll(random);bullet.dead=true;bullet.hitIds.add(segment.id);
+        alchemistHit(segment,hit,bullet,random);
+        if(state.mode!=="playing")return;
+        continue outer;
+      }
       const hit = isNecro ? necromancerHitRoll(random) : rollHit(random,isPaladin ? paladinDirectDamage(bullet) : state.weapon.damage*skillValue("shooter","attack",1,1.2));
       if (isNecro) prepareNecroHit(segment,hit,random);
       const batch = new Map([[segment.id,hit.damage]]);
@@ -340,7 +357,9 @@ function handleHits(random = Math.random) {
 
 function destroySegment(index, offerUpgrade = true) {
   const [destroyed] = state.snake.splice(index, 1);
-  if (state.necromancer) state.necroDeaths.push({segment:destroyed,neighbors:[state.snake[index-1],state.snake[index]].filter(Boolean)});
+  const neighbors=[state.snake[index-1],state.snake[index]].filter(Boolean);
+  if (state.necromancer) state.necroDeaths.push({segment:destroyed,neighbors});
+  if (state.alchemist) resolveAlchemistDeath(destroyed,neighbors);
   state.score += destroyed.upgrade ? 100 : 25;
   const coins = (destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   state.runCoins += coins;
@@ -410,7 +429,7 @@ function roundUpgradePool() {
       apply: () => { state.weapon.parallel = true; state.weapon.spread = 0; }
     });
   }
-  return pool.concat(paladinUpgradePool(),necromancerUpgradePool());
+  return pool.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool());
 }
 
 const RARITY_CHANCES = Object.freeze({grey:.60,green:.25,purple:.10,orange:.05});
@@ -495,6 +514,7 @@ function renderProfile() {
   renderLevelPicker();
   renderPaladinProfile();
   renderNecromancerProfile();
+  renderAlchemistProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
@@ -632,6 +652,7 @@ function draw() {
   drawPaladin();
   drawHolyEffects();
   drawNecromancer();
+  drawAlchemist();
   drawParticles();
 }
 
@@ -733,6 +754,8 @@ function drawBullets() {
   for (const bullet of state.bullets) {
     if (bullet.owner === "necromancer") {
       drawSoulOrb(bullet.x,bullet.y,4,false);
+    } else if (bullet.owner === "alchemist") {
+      ctx.save();ctx.shadowColor="#7cff59";ctx.shadowBlur=12;ctx.fillStyle=bullet.mixture==="fire"?"#ff9d45":bullet.mixture==="frost"?"#70dfff":bullet.mixture==="acid"?"#e9ff5b":bullet.mixture==="plague"?"#bb76ff":"#78ee59";ctx.beginPath();ctx.arc(bullet.x,bullet.y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#e9f4d5";ctx.fillRect(bullet.x-3,bullet.y-8,6,4);ctx.restore();
     } else if (bullet.owner === "paladin") {
       const size=12*(bullet.size||1.4);
       ctx.shadowColor = bullet.charged ? "#fff5c2" : "#ffc84a";
@@ -819,7 +842,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 17.3 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 18.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -857,6 +880,7 @@ function loop(time) {
 document.querySelector("#previousLevel").addEventListener("click",()=>changeLevel(-1));
 document.querySelector("#nextLevel").addEventListener("click",()=>changeLevel(1));
 bindNecromancerMenu();
+bindAlchemistMenu();
 bindSkillsMenu();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);

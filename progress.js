@@ -6,7 +6,8 @@ const SnakeProgress = (() => {
   const fresh = () => ({
     game: "the-snake", version: 1, skillUpgrades: [], completedLevels: 0, selectedLevel: 1, coins: 0, coinRemainder: 0, firstClears: Array(9).fill(false), best: 0, defeated: 0,
     runs: 0, damageLevel: 0, rateLevel: 0, critChanceLevel: 0, critDamageLevel: 0, difficulty: 0.10,
-    paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null
+    paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null,
+    alchemistUnlocked: false, alchemistSlot: null
   });
   function validate(value) {
     if (!value || value.game !== "the-snake" || value.version !== 1)
@@ -42,7 +43,7 @@ const SnakeProgress = (() => {
     if (![0.10, 0.15, 0.20].includes(value.difficulty))
       throw new Error("Ungültige Schwierigkeit.");
     result.difficulty = value.difficulty;
-    for (const hero of ["paladin", "necromancer"]) {
+    for (const hero of ["paladin", "necromancer", "alchemist"]) {
       const unlocked = hero+"Unlocked", slot = hero+"Slot";
       if (value[unlocked] !== undefined && typeof value[unlocked] !== "boolean")
         throw new Error("Ungültige Heldenfreischaltung.");
@@ -51,8 +52,8 @@ const SnakeProgress = (() => {
       if (![null,"left","right"].includes(result[slot]) || (!result[unlocked] && result[slot] !== null))
         throw new Error("Ungültiger Heldenplatz.");
     }
-    if (result.paladinSlot && result.paladinSlot === result.necromancerSlot)
-      throw new Error("Ein Platz kann nur einen Helden enthalten.");
+    const occupied=[result.paladinSlot,result.necromancerSlot,result.alchemistSlot].filter(Boolean);
+    if(new Set(occupied).size!==occupied.length)throw new Error("Ein Platz kann nur einen Helden enthalten.");
     return result;
   }
   function open(storage) {
@@ -129,9 +130,9 @@ const SnakeProgress = (() => {
         return true;
       },
       export() { return JSON.stringify(validate(data), null, 2); },
-      heroCost() { return data.paladinUnlocked || data.necromancerUnlocked ? 300 : 100; },
+      heroCost() { return data.paladinUnlocked || data.necromancerUnlocked || data.alchemistUnlocked ? 300 : 100; },
       unlockHero(hero) {
-        if (!["paladin","necromancer"].includes(hero)) return false;
+        if (!["paladin","necromancer","alchemist"].includes(hero)) return false;
         const key=hero+"Unlocked", cost=this.heroCost();
         if (data[key] || data.coins<cost) return false;
         const old={...data};
@@ -140,9 +141,10 @@ const SnakeProgress = (() => {
         return true;
       },
       equipHero(hero,slot) {
-        if (!["paladin","necromancer"].includes(hero) || !data[hero+"Unlocked"] || ![null,"left","right"].includes(slot)) return false;
-        const old={...data}, other=hero==="paladin"?"necromancer":"paladin";
-        if (slot && data[other+"Slot"]===slot) data[other+"Slot"]=data[hero+"Slot"];
+        const heroes=["paladin","necromancer","alchemist"];
+        if (!heroes.includes(hero) || !data[hero+"Unlocked"] || ![null,"left","right"].includes(slot)) return false;
+        const old={...data}, previous=data[hero+"Slot"];
+        if(slot)for(const other of heroes)if(other!==hero&&data[other+"Slot"]===slot)data[other+"Slot"]=previous;
         data[hero+"Slot"]=slot;
         if (!save()) { data=old;return false; }
         return true;

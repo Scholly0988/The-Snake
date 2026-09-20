@@ -43,7 +43,35 @@ const HERO_SKILLS = [
   ["necromancer","elite","upgrade","Letzter Fluch",["purple"],"Mit Fluch des Todes: markierte Segmente hinterlassen Elite-Seelen (2,2 / 3,3 / 4,4 Basis).","+20 % Schaden der Elite-Seelen."],
   ["necromancer","legion","upgrade","Seelenlegion",["purple"],"Beide Speicher: +5 Plätze, aber −20 % Seelenschaden. Seelenexplosion ausgenommen.","Nur −10 % statt −20 % Seelenschaden."],
   ["necromancer","seal","upgrade","Todessiegel",["orange"],"Nach 5 markierten Toden: 50 Wirbelseelen, je 3 Treffer; ersetzt Seelenexplosion.","Wirbelseelen: 2,5 statt 2 Basisschaden, jeweils plus Waffenschaden."],
-  ["necromancer","call","upgrade","Totenruf",["orange"],"Alle 22 s zwei temporäre Seelen und gemeinsamer Angriff.","20 statt 22 s Grundabklingzeit."]
+  ["necromancer","call","upgrade","Totenruf",["orange"],"Alle 22 s zwei temporäre Seelen und gemeinsamer Angriff.","20 statt 22 s Grundabklingzeit."],
+  ["alchemist","attack","attack","Seuchenfläschchen",[],"0,8 Direktschaden und ein Giftstapel pro Treffer.","+20 % direkter Fläschchenschaden."],
+  ["alchemist","poison","attack","Toxische Mischung",[],"Jeder Stapel verursacht 0,2 Schaden pro Sekunde für 4 Sekunden.","0,24 statt 0,2 Schaden pro Sekunde."],
+  ["alchemist","cloud","attack","Giftwolke",["orange"],"Alle 18 Sekunden eine vier Sekunden anhaltende Giftwolke.","16 statt 18 Sekunden Grundabklingzeit."],
+  ["alchemist","experiment","attack","Meisterexperiment",["orange"],"Alle 30 Sekunden sechs Sekunden lang verstärkte Giftangriffe.","8 statt 6 Sekunden Grunddauer."],
+  ["alchemist","strength","upgrade","Giftstärke",["grey","green","purple"],"+15 / +30 / +50 % Giftschaden je Auswahl.","+20 / +35 / +55 % je Auswahl."],
+  ["alchemist","duration","upgrade","Langlebiges Gift",["grey","green","purple"],"+1 / +2 / +4 Sekunden Giftdauer.","+2 / +3 / +5 Sekunden."],
+  ["alchemist","stacks","upgrade","Konzentriertes Toxin",["grey","green","purple"],"+1 / +2 / +3 maximale Giftstapel.","+2 / +3 / +4 Stapel."],
+  ["alchemist","transfer","upgrade","Ansteckende Mischung",["grey","green","purple"],"+15 / +30 / +50 Prozentpunkte Übertragungschance.","+20 / +35 / +55 Prozentpunkte."],
+  ["alchemist","inheritance","upgrade","Giftige Erbschaft",["grey","green","purple"],"Überträgt bis zu 2 / 3 / 4 Stapel.","Überträgt zusätzlich einen Stapel."],
+  ["alchemist","explosive","upgrade","Explosive Mischung",["grey","green","purple"],"20 / 35 / 50 % Direktschaden als Flächenschaden.","25 / 40 / 55 % Direktschaden."],
+  ["alchemist","bottles","upgrade","Größere Flaschen",["grey","green","purple"],"+15 / +30 / +50 % Explosionsradius.","+20 / +35 / +55 % Radius."],
+  ["alchemist","corrosive","upgrade","Ätzendes Gift",["grey","green","purple"],"+5 / +10 / +20 % Direktschaden gegen vergiftete Segmente.","+10 / +15 / +25 %."],
+  ["alchemist","nerve","upgrade","Nervengift",["grey","green","purple"],"Vergiftete Segmente verlangsamen die Schlange um 5 / 10 / 20 %.","7,5 / 12,5 / 25 %."],
+  ["alchemist","chain","upgrade","Toxische Kettenreaktion",["grey","green","purple"],"20 / 40 / 70 % Chance auf eine kleine Giftwolke.","30 / 50 / 80 % Chance."],
+  ["alchemist","cloudPower","upgrade","Verdorbene Wolke",["grey","green","purple"],"Größerer Radius und ab Grün längere Dauer.","Zusätzlich +10 % Radius."],
+  ["alchemist","cloudStacks","upgrade","Hochkonzentrierte Wolke",["grey","green","purple"],"20 / 40 / 70 % Chance auf einen zweiten Stapel.","30 / 50 / 80 % Chance."],
+  ["alchemist","mixer","upgrade","Schnellmischer",["grey","green","purple"],"Giftwolken-Cooldown −2 / −4 / −6 Sekunden.","Zusätzlich 1 Sekunde kürzer."],
+  ["alchemist","reactive","upgrade","Reaktive Substanz",["grey","green","purple"],"Krits erzeugen mit 25 / 50 / 100 % einen weiteren Stapel.","35 / 60 / 100 % Chance."],
+  ["alchemist","unstable","upgrade","Instabile Formel",["grey","green","purple"],"Gift-Ticks können 0,2 / 0,3 / 0,5 Extraschaden auslösen.","+20 % Extraschaden."],
+  ["alchemist","overdose","upgrade","Überdosierung",["grey","green","purple"],"+15 / +30 / +50 % Gift bei maximalen Stapeln.","+20 / +35 / +55 %."],
+  ["alchemist","focus","upgrade","Seuchenherd",["grey","green","purple"],"Volle Giftstapel verbreiten sich alle 5 / 4 / 3 Sekunden.","Jeweils 0,5 Sekunden schneller."],
+  ["alchemist","experimentTime","upgrade","Meisterexperiment verbessern",["grey","green","purple"],"+1 / +2 / +3 Sekunden Dauer.","+2 / +3 / +4 Sekunden."],
+  ["alchemist","toxicologist","upgrade","Meistertoxikologe",["grey","green","purple"],"Während des Experiments +15 / +30 / +50 % Gift.","+20 / +35 / +55 %."],
+  ["alchemist","cocktail","upgrade","Giftcocktail",["purple"],"Jeder 5. Wurf nutzt eine besondere Mixtur.","Besondere Mixturen verursachen +20 % Direktschaden."],
+  ["alchemist","epidemic","upgrade","Epidemie",["purple"],"30 % Chance, den gesamten Giftstatus weiterzugeben.","40 % statt 30 % Chance."],
+  ["alchemist","rain","upgrade","Giftregen",["orange"],"Jeder 10. Wurf trifft bis zu fünf sichtbare Segmente.","60 % statt 50 % Direktschaden."],
+  ["alchemist","mutation","upgrade","Mutation",["purple"],"Nach 4 Sekunden durchgehender Vergiftung +50 % Gift.","Bereits nach 3 Sekunden aktiv."],
+  ["alchemist","living","upgrade","Lebende Seuche",["orange"],"Alle 3 Sekunden verbreitet jedes vergiftete sichtbare Segment Gift.","Alle 2,5 Sekunden."]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
 function hasSkill(hero,key) { return (state.skillUpgrades || []).includes(hero+"."+key); }
 function skillValue(hero,key,base,upgraded) { return hasSkill(hero,key)?upgraded:base; }
@@ -64,7 +92,7 @@ function closeHeroSkills() {
 }
 function renderHeroSkills() {
   if(!selectedSkillHero)return;
-  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric"};
+  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara"};
   document.querySelector("#skillsTitle").textContent=names[selectedSkillHero]+" · Skills";
   document.querySelector("#skillsCoins").textContent=progress.data.coins+" Münzen · Jede Aufwertung einmalig 50 Münzen";
   const list=document.querySelector("#skillsList");list.replaceChildren();
@@ -95,7 +123,7 @@ function renderHeroSkills() {
   }
 }
 function bindSkillsMenu(){
-  for(const hero of ["shooter","paladin","necromancer"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
+  for(const hero of ["shooter","paladin","necromancer","alchemist"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
   document.querySelector("#closeSkills").addEventListener("click",closeHeroSkills);
 }
 
