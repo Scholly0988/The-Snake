@@ -167,7 +167,7 @@ function renderPaladinProfile() {
     button.disabled=!p.paladinUnlocked;
     button.textContent=(side==='left'?'Links':'Rechts')+(p.paladinSlot===side?' · Aktiv':' einsetzen');
     const slot=document.querySelector('#heroSlot'+side);
-    slot.innerHTML=p.paladinSlot===side?'<img src="paladin-platform.png" alt="Aldric auf seiner Plattform"><strong>Aldric</strong><small>Hammer · Aktiv</small>':'<span aria-hidden="true">＋</span><strong>'+(side==='left'?'Links':'Rechts')+'</strong><small>Noch frei</small>';
+    slot.innerHTML=p.paladinSlot===side?'<img src="paladin-front.png" alt="Aldric auf seiner Plattform"><strong>Aldric</strong><small>Hammer · Aktiv</small>':'<span aria-hidden="true">＋</span><strong>'+(side==='left'?'Links':'Rechts')+'</strong><small>Noch frei</small>';
   }
   document.querySelector('#unequipPaladin').disabled=!p.paladinSlot;
 }
@@ -178,7 +178,7 @@ function drawPaladin() {
   ctx.save();
   ctx.fillStyle='#c9a968';ctx.fillRect(Math.min(x,state.player.x)+16,y+28,4,5);
   const lift=p.swing>0?Math.sin(p.swing/.18*Math.PI)*3:0;
-  if (paladinSprite.complete && paladinSprite.naturalWidth) ctx.drawImage(paladinSprite,150,16,890,1250,x-20,y-15-lift,40,56);
+  if (paladinSprite.complete && paladinSprite.naturalWidth) ctx.drawImage(paladinSprite,x-20,y-15-lift,40,56);
   else {ctx.fillStyle='#e4c473';ctx.fillRect(x-14,y+24,28,16);ctx.fillStyle='#7797bd';ctx.fillRect(x-8,y,16,29);}
   if (p.charge>0) {
     ctx.strokeStyle='#fff1ac';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y-21,12,0,Math.PI*2);ctx.stroke();

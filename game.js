@@ -16,9 +16,9 @@ headSprite.src = "snake-head.png";
 const bodySprite = new Image();
 bodySprite.src = "snake-body.png";
 const playerSprite = new Image();
-playerSprite.src = "player-platform.png";
+playerSprite.src = "player-front.png";
 const paladinSprite = new Image();
-paladinSprite.src = "paladin-platform.png";
+paladinSprite.src = "paladin-front.png";
 const necromancerSprite = new Image();
 necromancerSprite.src = "necromancer-platform.png";
 const hammerSprite = new Image();
@@ -729,8 +729,8 @@ function drawPlayer() {
   ctx.fillRect(-20, 28, 6, 5);
   ctx.fillRect(14, 28, 6, 5);
   if (playerSprite.complete && playerSprite.naturalWidth) {
-    // Source crop excludes transparent padding without changing the artwork.
-    ctx.drawImage(playerSprite, 340, 65, 576, 1092, -16, PLAYER_MUZZLE_Y, 32, 61);
+    // Front portrait includes the entire character and docking platform.
+    ctx.drawImage(playerSprite, -20, -15, 40, 56);
   } else {
     ctx.fillStyle = "#344c62";
     ctx.fillRect(-14, 25, 28, 16);
@@ -793,7 +793,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.4 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 15.5 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
