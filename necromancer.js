@@ -305,10 +305,18 @@ function bindNecromancerMenu() {
     progress.equipHero("necromancer",side);renderProfile();
   });
 }
-function drawSoulOrb(x,y,size,elite) {
-  ctx.save();ctx.shadowColor="#a264ff";ctx.shadowBlur=10;
-  ctx.fillStyle=elite?"#f4dbff":"#8fffd0";ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="#a378ef";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+size);ctx.lineTo(x-3,y+size+7);ctx.stroke();
+function soulColor(soul = {}) {
+  if(soul.swirl)return "#ff83bd";
+  if(soul.elite)return "#ffd36a";
+  if(soul.small)return "#66dfff";
+  if(soul.strong)return "#bf8aff";
+  return "#8fffd0";
+}
+function drawSoulOrb(x,y,size,soul = {}) {
+  const color=soulColor(soul);
+  ctx.save();ctx.shadowColor=color;ctx.shadowBlur=10;
+  ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+size);ctx.lineTo(x-3,y+size+7);ctx.stroke();
   ctx.fillStyle="#392355";ctx.fillRect(x-2,y-1,1,2);ctx.fillRect(x+1,y-1,1,2);ctx.restore();
 }
 function drawNecromancer() {
@@ -317,12 +325,12 @@ function drawNecromancer() {
   ctx.save();
   if(necromancerSprite.complete&&necromancerSprite.naturalWidth)ctx.drawImage(necromancerSprite,x-20,y-15,40,56);
   else{ctx.fillStyle="#a695c5";ctx.fillRect(x-14,y+25,28,16);ctx.fillStyle="#894ac0";ctx.fillRect(x-8,y,16,26);}
-  if(n.pulse)drawSoulOrb(x+10,y-8,3+n.pulse*10,false);
+  if(n.pulse)drawSoulOrb(x+10,y-8,3+n.pulse*10);
   for(const s of state.snake)if(s.soulMark&&s.y>=0){
     ctx.strokeStyle="#ce9bff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,17,0,Math.PI*2);ctx.stroke();
     ctx.fillStyle="#edcaff";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText("☠",s.x,s.y+4);
   }
-  for(const s of state.souls)drawSoulOrb(s.x,s.y,s.elite?7:s.small?3:5,s.elite);
+  for(const s of state.souls)drawSoulOrb(s.x,s.y,s.elite?7:s.small?3:5,s);
   for(const e of state.soulEffects){
     const remaining=Math.max(0,Math.min(1,e.life/.4));
     ctx.globalAlpha=remaining;ctx.strokeStyle="#ad81ff";ctx.beginPath();
