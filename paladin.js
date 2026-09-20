@@ -2,7 +2,7 @@
 
 function newPaladin(slot) {
   return slot ? {slot, fireTimer: 0, hits: 0, impactEvery: 4, damageMultiplier: 1,
-    size: 1.4, speed: .85, radius: 40, explosionMultiplier: 1, pierce: 0,
+    size: 1.4, speed: .85, radius: 50, explosionMultiplier: 1, pierce: 0,
     revenge: false, morningChance: 0, morningGreen: false, morningPurple: false,
     ultimate: false, cooldown: 20, remaining: 20, charge: 0, swing: 0} : null;
 }

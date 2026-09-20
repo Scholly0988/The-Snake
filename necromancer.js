@@ -70,7 +70,7 @@ function resolveNecroDeaths() {
             n.sealCount=0;
             for (let i=0;i<50;i++) spawnSoul(s,{swirl:true,temporary:true,wait:0,angle:i*Math.PI*2/50});
           }
-        } else if (n.explosion) necroArea(batch,s,42,(n.explosion+state.weapon.damage)*(1+n.soulBonus)*(n.legion?.8:1));
+        } else if (n.explosion) necroArea(batch,s,52.5,(n.explosion+state.weapon.damage)*(1+n.soulBonus)*(n.legion?.8:1));
       }
       for (const s of state.snake) if (isSegmentVisible(s) && batch.has(s.id)) s.hp-=batch.get(s.id);
       for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
@@ -201,7 +201,7 @@ function updateNecromancer(dt) {
         s.jumps=s.hitIds.size-1;
         const damage=soulDamage(s);
         const batch=new Map([[target.id,necroDamage(target,damage)]]);
-        if(n.binding===5 && s.jumps===5) necroArea(batch,target,64,soulDamage(s,true)*2);
+        if(n.binding===5 && s.jumps===5) necroArea(batch,target,80,soulDamage(s,true)*2);
         if (s.jumps>=n.binding || !chooseSoulTarget(s)) finishSoulAttack(s);
         state.soulEffects.push({x:target.x,y:target.y,radius:15,life:.4});
         applyDamageBatch(batch);
@@ -221,7 +221,7 @@ function necromancerUpgradePool() {
     ["limit","Ruhelose Seelen",[1,2,3],"maximale Seelen"],
     ["soulBonus","Seelenhunger",[.15,.30,.50],"Seelenschaden"],
     ["speedBonus","Geisterflug",[.20,.40,.70],"Seelengeschwindigkeit"],
-    ["explosion","Seelenexplosion",[.3,.6,1],"Explosionsschaden (Radius 42)"],
+    ["explosion","Seelenexplosion",[.3,.6,1],"Explosionsschaden (Radius 52,5)"],
     ["strongDamage","Verstärkte Bindung",[.2,.5,1],"Schaden markierter Seelen"],
     ["choir","Totenchor",[1,2,4],"temporäre Seelen bei Totenruf"],
     ["curse","Fluch des Todes",[.10,.20,.35],"Schaden gegen markierte Segmente"]
@@ -244,7 +244,7 @@ function necromancerUpgradePool() {
         limit:"Erhöht die Anzahl gleichzeitig gebundener Seelen um "+v+".",
         soulBonus:"Erhöht den Schaden aller beschworenen Seelen um "+Math.round(v*100)+" %.",
         speedBonus:"Deine Seelen fliegen "+Math.round(v*100)+" % schneller.",
-        explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 42 Pixeln. Der aktuelle Standardwaffenschaden wird vor Prozentboni addiert.",
+        explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 52,5 Pixeln. Der aktuelle Standardwaffenschaden wird vor Prozentboni addiert.",
         strongDamage:"Seelen aus markierten Segmenten verursachen "+amount+" zusätzlichen Basisschaden.",
         choir:"Totenruf beschwört "+v+" zusätzliche Seelen.",
         curse:"Markierte Segmente erleiden "+Math.round(v*100)+" % mehr Schaden durch Vaelrics Angriffe und Seelen."
@@ -268,7 +268,7 @@ function necromancerUpgradePool() {
   for(const [rarity,jumps] of [["grey",1],["green",2],["purple",3],["orange",5]]) {
     if(n.binding<jumps)card("binding-"+rarity,rarity,"Verdammte Bindung",
       "Nach dem ersten Treffer springt jede Seele zu "+jumps+" weiteren Zielen und fügt ihnen Schaden zu. Danach kehrt sie zurück."+
-      (jumps===5?" Beim 5. Sprung: zusätzlich 200 % Seelenschaden im Radius von 64 px.":""),
+      (jumps===5?" Beim 5. Sprung: zusätzlich 200 % Seelenschaden im Radius von 80 px.":""),
       ()=>n.binding=Math.max(n.binding,jumps));
   }
   if(!n.storm)card("storm","green","Seelensturm","Solange mindestens 5 Seelen aktiv sind, fliegen sie 25 % schneller und verursachen 20 % mehr Schaden.",()=>n.storm=true);
