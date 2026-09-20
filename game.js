@@ -288,7 +288,7 @@ function projectileHits(bullet, target) {
 function applyDamageBatch(batch) {
   // All targets are determined before any segment retreats or upgrade pauses.
   for (const segment of state.snake) {
-    if (batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id))*1e10)/1e10;
+    if (isSegmentVisible(segment) && batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id))*1e10)/1e10;
   }
   for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
   resolveNecroDeaths();
@@ -300,7 +300,7 @@ function handleHits(random = Math.random) {
     bullet.hitIds ||= new Set();
     // Projectiles enter from below: resolve the nearest crossed target first.
     const targets = state.snake.map((segment,i)=>({segment,head:i===0?snakeHead():null}))
-      .filter(({segment,head})=>(bullet.owner!=="necromancer" || segment===state.snake[0]) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
+      .filter(({segment,head})=>isSegmentVisible(segment) && (bullet.owner!=="necromancer" || segment===state.snake[0]) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
       .sort((a,b)=>Math.max(b.segment.y,b.head?.y??-Infinity)-Math.max(a.segment.y,a.head?.y??-Infinity));
     for (const {segment} of targets) {
       if (!state.snake.includes(segment)) continue;
@@ -793,7 +793,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.5 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 15.6 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

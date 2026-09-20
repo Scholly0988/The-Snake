@@ -8,8 +8,10 @@ function newPaladin(slot) {
 }
 function paladinX() { return state.player.x + (state.paladin.slot === "left" ? -36 : 36); }
 function paladinDamage() { return (state.weapon.damage + 1) * state.paladin.damageMultiplier; }
-function visibleTargets() { return state.snake.filter(s => s.y >= 0 && s.y < state.player.y - 22 && s.x >= 0 && s.x <= state.width); }
-function addDamage(batch, segment, damage) { batch.set(segment.id, (batch.get(segment.id) || 0) + damage); }
+// A segment becomes damageable when its center enters the visible canvas.
+function isSegmentVisible(s) { return s.x >= 0 && s.x <= state.width && s.y >= 0 && s.y <= state.height; }
+function visibleTargets() { return state.snake.filter(s => s.hp > 0 && isSegmentVisible(s)); }
+function addDamage(batch, segment, damage) { if (!isSegmentVisible(segment)) return; batch.set(segment.id, (batch.get(segment.id) || 0) + damage); }
 function holyArea(batch, center, radius, damage, excludeId = null) {
   for (const s of state.snake) {
     if (s.id !== excludeId && Math.hypot(s.x - center.x, s.y - center.y) <= radius) addDamage(batch, s, damage);

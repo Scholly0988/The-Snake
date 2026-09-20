@@ -12,6 +12,7 @@ function necromancerHitRoll(random) {
   return {critical,damage:necromancerDamage()*(critical?state.weapon.critDamage/100:1)};
 }
 function necroDamage(segment,damage) {
+  if (!isSegmentVisible(segment)) return 0;
   segment.necroTouched=true;
   return damage*(segment.soulMark?1+state.necromancer.curse:1);
 }
@@ -46,7 +47,7 @@ function soulDamage(soul) {
   return (base+(state.weapon.soulDamageBonus || 0))*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
 }
 function necroArea(batch,center,radius,damage) {
-  for (const s of state.snake) if (s.hp>0&&Math.hypot(s.x-center.x,s.y-center.y)<=radius)
+  for (const s of state.snake) if (s.hp>0&&isSegmentVisible(s)&&Math.hypot(s.x-center.x,s.y-center.y)<=radius)
     addDamage(batch,s,necroDamage(s,damage));
   state.soulEffects.push({x:center.x,y:center.y,radius,life:.4});
 }
@@ -71,7 +72,7 @@ function resolveNecroDeaths() {
           }
         } else if (n.explosion) necroArea(batch,s,42,n.explosion*(1+n.soulBonus)*(n.legion?.8:1));
       }
-      for (const s of state.snake) if (batch.has(s.id)) s.hp-=batch.get(s.id);
+      for (const s of state.snake) if (isSegmentVisible(s) && batch.has(s.id)) s.hp-=batch.get(s.id);
       for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
     }
   } finally { n.resolving=false; }
@@ -97,7 +98,7 @@ function hitVortexSoul(soul) {
     segment,
     time:Math.min(soulContactTime(soul,segment),
       index===0&&head?soulContactTime(soul,head):Infinity)
-  })).filter(c=>Number.isFinite(c.time)&&!soul.hitIds.has(c.segment.id))
+  })).filter(c=>isSegmentVisible(c.segment)&&Number.isFinite(c.time)&&!soul.hitIds.has(c.segment.id))
     .sort((a,b)=>a.time-b.time);
   const batch=new Map(), damage=soulDamage(soul);
   for(const {segment} of contacts) {
