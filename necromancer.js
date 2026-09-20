@@ -6,7 +6,7 @@ function newNecromancer(slot) {
     taken:{},tiers:{}} : null;
 }
 function necromancerX() { return state.player.x+(state.necromancer.slot==="left"?-36:36); }
-function necromancerDamage() { return state.weapon.damage+.2; }
+function necromancerDamage() { return (state.weapon.damage+.2)*skillValue("necromancer","attack",1,1.2); }
 function necromancerHitRoll(random) {
   const critical=random()*100<Math.min(100,state.weapon.critChance+5);
   return {critical,damage:necromancerDamage()*(critical?state.weapon.critDamage/100:1)};
@@ -19,7 +19,7 @@ function necroDamage(segment,damage) {
 function prepareNecroHit(segment,hit,random) {
   const n=state.necromancer;
   if (segment===state.snake[0] && n.markCooldown<=0) {
-    n.markCooldown=1;
+    n.markCooldown=skillValue("necromancer","markChance",1,.75);
     if (random()<n.markChance) {
       const candidates=visibleTargets().filter(s=>!s.soulMark);
       if(candidates.length) {
@@ -45,8 +45,9 @@ function spawnSoul(center,options={}) {
 }
 function soulDamage(soul, area = false) {
   const n=state.necromancer;
-  const base=soul.swirl?2:soul.elite?[2.2,3.3,4.4][Math.max(0,Math.min(2,n.elite-1))]:soul.strong?n.strongDamage:soul.small?1.5:2;
-  return (base+((area || soul.swirl) ? state.weapon.damage : (state.weapon.soulDamageBonus || 0)))*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
+  const base=soul.swirl?skillValue("necromancer","seal",2,2.5):soul.elite?[2.2,3.3,4.4][Math.max(0,Math.min(2,n.elite-1))]:soul.strong?n.strongDamage:soul.small?skillValue("necromancer","harvest",1.5,2):2;
+  const permanent=soul.elite?skillValue("necromancer","elite",1,1.2):!soul.swirl&&!soul.small?skillValue("necromancer","soul",1,1.2):1;
+  return permanent*(base+((area || soul.swirl) ? state.weapon.damage : (state.weapon.soulDamageBonus || 0)))*(1+n.soulBonus)*(n.legion?skillValue("necromancer","legion",.8,.9):1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=skillValue("necromancer","storm",5,4)?1.2:1);
 }
 function necroArea(batch,center,radius,damage) {
   for (const s of state.snake) if (segmentInArea(s,center,radius))
@@ -73,7 +74,7 @@ function resolveNecroDeaths() {
             n.sealCount=0;
             for (let i=0;i<50;i++) spawnSoul(s,{swirl:true,temporary:true,wait:0,angle:i*Math.PI*2/50});
           }
-        } else if (n.explosion) necroArea(batch,s,52.5,(n.explosion+state.weapon.damage)*(1+n.soulBonus));
+        } else if (n.explosion) necroArea(batch,s,52.5,(n.explosion+state.weapon.damage)*(1+n.soulBonus)*skillValue("necromancer","explosion",1,1.2));
       }
       for (const s of state.snake) if (isSegmentVisible(s) && batch.has(s.id)) s.hp-=batch.get(s.id)*segmentDamageMultiplier(s);
       for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
@@ -134,7 +135,7 @@ function moveSoulTo(soul,x,y,speed,dt) {
 function restSoul(soul,speed,dt) {
   const x=Math.min(30,state.width/2),y=Math.max(20,state.height-32),radius=12;
   if(soul.phase==="return") {
-    if(moveSoulTo(soul,x+radius,y,speed,dt)){soul.phase="rest";soul.rest=5;soul.angle=0;}
+    if(moveSoulTo(soul,x+radius,y,speed,dt)){soul.phase="rest";soul.rest=state.necromancer.endless>0?skillValue("necromancer","endless",5,4):5;soul.angle=0;}
   } else {
     soul.rest=Math.max(0,soul.rest-dt);soul.angle+=dt*Math.PI*2;
     soul.x=x+radius*Math.cos(soul.angle);soul.y=y+radius*Math.sin(soul.angle);
@@ -157,7 +158,7 @@ function updateNecromancer(dt) {
     if (n.charge>0) {
       n.charge=Math.max(0,n.charge-dt);
       if (!n.charge) {
-        n.remaining=22;
+        n.remaining=skillValue("necromancer","call",22,20);
         for (let i=0;i<2+n.choir;i++) spawnSoul({x:necromancerX(),y:state.player.y+PLATFORM_SHOT_Y},{temporary:true,wait:0});
         state.souls.forEach(s=>{if(!s.swirl&&s.phase==="attack"){s.wait=0;s.targetId=null;}});
       }
@@ -184,7 +185,7 @@ function updateNecromancer(dt) {
       continue;
     }
     if (s.wait>0) {s.wait-=dt;continue;}
-    const speed=180*(1+n.speedBonus)*(n.storm&&state.souls.filter(t=>!t.dead).length>=5?1.25:1);
+    const speed=180*(1+n.speedBonus)*(n.storm&&state.souls.filter(t=>!t.dead).length>=skillValue("necromancer","storm",5,4)?1.25:1);
     if(!s.swirl&&s.phase!=="attack"){restSoul(s,speed,dt);continue;}
     s.previousX=s.x;s.previousY=s.y;
     if (s.swirl) {
@@ -203,9 +204,9 @@ function updateNecromancer(dt) {
         s.hitIds.add(target.id);s.hits++;s.targetId=null;
         // First contact is the initial attack; subsequent contacts are jumps.
         s.jumps=s.hitIds.size-1;
-        const damage=soulDamage(s);
+        const damage=soulDamage(s)*(s.jumps>0?skillValue("necromancer","binding",1,1.2):1);
         const batch=new Map([[target.id,necroDamage(target,damage)]]);
-        if(n.binding===5 && s.jumps===5) necroArea(batch,target,80,soulDamage(s,true)*2);
+        if(n.binding===5 && s.jumps===5) necroArea(batch,target,80,soulDamage(s,true)*2*skillValue("necromancer","binding",1,1.2));
         if (s.jumps>=n.binding || !chooseSoulTarget(s)) finishSoulAttack(s);
         state.soulEffects.push({x:target.x,y:target.y,radius:15,life:.4});
         applyDamageBatch(batch);
@@ -219,7 +220,7 @@ function necromancerUpgradePool() {
   const n=state.necromancer;if(!n)return [];
   const pool=[];
   function card(id,rarity,name,text,apply) {
-    pool.push({id:"necro-"+id,rarity,name,text:"Vaelric · "+text,apply});
+    pool.push({id:"necro-"+id,rarity,name,text:"Vaelric · "+skillCardText("necromancer",id,text),apply});
   }
   const repeat=[
     ["limit","Ruhelose Seelen",[1,2,3],"maximale Seelen"],
@@ -242,7 +243,7 @@ function necromancerUpgradePool() {
   for (const [i,rarity] of ["grey","green","purple"].entries()) {
     for (const [key,name,values,unit] of repeat) {
       if(key==="choir"&&!n.ultimate || key==="explosion"&&n.seal)continue;
-      const v=values[i],percent=["soulBonus","speedBonus","curse"].includes(key);
+      const v=values[i]+necroSkillDelta(key),percent=["soulBonus","speedBonus","curse"].includes(key);
       const amount=String(v).replace(".",",");
       const description={
         limit:"Erhöht die Anzahl gleichzeitig gebundener Seelen um "+v+".",
@@ -265,7 +266,7 @@ function necromancerUpgradePool() {
     }
     for (const [key,name,values,unit] of highest) {
       if(key==="siphon"&&!n.ultimate)continue;
-      const v=values[i];
+      const v=values[i]+necroSkillDelta(key);
       if((n.tiers[key]??-1)<i)card(key+"-"+rarity,rarity,name,(key==="siphon"?"Jede neu beschworene Seele verkürzt die verbleibende Abklingzeit von Totenruf um "+String(v).replace(".",",")+" Sekunden.":"Stirbt ein markiertes Segment, springt seine Marke mit "+Math.round(v*100)+" % Chance auf ein zufälliges unmarkiertes sichtbares Segment über."),()=>{n[key]=Math.max(n[key],v);n.tiers[key]=Math.max(n.tiers[key]??-1,i);});
     }
   }
@@ -279,7 +280,7 @@ function necromancerUpgradePool() {
   if(n.elite<3)card("elite","purple","Letzter Fluch","Mit Fluch des Todes hinterlassen zerstörte markierte Segmente Elite-Seelen mit "+String([2.2,3.3,4.4][n.elite]).replace(".",",")+" Basisschaden.",()=>n.elite=Math.min(3,n.elite+1));
   if(!n.legion)card("legion","purple","Seelenlegion","Du kannst 5 weitere Seelen gleichzeitig binden. Dafür verursachen alle Seelen 20 % weniger Schaden. Seelenexplosion ist davon ausgenommen.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
   if(!n.seal)card("seal","orange","Todessiegel","Nach 5 zerstörten markierten Segmenten brechen 50 Seelen spiralförmig hervor. Jede verursacht 2 Basisschaden plus Standardwaffenschaden pro Treffer und trifft bis zu 3 Segmente. Ersetzt die Explosion beim Tod markierter Segmente.",()=>n.seal=true);
-  if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=22;});
+  if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=skillValue("necromancer","call",22,20);});
   return pool;
 }
 function renderNecromancerProfile() {

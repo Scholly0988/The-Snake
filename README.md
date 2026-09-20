@@ -175,3 +175,11 @@ Pistole und Paladin-Hämmer starten nun am Mittelpunkt ihrer jeweiligen Plattfor
 bisheriger Position. Paralleler Mehrfachschuss bleibt nebeneinander angeordnet.
 Gezielte Tests prüfen Treffer nahe der unteren Verlustgrenze für den Schützen
 sowie Aldric links und rechts. Ersetzen: index.html, game.js, paladin.js.
+
+## Version 17.0 – Permanente Helden-Skills
+
+Im Heldenmenü gibt es für Schütze, Aldric und Vaelric je einen Skills-Button.
+Angriffe und Upgrade-Skills sind getrennt, Seltenheiten werden angezeigt.
+Einmalige Aufwertungen kosten jeweils 50 Münzen und gelten ab dem nächsten Run.
+Die vollständige Liste und Upload-Anleitung stehen in [SKILLS.md](SKILLS.md).
+Neu erforderlich: **skills.js**; es wird vor progress.js geladen.

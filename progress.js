@@ -4,7 +4,7 @@
 const SnakeProgress = (() => {
   const KEY = "the-snake.progress.v1";
   const fresh = () => ({
-    game: "the-snake", version: 1, completedLevels: 0, selectedLevel: 1, coins: 0, coinRemainder: 0, firstClears: Array(9).fill(false), best: 0, defeated: 0,
+    game: "the-snake", version: 1, skillUpgrades: [], completedLevels: 0, selectedLevel: 1, coins: 0, coinRemainder: 0, firstClears: Array(9).fill(false), best: 0, defeated: 0,
     runs: 0, damageLevel: 0, rateLevel: 0, critChanceLevel: 0, critDamageLevel: 0, difficulty: 0.10,
     paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null
   });
@@ -18,6 +18,11 @@ const SnakeProgress = (() => {
         throw new Error("Ungültiger Wert im Spielstand: " + key);
       result[key] = value[key];
     }
+    const upgrades=value.skillUpgrades??[];
+    const known=new Set(HERO_SKILLS.map(s=>s.id));
+    if(!Array.isArray(upgrades)||upgrades.length>known.size||upgrades.some(id=>typeof id!=="string"||!known.has(id))||new Set(upgrades).size!==upgrades.length)
+      throw new Error("Ungültige Skill-Aufwertungen.");
+    result.skillUpgrades=[...upgrades];
     result.coinRemainder=value.coinRemainder??0;
     if(![0,.5].includes(result.coinRemainder))throw new Error("Ungültiger Münzrest.");
     result.firstClears=value.firstClears??Array(9).fill(false);
@@ -104,6 +109,14 @@ const SnakeProgress = (() => {
         }
         data.completedLevels=Math.max(data.completedLevels,level);
         return save();
+      },
+      buySkill(id) {
+        const skill=HERO_SKILLS.find(s=>s.id===id);
+        if(!skill || data.skillUpgrades.includes(id) || data.coins<50 || (skill.hero!=="shooter"&&!data[skill.hero+"Unlocked"]))return false;
+        const old={...data,skillUpgrades:[...data.skillUpgrades]};
+        data.coins-=50;data.skillUpgrades.push(id);
+        if(!save()){data=old;return false;}
+        return true;
       },
       cost(key) { return 20 * (data[key] + 1) ** 2; },
       buy(key) {

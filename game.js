@@ -124,6 +124,7 @@ function resizeCanvas() {
 
 function resetGame() {
   releaseDrag();
+  state.skillUpgrades=[...progress.data.skillUpgrades];
   state.level=state.selectedLevel;
   state.runDifficulty=progress.data.difficulty;
   state.paladin = newPaladin(progress.data.paladinSlot);
@@ -279,7 +280,7 @@ function fireWeapon() {
     const halfWidth = (count - 1) * spacing / 2;
     const center = Math.max(6 + halfWidth, Math.min(state.width - 6 - halfWidth, state.player.x));
     const x = state.weapon.parallel ? center + (i - (count - 1) / 2) * spacing : state.player.x;
-    state.bullets.push({ x, y: state.player.y + PLATFORM_SHOT_Y, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510, hitsLeft: state.weapon.pierce + 1, dead: false });
+    state.bullets.push({ x, y: state.player.y + PLATFORM_SHOT_Y, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510*(state.weapon.parallel?skillValue("shooter","parallel",1,1.2):1), hitsLeft: state.weapon.pierce + 1, dead: false });
   }
 }
 
@@ -321,7 +322,7 @@ function handleHits(random = Math.random) {
       bullet.hitIds.add(segment.id);
       const isPaladin = bullet.owner === "paladin" && state.paladin;
       const isNecro = bullet.owner === "necromancer" && state.necromancer;
-      const hit = isNecro ? necromancerHitRoll(random) : rollHit(random,isPaladin ? paladinDamage() : state.weapon.damage);
+      const hit = isNecro ? necromancerHitRoll(random) : rollHit(random,isPaladin ? paladinDirectDamage(bullet) : state.weapon.damage*skillValue("shooter","attack",1,1.2));
       if (isNecro) prepareNecroHit(segment,hit,random);
       const batch = new Map([[segment.id,hit.damage]]);
       if (isPaladin) paladinHit(batch,segment,hit,random);
@@ -363,7 +364,7 @@ function roundUpgradePool() {
     { rarity: "grey", label: "Grau", damage: 1, rate: 10, pierce: 1 },
     { rarity: "green", label: "Grün", damage: 2, rate: 20, pierce: 2 },
     { rarity: "purple", label: "Lila", damage: 4, rate: 30, pierce: 3 }
-  ].flatMap(tier => [
+  ].map(tier=>({...tier,damage:tier.damage*skillValue("shooter","damage",1,1.2),rate:tier.rate+skillValue("shooter","rate",0,5),pierce:tier.pierce+skillValue("shooter","pierce",0,1)})).flatMap(tier => [
     { rarity: tier.rarity, label: tier.label, name: "+" + tier.damage + " Schaden",
       text: "Zusätzlicher Schaden pro Geschoss.",
       apply: () => { state.weapon.damage += tier.damage; state.weapon.soulDamageBonus = (state.weapon.soulDamageBonus || 0) + tier.damage; } },
@@ -379,6 +380,8 @@ function roundUpgradePool() {
     { rarity: "green", chance: 5, damage: 30 },
     { rarity: "purple", chance: 7.5, damage: 50 }
   ]) {
+    tier.chance+=skillValue("shooter","critChance",0,1);
+    tier.damage+=skillValue("shooter","critDamage",0,10);
     if ((state.weapon.critChance || 0) < 100) pool.push({
       rarity: tier.rarity, name: "+" + String(tier.chance).replace(".", ",") + " % Krit-Chance",
       text: "Erhöht die kritische Trefferchance um " + String(tier.chance).replace(".", ",") + " Prozentpunkte (maximal 100 %).",
@@ -391,16 +394,16 @@ function roundUpgradePool() {
     });
   }
   pool.push({
-    rarity: "grey", name: "+1 Mehrfachschuss", text: "Ein zusätzliches Geschoss bei jedem Schuss.",
+    rarity: "grey", name: "+"+skillValue("shooter","multi",1,2)+" Mehrfachschuss", text: "Zusätzliche Geschosse bei jedem Schuss.",
     apply: () => {
       if (state.weapon.bullets === 1 && !state.weapon.parallel) state.weapon.spread = 24;
-      state.weapon.bullets++;
+      state.weapon.bullets+=skillValue("shooter","multi",1,2);
     }
   });
   if (state.weapon.bullets > 1 && !state.weapon.parallel) {
     pool.push({
-      rarity: "green", name: "Engerer Mehrfachschuss", text: "Halbiert die Streuung deiner Geschosse.",
-      apply: () => state.weapon.spread *= .5
+      rarity: "green", name: "Engerer Mehrfachschuss", text: "Verringert die Streuung um "+skillValue("shooter","spread",50,60)+" %.",
+      apply: () => state.weapon.spread *= skillValue("shooter","spread",.5,.4)
     }, {
       rarity: "purple", name: "Paralleler Mehrfachschuss",
       text: "Geschosse starten nebeneinander und fliegen ohne Streuung geradeaus.",
@@ -488,6 +491,7 @@ function refreshHud() {
 
 function renderProfile() {
   const p = progress.data;
+  renderHeroSkills();
   renderLevelPicker();
   renderPaladinProfile();
   renderNecromancerProfile();
@@ -514,6 +518,7 @@ function showMenu() {
   gameOverScreen.classList.add("hidden");
   upgradeScreen.classList.add("hidden");
   startScreen.classList.remove("hidden");
+  closeHeroSkills();
   selectMenuPage("Home");
   renderProfile();
 }
@@ -814,7 +819,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 16.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 17.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -852,6 +857,7 @@ function loop(time) {
 document.querySelector("#previousLevel").addEventListener("click",()=>changeLevel(-1));
 document.querySelector("#nextLevel").addEventListener("click",()=>changeLevel(1));
 bindNecromancerMenu();
+bindSkillsMenu();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);
 restoreDifficulty();

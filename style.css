@@ -316,3 +316,14 @@ body { padding: 0; background: #111c21; }
 .level-picker strong,.level-picker small { display:block; }
 .level-picker small { font-size:11px; margin-top:4px; }
 button:disabled { opacity:.5; cursor:default; }
+
+.skill-card { background: #0c2231; border: 1px solid #aa8a50; border-radius: 12px; padding: 12px; margin: 12px 0; text-align: left; overflow-wrap: anywhere; }
+.skill-card h4 { margin: 0 0 8px; color: #ffe1a1; font: bold 18px Georgia,serif; }
+.skill-card p { font-size: 13px; line-height: 1.5; margin: 8px 0; }
+.skill-card button { min-height: 44px; width: 100%; }
+.skill-rarities { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-rarity { border: 2px solid #b7bec8; padding: 3px 8px; border-radius: 8px; font-size: 11px; color: #fff; }
+.skill-rarity.rarity-green { border-color: #68db8b; }
+.skill-rarity.rarity-purple { border-color: #bd83ff; }
+.skill-rarity.rarity-orange { border-color: #ffa743; }
+#skillsStatus { font-size: 12px; color: #adeec8; }
