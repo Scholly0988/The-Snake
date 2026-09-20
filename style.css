@@ -297,11 +297,11 @@ body { padding: 0; background: #111c21; }
 
 
 /* Compact five-column main HUD and physically ordered companion panels. */
-.hud { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; margin: 0 -9px 5px; }
-.hud div { padding: 5px 1px 4px; border-width: 1px; }
+.hud { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; margin: 0 -9px 3px; }
+.hud div { padding: 3px 1px 2px; border-width: 1px; }
 .hud div::before, .hud div::after { width: 4px; height: 4px; top: -3px; }
-.hud span { font: bold clamp(6px,1.8vw,9px) system-ui,sans-serif; letter-spacing: 0; white-space: nowrap; }
-.hud strong { font: bold clamp(12px,3.8vw,19px) Georgia,serif; margin-top: 3px; line-height: 1.15; }
+.hud span { font: bold clamp(6px,1.8vw,9px) system-ui,sans-serif; letter-spacing: 0; white-space: nowrap; line-height: 1.1; }
+.hud strong { font: bold clamp(12px,3.8vw,19px) Georgia,serif; margin-top: 0; line-height: 1.05; }
 .companion-hud { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; flex-shrink:0; margin:0 -9px 6px; }
 .platform-stats { min-width:0; padding:5px; border:1px solid #cba65f; border-radius:4px; background:linear-gradient(135deg,#17334fed,#091b2ef2); color:#fff0c8; }
 .platform-stats strong { display:block; color:#f5d68f; font:700 10px system-ui,sans-serif; margin-bottom:3px; }

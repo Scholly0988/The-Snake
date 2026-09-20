@@ -485,7 +485,7 @@ function refreshHud() {
   document.querySelector("#critChance").textContent = hudNumber(state.weapon.critChance || 0) + " %";
   document.querySelector("#critDamage").textContent = hudNumber(state.weapon.critDamage ?? 150) + " %";
   scoreEl.textContent = state.score;
-  damageEl.textContent = state.weapon.damage;
+  damageEl.textContent = state.weapon.damage.toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2});
   fireRateEl.textContent = `${(state.weapon.shotsPerSecond / 2.7).toFixed(1)}×`;
 }
 
@@ -819,7 +819,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 17.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 17.3 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
