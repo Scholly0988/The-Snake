@@ -2,7 +2,7 @@
 
 function newPaladin(slot) {
   return slot ? {slot, fireTimer: 0, hits: 0, impactEvery: 4, damageMultiplier: 1,
-    size: 1.4, speed: .85, radius: 50, explosionMultiplier: 1, pierce: 0,
+    blade:false,bladeEvery:5,throws:0,size: 1.4, speed: .85, radius: 50, explosionMultiplier: 1, pierce: 0,
     revenge: false, morningChance: 0, morningGreen: false, morningPurple: false,
     ultimate: false, cooldown: 20, remaining: 20, charge: 0, swing: 0} : null;
 }
@@ -48,9 +48,12 @@ function updatePaladin(dt) {
   p.fireTimer -= dt;
   if (p.fireTimer <= 0) {
     const x = paladinX();
+    if(p.blade)p.throws++;
+    const fullSweep=p.blade && p.throws%p.bladeEvery===0;
     // Side platform may overhang; its projectile does not teleport into the arena.
     state.bullets.push({owner:"paladin",x,y:state.player.y+PLATFORM_SHOT_Y,vx:0,
-      vy:-510*p.speed,size:p.size,hitsLeft:Infinity,dead:false,hammerPhase:"approach",
+      vy:-510*p.speed,size:p.size,hitsLeft:Infinity,dead:false,hammerPhase:"approach",fullSweep,
+      sweepIds:fullSweep?visibleTargets().map(s=>s.id):null,
       charged:p.hits % p.impactEvery === p.impactEvery-1});
     p.fireTimer += 1 / (state.weapon.shotsPerSecond * .65);
     p.swing = .18;
@@ -87,6 +90,13 @@ function advanceHammer(bullet,dt) {
     if(moveHeroProjectile(bullet,paladinX(),state.player.y+PLATFORM_SHOT_Y,speed,dt))bullet.dead=true;
     return;
   }
+  if(bullet.fullSweep){
+    bullet.hitIds ||= new Set();
+    const target=state.snake.find(s=>bullet.sweepIds.includes(s.id) && isSegmentVisible(s) && s.hp>0 && !bullet.hitIds.has(s.id));
+    if(!target){bullet.hammerPhase="return";return;}
+    moveHeroProjectile(bullet,target.x,target.y,speed,dt);
+    return;
+  }
   if(!bullet.arc){
     const targets=visibleTargets();
     if(!targets.length){bullet.hammerPhase="return";return;}
@@ -114,9 +124,10 @@ function paladinUpgradePool() {
   const pool = [
     card("consecrated","grey","Geweihter Hammer","+20 % Hammerschaden.",()=>p.damageMultiplier*=1.2),
     card("steel","green","Gesegneter Stahl","+15 % Projektilgröße.",()=>p.size*=1.15),
-    card("flight","green","Hammerflug","+20 % Projektilgeschwindigkeit.",()=>p.speed*=1.2),
-    card("blade","green","Heilige Klinge","Durchdringt 1 zusätzliches Segment.",()=>p.pierce++)
+    card("flight","green","Hammerflug","+20 % Projektilgeschwindigkeit.",()=>p.speed*=1.2)
   ];
+  if(!p.blade)pool.push(card("blade","orange","Heilige Klinge","Jeder 5. Hammer fliegt alle beim Wurf sichtbaren Schlangensegmente ab und trifft jedes einmal.",()=>{p.blade=true;p.throws=0;}));
+  else if(p.bladeEvery===5)pool.push(card("ancestors","purple","Hammer der Vorfahren","Heilige Klinge wird bei jedem 4. Hammerwurf ausgelöst.",()=>{p.bladeEvery=4;p.throws=0;}));
   for (const [rarity,radius,damage] of [["grey",15,10],["green",30,20],["purple",50,40]]) {
     pool.push(card("force-"+rarity,rarity,"Heilige Wucht","+"+radius+" % Explosionsradius.",()=>p.radius*=1+radius/100));
     pool.push(card("breaker-"+rarity,rarity,"Lichtbrecher","+"+damage+" % Explosionsschaden.",()=>p.explosionMultiplier*=1+damage/100));
@@ -142,7 +153,7 @@ function companionHudContent(side) {
     lines=[
       "Angriff "+hudNumber(paladinDamage())+" · Rate "+hudNumber(state.weapon.shotsPerSecond*.65/2.7)+"×",
       "Krit "+hudNumber(state.weapon.critChance)+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
-      "Einschlag "+(p.hits%p.impactEvery)+"/"+p.impactEvery+" · Durchschlag "+(state.weapon.pierce+p.pierce),
+      "Einschlag "+(p.hits%p.impactEvery)+"/"+p.impactEvery+" · Klinge "+(p.blade?(p.throws%p.bladeEvery)+"/"+p.bladeEvery:"gesperrt"),
       p.ultimate?"Urteil: "+(p.charge>0?"lädt":Math.ceil(p.remaining)+" s"):"Urteil: gesperrt"
     ];
   } else if(n?.slot===side) {

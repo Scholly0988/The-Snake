@@ -285,10 +285,13 @@ function projectileHits(bullet, target) {
   const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : 0);
   return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
 }
+function segmentDamageMultiplier(segment) {
+  return segment.soulMark ? 1 + (state.necromancer?.curse || 0) : 1;
+}
 function applyDamageBatch(batch) {
   // All targets are determined before any segment retreats or upgrade pauses.
   for (const segment of state.snake) {
-    if (isSegmentVisible(segment) && batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id))*1e10)/1e10;
+    if (isSegmentVisible(segment) && batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id)*segmentDamageMultiplier(segment))*1e10)/1e10;
   }
   for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
   resolveNecroDeaths();
@@ -793,7 +796,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.8 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 15.9 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

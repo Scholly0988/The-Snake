@@ -1,6 +1,6 @@
 "use strict";
 function newNecromancer(slot) {
-  return slot ? {slot,fireTimer:0,pulse:0,limit:3,soulBonus:0,speedBonus:0,markChance:.2,
+  return slot ? {slot,fireTimer:0,pulse:0,limit:3,soulBonus:0,speedBonus:0,markChance:.05,markCooldown:0,
     binding:0,endless:0,explosion:0,strongDamage:3,choir:0,siphon:0,curse:0,chain:0,harvest:0,
     storm:false,legion:false,elite:0,seal:false,sealCount:0,ultimate:false,remaining:22,charge:0,
     taken:{},tiers:{}} : null;
@@ -14,16 +14,18 @@ function necromancerHitRoll(random) {
 function necroDamage(segment,damage) {
   if (!isSegmentVisible(segment)) return 0;
   segment.necroTouched=true;
-  return damage*(segment.soulMark?1+state.necromancer.curse:1);
+  return damage;
 }
 function prepareNecroHit(segment,hit,random) {
   const n=state.necromancer;
-  if (segment===state.snake[0] && random()<n.markChance) {
-    const candidates=state.snake.filter(s=>s.hp>0&&!s.soulMark &&
-      s.x>=0&&s.x<=state.width&&s.y>=0&&s.y<=state.height);
-    if(candidates.length) {
-      const target=candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))];
-      target.soulMark=true;
+  if (segment===state.snake[0] && n.markCooldown<=0) {
+    n.markCooldown=1;
+    if (random()<n.markChance) {
+      const candidates=visibleTargets().filter(s=>!s.soulMark);
+      if(candidates.length) {
+        const target=candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))];
+        target.soulMark=true;
+      }
     }
   }
   hit.damage=necroDamage(segment,hit.damage);
@@ -62,7 +64,8 @@ function resolveNecroDeaths() {
         if (s.necroTouched || s.soulMark) spawnSoul(s,{strong:!!s.soulMark,elite:!!(s.soulMark&&n.curse>0&&n.elite)});
         if (!s.soulMark) continue;
         if (n.chain && Math.random()<n.chain) {
-          const neighbor=neighbors.find(t=>state.snake.includes(t)&&t.hp>0&&!t.soulMark);
+          const candidates=visibleTargets().filter(t=>!t.soulMark);
+          const neighbor=candidates[Math.floor(Math.random()*candidates.length)];
           if (neighbor) neighbor.soulMark=true;
         }
         if (n.seal) {
@@ -70,9 +73,9 @@ function resolveNecroDeaths() {
             n.sealCount=0;
             for (let i=0;i<50;i++) spawnSoul(s,{swirl:true,temporary:true,wait:0,angle:i*Math.PI*2/50});
           }
-        } else if (n.explosion) necroArea(batch,s,52.5,(n.explosion+state.weapon.damage)*(1+n.soulBonus)*(n.legion?.8:1));
+        } else if (n.explosion) necroArea(batch,s,52.5,(n.explosion+state.weapon.damage)*(1+n.soulBonus));
       }
-      for (const s of state.snake) if (isSegmentVisible(s) && batch.has(s.id)) s.hp-=batch.get(s.id);
+      for (const s of state.snake) if (isSegmentVisible(s) && batch.has(s.id)) s.hp-=batch.get(s.id)*segmentDamageMultiplier(s);
       for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
     }
   } finally { n.resolving=false; }
@@ -142,6 +145,7 @@ function updateNecromancer(dt) {
   const n=state.necromancer;
   if (!n) return;
   resolveNecroDeaths();
+  n.markCooldown=Math.max(0,n.markCooldown-dt);
   n.pulse=Math.max(0,n.pulse-dt);
   n.fireTimer-=dt;
   if (n.fireTimer<=0) {
@@ -222,12 +226,12 @@ function necromancerUpgradePool() {
     ["soulBonus","Seelenhunger",[.15,.30,.50],"Seelenschaden"],
     ["speedBonus","Geisterflug",[.20,.40,.70],"Seelengeschwindigkeit"],
     ["explosion","Seelenexplosion",[.3,.6,1],"Explosionsschaden (Radius 52,5)"],
-    ["strongDamage","Verstärkte Bindung",[.2,.5,1],"Schaden markierter Seelen"],
+    ["strongDamage","Verstärkte Bindung",[1.7,2,2.5],"Schaden markierter Seelen"],
     ["choir","Totenchor",[1,2,4],"temporäre Seelen bei Totenruf"],
     ["curse","Fluch des Todes",[.10,.20,.35],"Schaden gegen markierte Segmente"]
   ];
   const once=[
-    ["markChance","Dunkles Mal",[.10,.20,.35]],
+    ["markChance","Dunkles Mal",[.05,.10,.15]],
     ["endless","Endlose Diener",[1,2,3]],
     ["harvest","Unheilige Ernte",[.05,.10,.20]]
   ];
@@ -247,7 +251,7 @@ function necromancerUpgradePool() {
         explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 52,5 Pixeln. Der aktuelle Standardwaffenschaden wird vor Prozentboni addiert.",
         strongDamage:"Seelen aus markierten Segmenten verursachen "+amount+" zusätzlichen Basisschaden.",
         choir:"Totenruf beschwört "+v+" zusätzliche Seelen.",
-        curse:"Markierte Segmente erleiden "+Math.round(v*100)+" % mehr Schaden durch Vaelrics Angriffe und Seelen."
+        curse:"Markierte Segmente erleiden "+Math.round(v*100)+" % mehr Schaden durch alle Helden, Angriffe, Seelen und Flächeneffekte."
       }[key];
       card(key+"-"+rarity,rarity,name,description,()=>n[key]+=v);
     }
@@ -255,14 +259,14 @@ function necromancerUpgradePool() {
       const id=key+"-"+rarity,v=values[i];
       if(!n.taken[id]) card(id,rarity,name,{
         endless:"Jede Seele führt "+v+" zusätzliche Angriffszyklen aus. Dazwischen kehrt sie zurück und kreist 5 Sekunden unten links.",
-        markChance:"Jeder Stabtreffer auf das erste Segment kann ein zufälliges unmarkiertes Segment im sichtbaren Spielfeld markieren. Erhöht diese Chance um "+Math.round(v*100)+" Prozentpunkte. Markierte Segmente hinterlassen stärkere Seelen.",
+        markChance:"Höchstens einmal pro Sekunde kann ein Stabtreffer auf das erste Segment ein zufälliges unmarkiertes Segment im sichtbaren Spielfeld markieren. Erhöht diese Chance um "+Math.round(v*100)+" Prozentpunkte. Markierte Segmente hinterlassen stärkere Seelen.",
         harvest:"Erhöht die Chance, bei einem kritischen Stabtreffer eine kleine Seele zu beschwören, um "+Math.round(v*100)+" Prozentpunkte."
       }[key],()=>{if(!n.taken[id]){n[key]+=v;n.taken[id]=true;}});
     }
     for (const [key,name,values,unit] of highest) {
       if(key==="siphon"&&!n.ultimate)continue;
       const v=values[i];
-      if((n.tiers[key]??-1)<i)card(key+"-"+rarity,rarity,name,(key==="siphon"?"Jede neu beschworene Seele verkürzt die verbleibende Abklingzeit von Totenruf um "+String(v).replace(".",",")+" Sekunden.":"Stirbt ein markiertes Segment, springt seine Marke mit "+Math.round(v*100)+" % Chance auf ein benachbartes Segment über."),()=>{n[key]=Math.max(n[key],v);n.tiers[key]=Math.max(n.tiers[key]??-1,i);});
+      if((n.tiers[key]??-1)<i)card(key+"-"+rarity,rarity,name,(key==="siphon"?"Jede neu beschworene Seele verkürzt die verbleibende Abklingzeit von Totenruf um "+String(v).replace(".",",")+" Sekunden.":"Stirbt ein markiertes Segment, springt seine Marke mit "+Math.round(v*100)+" % Chance auf ein zufälliges unmarkiertes sichtbares Segment über."),()=>{n[key]=Math.max(n[key],v);n.tiers[key]=Math.max(n.tiers[key]??-1,i);});
     }
   }
   for(const [rarity,jumps] of [["grey",1],["green",2],["purple",3],["orange",5]]) {
@@ -273,7 +277,7 @@ function necromancerUpgradePool() {
   }
   if(!n.storm)card("storm","green","Seelensturm","Solange mindestens 5 Seelen aktiv sind, fliegen sie 25 % schneller und verursachen 20 % mehr Schaden.",()=>n.storm=true);
   if(n.elite<3)card("elite","purple","Letzter Fluch","Mit Fluch des Todes hinterlassen zerstörte markierte Segmente Elite-Seelen mit "+String([2.2,3.3,4.4][n.elite]).replace(".",",")+" Basisschaden.",()=>n.elite=Math.min(3,n.elite+1));
-  if(!n.legion)card("legion","purple","Seelenlegion","Du kannst 5 weitere Seelen gleichzeitig binden. Dafür verursachen alle Seelen 20 % weniger Schaden.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
+  if(!n.legion)card("legion","purple","Seelenlegion","Du kannst 5 weitere Seelen gleichzeitig binden. Dafür verursachen alle Seelen 20 % weniger Schaden. Seelenexplosion ist davon ausgenommen.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
   if(!n.seal)card("seal","orange","Todessiegel","Nach 5 zerstörten markierten Segmenten brechen 50 Seelen spiralförmig hervor. Jede verursacht 2 Basisschaden plus Standardwaffenschaden pro Treffer und trifft bis zu 3 Segmente. Ersetzt die Explosion beim Tod markierter Segmente.",()=>n.seal=true);
   if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=22;});
   return pool;
