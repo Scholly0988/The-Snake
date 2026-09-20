@@ -12,9 +12,12 @@ function paladinDamage() { return (state.weapon.damage + 1) * state.paladin.dama
 function isSegmentVisible(s) { return s.x >= 0 && s.x <= state.width && s.y >= 0 && s.y <= state.height; }
 function visibleTargets() { return state.snake.filter(s => s.hp > 0 && isSegmentVisible(s)); }
 function addDamage(batch, segment, damage) { if (!isSegmentVisible(segment)) return; batch.set(segment.id, (batch.get(segment.id) || 0) + damage); }
+function segmentInArea(segment, center, radius) {
+  return segment.hp > 0 && isSegmentVisible(segment) && Math.hypot(segment.x-center.x, segment.y-center.y) <= radius + SEGMENT_HIT_RADIUS;
+}
 function holyArea(batch, center, radius, damage, excludeId = null) {
   for (const s of state.snake) {
-    if (s.id !== excludeId && Math.hypot(s.x - center.x, s.y - center.y) <= radius) addDamage(batch, s, damage);
+    if (s.id !== excludeId && segmentInArea(s, center, radius)) addDamage(batch, s, damage);
   }
   state.holyEffects.push({x:center.x, y:center.y, radius, life:.45, maxLife:.45, kind:"ring"});
 }
@@ -31,7 +34,7 @@ function paladinHit(batch, segment, hit, random) {
   p.hits++;
   state.holyEffects.push({x:segment.x,y:segment.y,radius:12,life:.2,maxLife:.2,kind:"ring"});
   if (p.hits % p.impactEvery === 0) {
-    paladinExplosion(batch, segment, p.radius, paladinDamage() * .5 * p.explosionMultiplier, segment.id, random);
+    paladinExplosion(batch, segment, p.radius, paladinDamage() * .5 * p.explosionMultiplier, null, random);
   }
   if (p.revenge && hit.critical) {
     addDamage(batch, segment, paladinDamage() * .5);

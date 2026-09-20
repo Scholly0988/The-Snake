@@ -41,13 +41,13 @@ function spawnSoul(center,options={}) {
   if (n.ultimate) n.remaining=Math.max(0,n.remaining-n.siphon);
   return soul;
 }
-function soulDamage(soul) {
+function soulDamage(soul, area = false) {
   const n=state.necromancer;
   const base=soul.swirl?2:soul.elite?[2.2,3.3,4.4][Math.max(0,Math.min(2,n.elite-1))]:soul.strong?n.strongDamage:soul.small?1.5:2;
-  return (base+(state.weapon.soulDamageBonus || 0))*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
+  return (base+((area || soul.swirl) ? state.weapon.damage : (state.weapon.soulDamageBonus || 0)))*(1+n.soulBonus)*(n.legion?.8:1)*(n.storm&&state.souls.filter(s=>!s.dead).length>=5?1.2:1);
 }
 function necroArea(batch,center,radius,damage) {
-  for (const s of state.snake) if (s.hp>0&&isSegmentVisible(s)&&Math.hypot(s.x-center.x,s.y-center.y)<=radius)
+  for (const s of state.snake) if (segmentInArea(s,center,radius))
     addDamage(batch,s,necroDamage(s,damage));
   state.soulEffects.push({x:center.x,y:center.y,radius,life:.4});
 }
@@ -70,7 +70,7 @@ function resolveNecroDeaths() {
             n.sealCount=0;
             for (let i=0;i<50;i++) spawnSoul(s,{swirl:true,temporary:true,wait:0,angle:i*Math.PI*2/50});
           }
-        } else if (n.explosion) necroArea(batch,s,42,n.explosion*(1+n.soulBonus)*(n.legion?.8:1));
+        } else if (n.explosion) necroArea(batch,s,42,(n.explosion+state.weapon.damage)*(1+n.soulBonus)*(n.legion?.8:1));
       }
       for (const s of state.snake) if (isSegmentVisible(s) && batch.has(s.id)) s.hp-=batch.get(s.id);
       for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
@@ -201,7 +201,7 @@ function updateNecromancer(dt) {
         s.jumps=s.hitIds.size-1;
         const damage=soulDamage(s);
         const batch=new Map([[target.id,necroDamage(target,damage)]]);
-        if(n.binding===5 && s.jumps===5) necroArea(batch,target,64,damage*2);
+        if(n.binding===5 && s.jumps===5) necroArea(batch,target,64,soulDamage(s,true)*2);
         if (s.jumps>=n.binding || !chooseSoulTarget(s)) finishSoulAttack(s);
         state.soulEffects.push({x:target.x,y:target.y,radius:15,life:.4});
         applyDamageBatch(batch);
@@ -244,7 +244,7 @@ function necromancerUpgradePool() {
         limit:"Erhöht die Anzahl gleichzeitig gebundener Seelen um "+v+".",
         soulBonus:"Erhöht den Schaden aller beschworenen Seelen um "+Math.round(v*100)+" %.",
         speedBonus:"Deine Seelen fliegen "+Math.round(v*100)+" % schneller.",
-        explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 42 Pixeln.",
+        explosion:"Stirbt ein markiertes Segment, explodiert es. Erhöht den Schaden dieser Explosion um "+amount+" im Umkreis von 42 Pixeln. Der aktuelle Standardwaffenschaden wird vor Prozentboni addiert.",
         strongDamage:"Seelen aus markierten Segmenten verursachen "+amount+" zusätzlichen Basisschaden.",
         choir:"Totenruf beschwört "+v+" zusätzliche Seelen.",
         curse:"Markierte Segmente erleiden "+Math.round(v*100)+" % mehr Schaden durch Vaelrics Angriffe und Seelen."
@@ -274,7 +274,7 @@ function necromancerUpgradePool() {
   if(!n.storm)card("storm","green","Seelensturm","Solange mindestens 5 Seelen aktiv sind, fliegen sie 25 % schneller und verursachen 20 % mehr Schaden.",()=>n.storm=true);
   if(n.elite<3)card("elite","purple","Letzter Fluch","Mit Fluch des Todes hinterlassen zerstörte markierte Segmente Elite-Seelen mit "+String([2.2,3.3,4.4][n.elite]).replace(".",",")+" Basisschaden.",()=>n.elite=Math.min(3,n.elite+1));
   if(!n.legion)card("legion","purple","Seelenlegion","Du kannst 5 weitere Seelen gleichzeitig binden. Dafür verursachen alle Seelen 20 % weniger Schaden.",()=>{if(!n.legion){n.legion=true;n.limit+=5;}});
-  if(!n.seal)card("seal","orange","Todessiegel","Nach 5 zerstörten markierten Segmenten brechen 50 Seelen spiralförmig hervor. Jede verursacht 2 Basisschaden pro Treffer und trifft bis zu 3 Segmente. Ersetzt die Explosion beim Tod markierter Segmente.",()=>n.seal=true);
+  if(!n.seal)card("seal","orange","Todessiegel","Nach 5 zerstörten markierten Segmenten brechen 50 Seelen spiralförmig hervor. Jede verursacht 2 Basisschaden plus Standardwaffenschaden pro Treffer und trifft bis zu 3 Segmente. Ersetzt die Explosion beim Tod markierter Segmente.",()=>n.seal=true);
   if(!n.ultimate)card("call","orange","Totenruf","Alle 22 s gemeinsamer Seelenangriff und 2 temporäre Seelen. Schaltet Totenchor und Seelensog frei.",()=>{n.ultimate=true;n.remaining=22;});
   return pool;
 }
