@@ -4,7 +4,7 @@
 const SnakeProgress = (() => {
   const KEY = "the-snake.progress.v1";
   const fresh = () => ({
-    game: "the-snake", version: 1, completedLevels: 0, selectedLevel: 1, coins: 0, best: 0, defeated: 0,
+    game: "the-snake", version: 1, completedLevels: 0, selectedLevel: 1, coins: 0, coinRemainder: 0, firstClears: Array(9).fill(false), best: 0, defeated: 0,
     runs: 0, damageLevel: 0, rateLevel: 0, critChanceLevel: 0, critDamageLevel: 0, difficulty: 0.10,
     paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null
   });
@@ -18,6 +18,11 @@ const SnakeProgress = (() => {
         throw new Error("Ungültiger Wert im Spielstand: " + key);
       result[key] = value[key];
     }
+    result.coinRemainder=value.coinRemainder??0;
+    if(![0,.5].includes(result.coinRemainder))throw new Error("Ungültiger Münzrest.");
+    result.firstClears=value.firstClears??Array(9).fill(false);
+    if(!Array.isArray(result.firstClears)||result.firstClears.length!==9||result.firstClears.some(v=>typeof v!=="boolean"))throw new Error("Ungültige Erstabschlüsse.");
+    result.firstClears=[...result.firstClears];
     result.completedLevels=value.completedLevels===undefined?0:value.completedLevels;
     result.selectedLevel=value.selectedLevel===undefined?1:value.selectedLevel;
     if(!Number.isInteger(result.completedLevels)||result.completedLevels<0||result.completedLevels>3 ||
@@ -73,18 +78,30 @@ const SnakeProgress = (() => {
         return false;
       }
     }
+    function credit(amount) {
+      const total=data.coins+data.coinRemainder+amount;
+      data.coins=Math.min(1000000000,Math.floor(total));
+      data.coinRemainder=data.coins===1000000000?0:total%1;
+    }
     return {
       get data() { return data; },
       get message() { return message; },
       save,
       reward(coins, score) {
-        data.coins = Math.min(1000000000, data.coins + coins);
+        credit(coins);
         data.defeated = Math.min(1000000000, data.defeated + 1);
         data.best = Math.min(1000000000, Math.max(data.best, score));
         save();
       },
-      completeLevel(level) {
+      completeLevel(level, difficulty) {
         if(!Number.isInteger(level)||level<1||level>3||level>data.completedLevels+1)return false;
+        if(difficulty!==undefined){
+          const index=[.10,.15,.20].indexOf(difficulty);
+          if(index<0)return false;
+          const key=(level-1)*3+index, multiplier=[1,1.5,2][index];
+          credit(level*50*multiplier+(data.firstClears[key]?0:level*100*multiplier));
+          data.firstClears[key]=true;
+        }
         data.completedLevels=Math.max(data.completedLevels,level);
         return save();
       },

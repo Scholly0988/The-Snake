@@ -70,11 +70,15 @@ function levelSegmentHp(level,index,count) {
   if(count<=1)return first;
   return Math.min(last-(count-1-index),Math.max(first+index,Math.round(first*(last/first)**(index/(count-1)))));
 }
+function difficultyMultiplier(difficulty=progress.data.difficulty) { return difficulty===.20?2:difficulty===.15?1.5:1; }
 function renderLevelPicker() {
   const level=state.selectedLevel, config=LEVELS[level-1];
+  const multiplier=difficultyMultiplier();
+  const key=(level-1)*3+[.10,.15,.20].indexOf(progress.data.difficulty);
+  document.querySelector("#rewardInfo").textContent="Münzen: "+level*multiplier+" / "+level*5*multiplier+" pro Segment · Abschluss +"+level*50*multiplier+" · "+(progress.data.firstClears[key]?"Erstbonus erhalten":"Erstbonus +"+level*100*multiplier);
   const locked=level>progress.data.completedLevels+1;
   document.querySelector("#levelName").textContent="Level "+level+(locked?" · Gesperrt":level<=progress.data.completedLevels?" · Abgeschlossen":"");
-  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":config.first+"–"+config.last.toLocaleString("de-DE")+" Leben · 100 Segmente";
+  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":Math.round(config.first*multiplier)+"–"+Math.round(config.last*multiplier).toLocaleString("de-DE")+" Leben · 100 Segmente";
   document.querySelector("#previousLevel").disabled=level===1;
   document.querySelector("#nextLevel").disabled=level===3;
   document.querySelector("#startButton").disabled=locked;
@@ -91,11 +95,16 @@ function completeLevel() {
   if(state.mode!=="playing"||state.snake.length)return;
   releaseDrag();state.mode="victory";state.pendingUpgrades=0;
   state.score+=500;progress.data.best=Math.max(progress.data.best,state.score);
-  progress.completeLevel(state.level);
+  const multiplier=difficultyMultiplier(state.runDifficulty);
+  const key=(state.level-1)*3+[.10,.15,.20].indexOf(state.runDifficulty);
+  const completionCoins=state.level*50*multiplier;
+  const firstCoins=progress.data.firstClears[key]?0:state.level*100*multiplier;
+  progress.completeLevel(state.level,state.runDifficulty);
+  state.runCoins+=completionCoins+firstCoins;
   upgradeScreen.classList.add("hidden");
   document.querySelector("#resultEyebrow").textContent="SCHLANGE BESIEGT";
   document.querySelector("#resultTitle").textContent="Level "+state.level+" abgeschlossen!";
-  document.querySelector("#runSummary").textContent=state.runCoins+" Münzen verdient · "+(state.level<3?"Level "+(state.level+1)+" freigeschaltet":"Alle drei Level abgeschlossen");
+  document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · Abschluss +"+completionCoins+(firstCoins?" · Erstabschluss +"+firstCoins:"")+" · "+(state.level<3?"Level "+(state.level+1)+" freigeschaltet":"Alle drei Level abgeschlossen");
   finalScore.textContent=state.score;
   gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();
 }
@@ -116,6 +125,7 @@ function resizeCanvas() {
 function resetGame() {
   releaseDrag();
   state.level=state.selectedLevel;
+  state.runDifficulty=progress.data.difficulty;
   state.paladin = newPaladin(progress.data.paladinSlot);
   state.necromancer = newNecromancer(progress.data.necromancerSlot);
   state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
@@ -141,7 +151,7 @@ function createSnake(count) {
   state.snake = [];
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
-    const scaledHp = levelSegmentHp(state.level,i,count);
+    const scaledHp = Math.round(levelSegmentHp(state.level,i,count)*difficultyMultiplier(state.runDifficulty??.10));
     state.snake.push({
       id: state.nextId++,
       pathOffset: (i + 1) * SEGMENT_SPACING,
@@ -331,7 +341,7 @@ function destroySegment(index, offerUpgrade = true) {
   const [destroyed] = state.snake.splice(index, 1);
   if (state.necromancer) state.necroDeaths.push({segment:destroyed,neighbors:[state.snake[index-1],state.snake[index]].filter(Boolean)});
   state.score += destroyed.upgrade ? 100 : 25;
-  const coins = destroyed.upgrade ? 5 : 1;
+  const coins = (destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   state.runCoins += coins;
   progress.reward(coins, state.score);
   document.querySelector("#saveStatus").textContent = progress.message;
@@ -462,7 +472,7 @@ function endGame() {
   progress.data.best = Math.max(progress.data.best, state.score);
   progress.save();
   renderProfile();
-  document.querySelector("#runSummary").textContent = state.runCoins + " Münzen verdient · bleiben erhalten";
+  document.querySelector("#runSummary").textContent = Math.floor(state.runCoins) + " Münzen verdient · bleiben erhalten";
   finalScore.textContent = state.score;
   gameOverScreen.classList.remove("hidden");
 }
@@ -524,6 +534,12 @@ for (const page of ["Home", "Upgrades", "Heroes", "Options"]) {
   });
 }
 
+for (const value of [.10,.15,.20]) {
+  document.querySelector('input[name="difficulty"][value="'+value.toFixed(2)+'"]').addEventListener("change",()=>{
+    if(state.mode!=="start")return;
+    progress.data.difficulty=value;progress.save();renderLevelPicker();
+  });
+}
 function restoreDifficulty() {
   const radio = document.querySelector('input[name="difficulty"][value="' + progress.data.difficulty.toFixed(2) + '"]');
   if (radio) radio.checked = true;
@@ -798,7 +814,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 15.10 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 16.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
