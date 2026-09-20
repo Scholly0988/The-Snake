@@ -193,3 +193,13 @@ Seuchenfläschchen, unabhängige Giftstapel, Giftübertragung, Giftwolken,
 Meisterexperiment sowie die vereinbarten lila und orangen Build-Fähigkeiten.
 Heldenauswahl, Plattformwechsel, HUD, lokaler Spielstand und dauerhafte
 50-Münzen-Skills unterstützen Selvara. Details: [SELVARA.md](SELVARA.md).
+
+## Version 18.1 – Tablet- und Laptop-Ansicht
+
+Ab 760 Pixel Fensterbreite steht das Spielfeld mittig zwischen zwei ausführlichen
+Heldenkarten. Jede ausgerüstete Seitenplattform zeigt dort alle aktuellen
+Kampf- und Klassenwerte, gewählte Run-Upgrades einschließlich Seltenheit und
+Auswahlanzahl sowie die dauerhaft für 50 Münzen aufgewerteten Skills. Auf dem
+Handy bleibt das bisherige kompakte HUD erhalten. Am PC bewegt man die komplette
+Plattformgruppe zusätzlich mit den Pfeiltasten oder mit A/D; Touch-Wischen bleibt
+unverändert verfügbar.

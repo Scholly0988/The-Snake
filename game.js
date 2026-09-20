@@ -57,7 +57,8 @@ const state = {
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, pendingUpgrades: 0, upgradeOfferId: 0,
-  pointerDown: false
+  runUpgradeHistory: {paladin:[],necromancer:[],alchemist:[]},
+  pointerDown: false, keyboardLeft: false, keyboardRight: false
 };
 
 const SNAKE_SCALE = .9;
@@ -136,6 +137,8 @@ function resetGame() {
   state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
   state.holyEffects = [];
   state.pendingUpgrades = 0;
+  state.runUpgradeHistory = {paladin:[],necromancer:[],alchemist:[]};
+  state.keyboardLeft = false; state.keyboardRight = false;
   state.lastUpgrade=null;
   state.score = 0;
   state.runCoins = 0;
@@ -226,6 +229,8 @@ function update(dt) {
 
   syncSnakePositions();
 
+  const keyboardDirection=(state.keyboardRight?1:0)-(state.keyboardLeft?1:0);
+  if(keyboardDirection)state.player.targetX=clampPlayerX(state.player.targetX+keyboardDirection*state.player.speed*dt);
   const dx = state.player.targetX - state.player.x;
   const maxStep = state.player.speed * dt;
   state.player.x += Math.sign(dx) * Math.min(Math.abs(dx), maxStep);
@@ -364,7 +369,7 @@ function destroySegment(index, offerUpgrade = true) {
   const coins = (destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   state.runCoins += coins;
   progress.reward(coins, state.score);
-  document.querySelector("#saveStatus").textContent = progress.message;
+  document.querySelector("#saveStatus").textContent = progress.message + " · Touch: Wischen · PC: ← → oder A/D";
   burst(destroyed.x, destroyed.y, destroyed.upgrade ? "#ffe083" : "#75ffac", 16);
 
   // Nur der Abschnitt vor der Lücke (Richtung Kopf) fällt zurück.
@@ -464,6 +469,7 @@ function openUpgrade() {
       state.upgradeOfferId++;
       state.lastUpgrade=choice.name+" ("+choice.rarity+")";
       choice.apply();
+      recordRunUpgrade(choice);
       refreshHud();
       state.pendingUpgrades = Math.max(0,state.pendingUpgrades-1);
       if (state.pendingUpgrades>0) { openUpgrade(); return; }
@@ -474,6 +480,13 @@ function openUpgrade() {
     upgradeChoices.append(button);
   }
   upgradeScreen.classList.remove("hidden");
+}
+
+function recordRunUpgrade(choice) {
+  const hero=choice.text.startsWith("Aldric ·")?"paladin":choice.text.startsWith("Vaelric ·")?"necromancer":choice.text.startsWith("Selvara ·")?"alchemist":null;
+  if(!hero)return;
+  const text=choice.text.replace(/^(Aldric|Vaelric|Selvara) · /,"");
+  state.runUpgradeHistory[hero].push({name:choice.name,rarity:choice.rarity,text});
 }
 
 function shuffle(items) {
@@ -814,6 +827,11 @@ function releaseDrag() {
   if (id != null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
 }
 
+function setKeyboardKey(code, pressed) {
+  if(code==="ArrowLeft"||code==="KeyA")state.keyboardLeft=pressed;
+  if(code==="ArrowRight"||code==="KeyD")state.keyboardRight=pressed;
+}
+
 canvas.addEventListener("pointerdown", event => {
   if (state.mode !== "playing" || state.pointerDown) return;
   state.pointerDown = true;
@@ -830,7 +848,16 @@ canvas.addEventListener("pointerup", event => {
 });
 canvas.addEventListener("pointercancel", releaseDrag);
 canvas.addEventListener("lostpointercapture", releaseDrag);
-window.addEventListener("blur", releaseDrag);
+window.addEventListener("keydown",event=>{
+  if(state.mode!=="playing"||!["ArrowLeft","ArrowRight","KeyA","KeyD"].includes(event.code))return;
+  event.preventDefault();setKeyboardKey(event.code,true);
+});
+window.addEventListener("keyup",event=>{
+  if(!["ArrowLeft","ArrowRight","KeyA","KeyD"].includes(event.code))return;
+  event.preventDefault();setKeyboardKey(event.code,false);
+  if(!state.keyboardLeft&&!state.keyboardRight&&!state.pointerDown)state.player.targetX=state.player.x;
+});
+window.addEventListener("blur",()=>{releaseDrag();state.keyboardLeft=false;state.keyboardRight=false;});
 
 document.querySelector("#startButton").addEventListener("click", startGame);
 document.querySelector("#restartButton").addEventListener("click", startGame);
@@ -842,7 +869,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 18.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 18.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

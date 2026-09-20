@@ -306,6 +306,7 @@ body { padding: 0; background: #111c21; }
 .platform-stats { min-width:0; padding:5px; border:1px solid #cba65f; border-radius:4px; background:linear-gradient(135deg,#17334fed,#091b2ef2); color:#fff0c8; }
 .platform-stats strong { display:block; color:#f5d68f; font:700 10px system-ui,sans-serif; margin-bottom:3px; }
 .platform-stats span { display:block; font:clamp(8px,2.25vw,10px)/1.4 system-ui,sans-serif; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.desktop-hero-details { display:none; }
 @media(max-height:620px) {
   .platform-stats { padding:3px; }
   .platform-stats span { line-height:1.25; }
@@ -327,3 +328,49 @@ button:disabled { opacity:.5; cursor:default; }
 .skill-rarity.rarity-purple { border-color: #bd83ff; }
 .skill-rarity.rarity-orange { border-color: #ffa743; }
 #skillsStatus { font-size: 12px; color: #adeec8; }
+
+/* Tablet/Laptop: arena in the centre, complete companion sheets at both sides. */
+@media (min-width:760px) {
+  body { place-items:center; padding:0; }
+  .game-shell {
+    width:min(100%,1180px); max-width:1180px; height:100svh;
+    display:grid; grid-template-columns:minmax(145px,240px) minmax(380px,520px) minmax(145px,240px);
+    grid-template-rows:auto minmax(0,1fr) auto; column-gap:10px;
+    padding:max(8px,env(safe-area-inset-top)) 8px max(6px,env(safe-area-inset-bottom));
+    background-size:cover;
+  }
+  .hud { grid-column:2; grid-row:1; margin:0 0 5px; }
+  .companion-hud { display:contents; }
+  .platform-stats {
+    grid-row:1 / 4; min-height:0; overflow-y:auto; scrollbar-width:thin;
+    padding:10px; border:2px solid #cba65f; border-radius:8px;
+    background:linear-gradient(160deg,#17334ff5,#071725f7); box-shadow:0 7px 22px #0008;
+  }
+  #platformStatsleft { grid-column:1; }
+  #platformStatsright { grid-column:3; }
+  .platform-stats > strong { position:sticky; top:-10px; z-index:1; margin:-10px -10px 8px; padding:10px; background:#0d2437; border-bottom:1px solid #cba65f; font-size:14px; }
+  .platform-compact { padding-bottom:8px; border-bottom:1px solid #79643c; }
+  .platform-stats span { font-size:11px; line-height:1.45; }
+  .desktop-hero-details { display:block; color:#f7edcf; }
+  .desktop-hero-details h4 { margin:12px 0 6px; color:#f5d68f; font:700 12px Georgia,serif; letter-spacing:.04em; }
+  .desktop-hero-details dl { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:3px 6px; margin:0; font:10px/1.3 system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+  .desktop-hero-details dt { color:#a9c5d5; overflow-wrap:anywhere; }
+  .desktop-hero-details dd { margin:0; color:#fff4d3; text-align:right; overflow-wrap:anywhere; }
+  .hero-upgrade-list,.permanent-skill-list { display:grid; gap:5px; margin:0; padding:0; list-style:none; }
+  .hero-upgrade-list li,.permanent-skill-list li { padding:5px 6px; border-left:3px solid #9ba3ad; border-radius:3px; background:#081a28aa; font:10px/1.25 system-ui,sans-serif; }
+  .hero-upgrade-list li.rarity-green { border-left-color:#65dc94; }
+  .hero-upgrade-list li.rarity-purple { border-left-color:#c990ff; }
+  .hero-upgrade-list li.rarity-orange { border-left-color:#ff9b38; }
+  .hero-upgrade-list small,.permanent-skill-list small { display:block; margin-top:2px; color:#b7cbd5; font-size:9px; }
+  .empty-upgrades { margin:0; color:#91aab7; font:italic 10px/1.35 system-ui,sans-serif; }
+  .game-wrap { grid-column:2; grid-row:2; width:100%; height:auto; min-height:0; }
+  .hint { grid-column:2; grid-row:3; margin-top:5px; }
+}
+
+@media (min-width:1050px) {
+  .game-shell { column-gap:16px; }
+  .platform-stats { padding:12px; }
+  .platform-stats > strong { top:-12px; margin:-12px -12px 10px; padding:12px; font-size:16px; }
+  .desktop-hero-details dl { font-size:11px; }
+  .hero-upgrade-list li,.permanent-skill-list li { font-size:11px; }
+}

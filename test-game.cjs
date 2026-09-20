@@ -601,3 +601,23 @@ assert.equal(run('progress.data.coins-victoryBefore'),450);
 run('completeLevel()');
 assert.equal(run('progress.data.coins-victoryBefore'),450,'Duplicate victory callback is guarded');
 console.log('PASS: level/difficulty HP and segment rewards, completion bonus and duplicate victory guard');
+
+// Desktop/tablet companion sheets and keyboard movement.
+run('progress.data.paladinUnlocked=true;progress.data.paladinSlot="left";progress.data.necromancerSlot=null;progress.data.alchemistSlot=null;progress.data.skillUpgrades=["paladin.attack"];state.mode="playing";resetGame();state.mode="playing"');
+run('var desktopCard=paladinUpgradePool().find(c=>c.id==="consecrated");desktopCard.apply();recordRunUpgrade(desktopCard)');
+const desktopHud=run('companionHudContent("left")');
+assert.match(desktopHud,/desktop-hero-details/);
+assert.match(desktopHud,/Aktuelle Werte/);
+assert.match(desktopHud,/Geweihter Hammer/);
+assert.match(desktopHud,/Hammer des Morgenlichts/);
+assert.match(desktopHud,/×1/);
+run('state.player.x=195;state.player.targetX=195;setKeyboardKey("ArrowRight",true);update(.1)');
+assert(run('state.player.x')>195,'Right arrow moves the whole platform right');
+const movedRight=run('state.player.x');
+run('setKeyboardKey("ArrowRight",false);setKeyboardKey("KeyA",true);update(.1)');
+assert(run('state.player.x')<movedRight,'A key moves the whole platform left');
+run('setKeyboardKey("KeyA",false)');
+const css=fs.readFileSync('style.css','utf8');
+assert.match(css,/@media \(min-width:760px\)/);
+assert.match(css,/\.desktop-hero-details \{ display:block/);
+console.log('PASS: responsive side sheets show current/run/permanent details and arrow/A-D keyboard movement');

@@ -147,6 +147,73 @@ function paladinUpgradePool() {
 function hudNumber(value) {
   return value.toLocaleString("de-DE",{maximumFractionDigits:2});
 }
+function heroUpgradeHistory(hero) {
+  const grouped=new Map();
+  for(const item of state.runUpgradeHistory?.[hero]||[]){
+    const key=item.rarity+"|"+item.name;
+    const row=grouped.get(key)||{...item,count:0};row.count++;grouped.set(key,row);
+  }
+  if(!grouped.size)return '<p class="empty-upgrades">Noch keine Run-Upgrades gewählt.</p>';
+  return '<ul class="hero-upgrade-list">'+[...grouped.values()].map(item=>
+    '<li class="rarity-'+item.rarity+'"><b>'+item.name+' ×'+item.count+'</b><small>'+item.text+'</small></li>'
+  ).join('')+'</ul>';
+}
+function permanentHeroSkills(hero) {
+  const owned=new Set(state.skillUpgrades||progress.data.skillUpgrades||[]);
+  const skills=HERO_SKILLS.filter(skill=>skill.hero===hero&&owned.has(skill.id));
+  return skills.length?'<ul class="permanent-skill-list">'+skills.map(skill=>'<li>'+skill.name+'<small>'+skill.upgrade+'</small></li>').join('')+'</ul>':'<p class="empty-upgrades">Keine dauerhaften Skill-Aufwertungen.</p>';
+}
+function heroDetailRows(hero) {
+  if(hero==="paladin"){
+    const p=state.paladin;
+    return [
+      ["Direktschaden",hudNumber(paladinDirectDamage())],["Feuerrate",hudNumber(state.weapon.shotsPerSecond*.65/2.7)+"×"],
+      ["Krit-Chance",hudNumber(state.weapon.critChance)+" %"],["Krit-Schaden",hudNumber(state.weapon.critDamage)+" %"],
+      ["Hammergröße",hudNumber(p.size*100)+" %"],["Flugtempo",hudNumber(p.speed*100)+" %"],
+      ["Heiliger Einschlag","jeder "+p.impactEvery+". Treffer"],["Explosionsradius",hudNumber(p.radius)+" px"],
+      ["Explosionsstärke",hudNumber(p.explosionMultiplier*100)+" %"],["Durchschlag",p.pierce],
+      ["Morgenlicht",hudNumber(p.morningChance*100)+" %"],["Heilige Klinge",p.blade?"jeder "+p.bladeEvery+". Hammer":"gesperrt"],
+      ["Göttliches Urteil",p.ultimate?hudNumber(p.cooldown)+" s Cooldown":"gesperrt"],["Vergeltung",p.revenge?"aktiv":"nicht aktiv"]
+    ];
+  }
+  if(hero==="necromancer"){
+    const n=state.necromancer;
+    return [
+      ["Direktschaden",hudNumber(necromancerDamage())],["Feuerrate",hudNumber(state.weapon.shotsPerSecond*.85/2.7)+"×"],
+      ["Krit-Chance",hudNumber(Math.min(100,state.weapon.critChance+5))+" %"],["Krit-Schaden",hudNumber(state.weapon.critDamage)+" %"],
+      ["Normale Seele",hudNumber(soulDamage({}))+" Schaden"],["Markierte Seele",hudNumber(soulDamage({strong:true}))+" Schaden"],
+      ["Kleine Seele",hudNumber(soulDamage({small:true}))+" Schaden"],["Seelenplätze",n.limit+" / kleine "+smallSoulLimit()],
+      ["Seelenhunger",hudNumber(n.soulBonus*100)+" %"],["Geisterflug",hudNumber(n.speedBonus*100)+" %"],
+      ["Dunkles Mal",hudNumber(n.markChance*100)+" %"],["Zusätzliche Sprünge",n.binding],
+      ["Angriffszyklen",3+n.endless],["Seelenexplosion",n.seal?"durch Todessiegel ersetzt":hudNumber(n.explosion)],
+      ["Fluch des Todes",hudNumber(n.curse*100)+" %"],["Kettenfluch",hudNumber(n.chain*100)+" %"],
+      ["Unheilige Ernte",hudNumber(n.harvest*100)+" %"],["Elite-Seelen",n.elite?"Stufe "+n.elite:"nicht aktiv"],
+      ["Totenruf",n.ultimate?"alle "+hudNumber(n.remaining)+" / 22 s":"gesperrt"],["Todessiegel",n.seal?n.sealCount+"/5":"gesperrt"],
+      ["Seelenlegion",n.legion?"aktiv":"nicht aktiv"],["Seelensturm",n.storm?"aktiv":"nicht aktiv"]
+    ];
+  }
+  const a=state.alchemist;
+  return [
+    ["Direktschaden",hudNumber(alchemistDamage())],["Feuerrate",hudNumber(state.weapon.shotsPerSecond*.9/2.7)+"×"],
+    ["Krit-Chance",hudNumber(state.weapon.critChance)+" %"],["Krit-Schaden",hudNumber(state.weapon.critDamage)+" %"],
+    ["Gift je Stapel",hudNumber(poisonDamagePerStack({poisonStacks:[],poisonAge:0}))+"/s"],["Giftdauer",hudNumber(a.poisonDuration)+" s"],
+    ["Max. Giftstapel",poisonLimit()],["Giftstärke-Bonus",hudNumber(a.poisonBonus*100)+" %"],
+    ["Übertragung",hudNumber(a.transferChance*100)+" %"],["Übertragene Stapel",a.transferStacks],
+    ["Flaschen-AoE",hudNumber(a.explosion*100)+" %"],["Explosionsradius",hudNumber(a.explosionRadius)+" px"],
+    ["Ätzendes Gift",hudNumber(a.corrosive*100)+" %"],["Nervengift",hudNumber(a.slow*100)+" %"],
+    ["Kettenreaktion",hudNumber(a.chainChance*100)+" %"],["Reaktive Substanz",hudNumber(a.reactiveChance*100)+" %"],
+    ["Überdosierung",hudNumber(a.overdose*100)+" %"],["Seuchenherd",a.plagueInterval?hudNumber(a.plagueInterval)+" s":"nicht aktiv"],
+    ["Giftwolke",a.cloud?hudNumber(a.cloudRadius)+" px / "+hudNumber(a.cloudDuration)+" s":"gesperrt"],
+    ["Meisterexperiment",a.experiment?hudNumber(a.experimentDuration)+" s":"gesperrt"],
+    ["Giftcocktail",a.cocktail?"aktiv":"nicht aktiv"],["Epidemie",a.epidemic?"aktiv":"nicht aktiv"],
+    ["Giftregen",a.rain?"aktiv":"nicht aktiv"],["Mutation",a.mutation?"aktiv":"nicht aktiv"],
+    ["Lebende Seuche",a.living?"aktiv":"nicht aktiv"]
+  ];
+}
+function desktopHeroDetails(hero) {
+  const rows=heroDetailRows(hero).map(([key,value])=>'<dt>'+key+'</dt><dd>'+value+'</dd>').join('');
+  return '<div class="desktop-hero-details"><h4>Aktuelle Werte</h4><dl>'+rows+'</dl><h4>Run-Upgrades</h4>'+heroUpgradeHistory(hero)+'<h4>Dauerhafte Skills</h4>'+permanentHeroSkills(hero)+'</div>';
+}
 function companionHudContent(side) {
   const label=side==="left"?"LINKS":"RECHTS";
   const p=state.paladin,n=state.necromancer,a=state.alchemist;
@@ -179,8 +246,9 @@ function companionHudContent(side) {
       (a.cloud?"Wolke: "+Math.ceil(a.cloudRemaining)+" s":"Wolke: gesperrt")+" · "+(a.experiment?(a.experimentActive>0?"Experiment aktiv":"Experiment "+Math.ceil(a.experimentRemaining)+" s"):"Experiment gesperrt")
     ];
   }
-  return "<strong>"+label+" · "+(title||"Frei")+"</strong>"+
-    (title?lines.map(line=>"<span>"+line+"</span>").join(""):"<span>Kein Held ausgerüstet</span>");
+  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":null;
+  return "<strong>"+label+" · "+(title||"Frei")+"</strong><div class=\"platform-compact\">"+
+    (title?lines.map(line=>"<span>"+line+"</span>").join(""):"<span>Kein Held ausgerüstet</span>")+"</div>"+(hero?desktopHeroDetails(hero):"");
 }
 function refreshPaladinHud() {
   for(const side of ["left","right"])
