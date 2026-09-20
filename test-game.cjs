@@ -190,6 +190,14 @@ run('startGame()');
 assert.equal(run('state.mode'),'playing');
 console.log('PASS: four menu pages, active navigation, return home and start round');
 
+context.window.innerWidth=390;context.window.innerHeight=844;context.window.visualViewport={width:390,height:760,scale:1};context.window.screen={width:390,height:844};
+assert.match(run('viewportMeasurementText()'),/Spielfeld: 390 × 700 CSS-Pixel/);
+assert.match(run('viewportMeasurementText()'),/Sichtbarer Viewport: 390 × 760 CSS-Pixel/);
+assert.match(run('viewportMeasurementText()'),/Geräte-Pixelfaktor: 1/);
+run('measureGameArea()');
+assert.equal(element.disabled,false);
+console.log('PASS: options measurement reports field, layout, visual viewport, screen and pixel ratio');
+
 assert.equal(run("Object.values(RARITY_CHANCES).reduce((a,b)=>a+b,0)"),1);
 
 // Paladin combat and upgrade regression cases.

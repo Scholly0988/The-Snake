@@ -644,6 +644,56 @@ document.querySelector("#importSave").addEventListener("click", () => {
   }
 });
 
+function measurementNumber(value) {
+  return Number.isFinite(Number(value)) ? Math.round(Number(value) * 10) / 10 : 0;
+}
+function viewportMeasurementText() {
+  const field=wrap.getBoundingClientRect();
+  const shell=document.querySelector(".game-shell").getBoundingClientRect();
+  const visual=window.visualViewport;
+  const screenInfo=window.screen||{};
+  const innerWidth=measurementNumber(window.innerWidth||document.documentElement?.clientWidth);
+  const innerHeight=measurementNumber(window.innerHeight||document.documentElement?.clientHeight);
+  const visualWidth=measurementNumber(visual?.width||innerWidth);
+  const visualHeight=measurementNumber(visual?.height||innerHeight);
+  return [
+    "THE SNAKE · SPIELFELDMESSUNG 18.3",
+    "Spielfeld: "+measurementNumber(field.width)+" × "+measurementNumber(field.height)+" CSS-Pixel",
+    "Spielbereich gesamt: "+measurementNumber(shell.width)+" × "+measurementNumber(shell.height)+" CSS-Pixel",
+    "Layout-Viewport: "+innerWidth+" × "+innerHeight+" CSS-Pixel",
+    "Sichtbarer Viewport: "+visualWidth+" × "+visualHeight+" CSS-Pixel",
+    "Viewport-Skalierung: "+measurementNumber(visual?.scale||1),
+    "Bildschirm: "+measurementNumber(screenInfo.width)+" × "+measurementNumber(screenInfo.height)+" CSS-Pixel",
+    "Geräte-Pixelfaktor: "+measurementNumber(window.devicePixelRatio||1),
+    "Ausrichtung: "+(visualWidth>visualHeight?"Querformat":"Hochformat")
+  ].join("\n");
+}
+function measureGameArea() {
+  resizeCanvas();
+  const text=viewportMeasurementText();
+  document.querySelector("#gameAreaReport").textContent=text;
+  document.querySelector("#copyGameArea").disabled=false;
+  return text;
+}
+async function copyGameAreaMeasurement() {
+  const report=document.querySelector("#gameAreaReport");
+  const text=report.textContent;
+  if(!text||text.startsWith("Noch keine"))return;
+  try {
+    if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
+    else {
+      const helper=document.createElement("textarea");helper.value=text;helper.setAttribute("readonly","");
+      helper.style.position="fixed";helper.style.opacity="0";document.body.append(helper);helper.select();
+      if(!document.execCommand("copy"))throw new Error("copy failed");helper.remove();
+    }
+    document.querySelector("#transferStatus").textContent="Messwerte kopiert. Du kannst sie mir jetzt schicken.";
+  } catch {
+    document.querySelector("#transferStatus").textContent="Automatisches Kopieren nicht möglich. Halte den Messbericht gedrückt und kopiere ihn manuell.";
+  }
+}
+document.querySelector("#measureGameArea").addEventListener("click",measureGameArea);
+document.querySelector("#copyGameArea").addEventListener("click",copyGameAreaMeasurement);
+
 function burst(x, y, color, count) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -869,7 +919,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 18.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 18.3 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

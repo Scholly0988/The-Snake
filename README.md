@@ -1,5 +1,11 @@
 # The Snake
 
+## Version 18.3
+
+- Unter **Optionen → Spielfeldgröße messen** lassen sich die aktuellen Maße des aktiven Browsers auslesen.
+- Der Bericht enthält Spielfeld, gesamten Spielbereich, Layout- und sichtbaren Viewport, Bildschirm, Zoom, Pixelfaktor und Ausrichtung.
+- Die Werte können direkt kopiert und als Vorlage für eine feste Spielfeldgröße verwendet werden.
+
 ## Version 18.2
 
 - Selvaras Charakterbild besitzt jetzt einen echten transparenten Hintergrund.

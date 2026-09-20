@@ -226,6 +226,10 @@ button:active { transform: scale(.98); }
 .menu-sheet .menu-note { color: #b3c7d2; font-size: 11px; }
 .menu-sheet textarea { max-width: 100%; resize: vertical; }
 .menu-sheet input[type=file] { min-width: 0; max-width: 100%; }
+.measurement-card { margin: 0 0 22px; padding: 12px; border: 1px solid #b89555; border-radius: 12px; background: #071a28cc; }
+.measurement-card h3 { margin-top: 0; color: #ffe1a1; }
+#gameAreaReport { margin: 12px 0 2px; padding: 10px; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid #4d7184; border-radius: 8px; background: #04121d; color: #dff5ff; font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; text-align: left; }
+#copyGameArea { min-height: 42px; }
 .menu-nav button:focus-visible, .fantasy-menu button:focus-visible { outline: 3px solid white; outline-offset: 2px; }
 @media (max-height: 600px) {
   .menu-title { padding-top: 0; }
