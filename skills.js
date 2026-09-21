@@ -71,7 +71,36 @@ const HERO_SKILLS = [
   ["alchemist","epidemic","upgrade","Epidemie",["purple"],"30 % Chance, den gesamten Giftstatus weiterzugeben.","40 % statt 30 % Chance."],
   ["alchemist","rain","upgrade","Giftregen",["orange"],"Jeder 10. Wurf trifft bis zu fünf sichtbare Segmente.","60 % statt 50 % Direktschaden."],
   ["alchemist","mutation","upgrade","Mutation",["purple"],"Nach 4 Sekunden durchgehender Vergiftung +50 % Gift.","Bereits nach 3 Sekunden aktiv."],
-  ["alchemist","living","upgrade","Lebende Seuche",["orange"],"Alle 3 Sekunden verbreitet jedes vergiftete sichtbare Segment Gift.","Alle 2,5 Sekunden."]
+  ["alchemist","living","upgrade","Lebende Seuche",["orange"],"Alle 3 Sekunden verbreitet jedes vergiftete sichtbare Segment Gift.","Alle 2,5 Sekunden."],
+  ["runemaster","attack","attack","Runenkanone",[],"1,0 Direktschaden bei 0,95× Feuerrate; Treffer erzeugen Runenladungen.","+20 % direkter Kanonenschaden."],
+  ["runemaster","break","attack","Runenbruch",[],"Bei voller Rune: 2 Schaden am Ziel und 0,75 Flächenschaden.","+20 % Runenbruch- und Flächenschaden."],
+  ["runemaster","strikeAttack","attack","Runenschlag",[],"Alle 20 Sekunden: 1,5× Direktschaden und sofort 3 Ladungen.","10 % kürzere Grundabklingzeit."],
+  ["runemaster","circleAttack","attack","Großer Runenkreis",["orange"],"Orange schaltet die Ultimate frei: alle sichtbaren Segmente erhalten Runenladungen.","Ultimate startet mit 25 statt 30 Sekunden Cooldown."],
+  ["runemaster","power","upgrade","Runenmacht",["grey","green","purple"],"+15 / +30 / +50 % Runenbruch-Schaden; Stufen addieren sich.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["runemaster","wave","upgrade","Runenwelle",["grey","green","purple"],"1,0 / 1,25 / 1,6 Flächenschaden; höchste Stufe zählt.","Je Stufe +20 % Flächenschaden."],
+  ["runemaster","glyph","upgrade","Größere Glyphe",["grey","green","purple"],"+15 / +30 / +50 % Radius; Stufen addieren sich.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["runemaster","rest","upgrade","Runenrest",["grey","green","purple"],"55 / 70 / 100 % Übertragungschance; höchste Stufe zählt.","Unterhalb 100 % zusätzlich +10 Prozentpunkte."],
+  ["runemaster","echo","upgrade","Nachhall",["grey","green","purple"],"20 / 40 / 70 % Chance auf eine Nachbarladung.","Je Stufe +10 Prozentpunkte Chance."],
+  ["runemaster","spark","upgrade","Runenfunke",["grey","green","purple"],"Krits erzeugen mit 25 / 50 / 100 % eine Zusatzladung.","Je Stufe +10 Prozentpunkte Chance."],
+  ["runemaster","precision","upgrade","Arkane Präzision",["grey","green","purple"],"+5 / +10 / +20 % Direktschaden gegen geladene Ziele; additiv.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["runemaster","overload","upgrade","Überladene Rune",["grey","green","purple"],"+20 / +40 / +70 % Schaden beim vollendenden Treffer; additiv.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["runemaster","splitter","upgrade","Runensplitter",["grey","green","purple"],"1×0,35 / 2×0,4 / 3×0,5 Schaden; höchste Stufe zählt.","Splitter verursachen +20 % Schaden."],
+  ["runemaster","quick","upgrade","Schnellgravur",["grey","green","purple"],"Runenschlag-Cooldown 18 / 16 / 13 Sekunden.","Jeweils weitere 10 % kürzer."],
+  ["runemaster","strike","upgrade","Verstärkter Runenschlag",["grey","green","purple"],"3 / 4 / 5 Ladungen und +20 / +30 / +50 % Schaden.","Zusätzlich +10 % Runenschlag-Schaden."],
+  ["runemaster","double","upgrade","Runendoppelung",["grey","green","purple"],"10 / 20 / 35 % Chance auf zwei Ladungen.","Je Stufe +10 Prozentpunkte Chance."],
+  ["runemaster","unstable","upgrade","Instabile Schrift",["grey","green","purple"],"Chance auf eine zweite kleinere Runenexplosion.","Zweite Explosion verursacht +20 % Schaden."],
+  ["runemaster","chain","upgrade","Runenkette",["grey","green","purple"],"15 / 30 / 50 % Chance auf eine Kettenaktivierung.","Je Stufe +10 Prozentpunkte Chance."],
+  ["runemaster","resonance","upgrade","Runenresonanz",["grey","green","purple"],"Ab 3 markierten Segmenten +8 / +15 / +25 % Feuerrate.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["runemaster","masterGlyph","upgrade","Meisterglyphen",["grey","green","purple"],"Verbessert den fünften Treffer oder senkt das Ziel auf 4 Ladungen.","Runenbruch verursacht zusätzlich +20 % Schaden."],
+  ["runemaster","circle","upgrade","Großer Runenkreis",["grey","green","purple"],"Verbessert Ladungen, Feuerrate und Dauer der freigeschalteten Ultimate.","Feuerratenbonus zusätzlich +10 Prozentpunkte."],
+  ["runemaster","circleDamage","upgrade","Kreis der Zerstörung",["grey","green","purple"],"+15 / +30 / +50 % Schaden für Ultimate-Runenbrüche; additiv.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["runemaster","ritual","upgrade","Beschleunigtes Ritual",["grey","green","purple"],"Ultimate-Cooldown 27 / 24 / 20 Sekunden.","Jeweils weitere 10 % kürzer."],
+  ["runemaster","endless","upgrade","Endlose Rune",["purple"],"Nach Runenbruch bleibt 1 Ladung bestehen.","Runenbruch hinterlässt 2 Ladungen."],
+  ["runemaster","mastery","upgrade","Runenmeisterschaft",["purple"],"+2 % Gesamtschaden je sichtbarer Rune, maximal +30 %.","+2,5 % je Rune, maximal +40 %."],
+  ["runemaster","domino","upgrade","Domino-Glyphe",["purple"],"Runenbruch-Tod gibt der stärksten sichtbaren Rune +1 Ladung.","Bei leerer Schlange erhält ein zufälliges sichtbares Segment die Ladung."],
+  ["runemaster","storm","upgrade","Runensturm",["orange"],"Nach 5 Runenbrüchen treffen 8 Geschosse zufällige sichtbare Segmente.","10 statt 8 Runengeschosse."],
+  ["runemaster","mirror","upgrade","Spiegelglyphe",["orange"],"Spiegelt verbrauchte Ladungen einmalig auf ein anderes sichtbares Segment.","Gespiegelter Runenbruch verursacht +20 % Schaden."],
+  ["runemaster","perfect","upgrade","Perfekte Schrift",["orange"],"Jeder 10. normale Schuss vollendet sofort eine Rune.","Bereits jeder 8. normale Schuss." ]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
 function hasSkill(hero,key) { return (state.skillUpgrades || []).includes(hero+"."+key); }
 function skillValue(hero,key,base,upgraded) { return hasSkill(hero,key)?upgraded:base; }
@@ -92,7 +121,7 @@ function closeHeroSkills() {
 }
 function renderHeroSkills() {
   if(!selectedSkillHero)return;
-  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara"};
+  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar"};
   document.querySelector("#skillsTitle").textContent=names[selectedSkillHero]+" · Skills";
   document.querySelector("#skillsCoins").textContent=progress.data.coins+" Münzen · Jede Aufwertung einmalig 50 Münzen";
   const list=document.querySelector("#skillsList");list.replaceChildren();
@@ -123,7 +152,7 @@ function renderHeroSkills() {
   }
 }
 function bindSkillsMenu(){
-  for(const hero of ["shooter","paladin","necromancer","alchemist"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
+  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
   document.querySelector("#closeSkills").addEventListener("click",closeHeroSkills);
 }
 

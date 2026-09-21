@@ -192,6 +192,22 @@ function heroDetailRows(hero) {
       ["Seelenlegion",n.legion?"aktiv":"nicht aktiv"],["Seelensturm",n.storm?"aktiv":"nicht aktiv"]
     ];
   }
+  if(hero==="runemaster"){
+    const r=state.runemaster,marked=visibleTargets().filter(s=>runeCharges(s)>0).length;
+    return [
+      ["Direktschaden",hudNumber(runemasterDamage())],["Feuerrate",hudNumber(runemasterRateMultiplier())+"×"],
+      ["Krit-Chance",hudNumber(state.weapon.critChance)+" %"],["Krit-Schaden",hudNumber(state.weapon.critDamage)+" %"],
+      ["Benötigte Ladungen",r.chargeGoal],["Markierte Segmente",marked],
+      ["Runenbruch",hudNumber(r.breakDamage*(1+r.breakBonus))+" Schaden"],["Runenwelle",hudNumber(r.neighborDamage)+" Schaden"],
+      ["Explosionsradius",hudNumber(r.radius*(1+r.radiusBonus))+" px"],["Runenrest",hudNumber(r.restChance*100)+" %"],
+      ["Nachhall",hudNumber(r.echoChance*100)+" %"],["Runendoppelung",hudNumber(r.doubleChance*100)+" %"],
+      ["Runenschlag",hudNumber(r.strikeRemaining)+" / "+r.strikeCooldown+" s"],["Runenschlag-Ladungen",r.strikeCharges],
+      ["Runenresonanz",hudNumber(r.resonanceBonus*100)+" %"],["Runensturm",r.storm?r.breakCount%5+"/5":"gesperrt"],
+      ["Großer Runenkreis",r.ultimate?Math.ceil(r.ultimateRemaining)+" s":"gesperrt"],["Endlose Rune",r.endless?"aktiv":"nicht aktiv"],
+      ["Spiegelglyphe",r.mirror?"aktiv":"nicht aktiv"],["Perfekte Schrift",r.perfect?r.shots%10+"/10":"nicht aktiv"],
+      ["Runenmeisterschaft",r.mastery?"aktiv":"nicht aktiv"],["Domino-Glyphe",r.domino?"aktiv":"nicht aktiv"]
+    ];
+  }
   const a=state.alchemist;
   return [
     ["Direktschaden",hudNumber(alchemistDamage())],["Feuerrate",hudNumber(state.weapon.shotsPerSecond*.9/2.7)+"×"],
@@ -216,7 +232,7 @@ function desktopHeroDetails(hero) {
 }
 function companionHudContent(side) {
   const label=side==="left"?"LINKS":"RECHTS";
-  const p=state.paladin,n=state.necromancer,a=state.alchemist;
+  const p=state.paladin,n=state.necromancer,a=state.alchemist,r=state.runemaster;
   let title="",lines=[];
   if(p?.slot===side) {
     title="Aldric";
@@ -245,8 +261,18 @@ function companionHudContent(side) {
       "Übertragung "+hudNumber(a.transferChance*100)+" % · Wurf "+(a.throws%10)+"/10",
       (a.cloud?"Wolke: "+Math.ceil(a.cloudRemaining)+" s":"Wolke: gesperrt")+" · "+(a.experiment?(a.experimentActive>0?"Experiment aktiv":"Experiment "+Math.ceil(a.experimentRemaining)+" s"):"Experiment gesperrt")
     ];
+  } else if(r?.slot===side) {
+    title="Kaelvar";
+    const marked=visibleTargets().filter(s=>runeCharges(s)>0).length;
+    lines=[
+      "Angriff "+hudNumber(runemasterDamage())+" · Rate "+hudNumber(runemasterRateMultiplier())+"×",
+      "Krit "+hudNumber(state.weapon.critChance)+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
+      "Runen "+marked+" · Brüche "+r.breakCount+" · Ziel "+r.chargeGoal+" Ladungen",
+      "Runenschlag "+Math.ceil(r.strikeRemaining)+" s · Sturm "+(r.storm?r.breakCount%5+"/5":"gesperrt"),
+      r.ultimate?"Runenkreis: "+Math.ceil(r.ultimateRemaining)+" s":"Runenkreis: gesperrt"
+    ];
   }
-  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":null;
+  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":r?.slot===side?"runemaster":null;
   return "<strong>"+label+" · "+(title||"Frei")+"</strong><div class=\"platform-compact\">"+
     (title?lines.map(line=>"<span>"+line+"</span>").join(""):"<span>Kein Held ausgerüstet</span>")+"</div>"+(hero?desktopHeroDetails(hero):"");
 }

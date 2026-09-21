@@ -22,6 +22,7 @@ vm.runInContext(fs.readFileSync('progress.js','utf8'), context);
 vm.runInContext(fs.readFileSync('paladin.js','utf8'), context);
 vm.runInContext(fs.readFileSync('necromancer.js','utf8'), context);
 vm.runInContext(fs.readFileSync('alchemist.js','utf8'), context);
+vm.runInContext(fs.readFileSync('runemaster.js','utf8'), context);
 vm.runInContext(fs.readFileSync('game.js','utf8'), context);
 const run = code => vm.runInContext(code, context);
 for (const width of [280,320,390,430]) {

@@ -1,5 +1,13 @@
 # The Snake
 
+## Version 19.0 – Kaelvar
+
+Kaelvar, der Meister der lebenden Runen, ist als vierter freischaltbarer
+Begleitheld implementiert. Runenkanone, Runenladungen, Runenbruch, Runenschlag,
+Großer Runenkreis, alle festgelegten Seltenheits-Upgrades, Sonderfähigkeiten,
+Heldenmenü, Plattform-HUD, Browser-Speicherung und transparente Grafik sind
+enthalten. Details: [KAELVAR.md](KAELVAR.md).
+
 ## Version 18.3
 
 - Unter **Optionen → Spielfeldgröße messen** lassen sich die aktuellen Maße des aktiven Browsers auslesen.

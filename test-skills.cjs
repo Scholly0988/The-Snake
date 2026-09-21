@@ -10,7 +10,7 @@ const canvasContext=new Proxy({createRadialGradient:()=>({addColorStop(){}}),cre
 const elements=new Map(),get=s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s)};
 const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
 const context=vm.createContext({document:{querySelector:get,createElement:()=>new Element()},window:{localStorage:storage,devicePixelRatio:1,addEventListener(){}},Image:class{},performance:{now:()=>0},requestAnimationFrame(){}});
-for(const f of ['skills.js','progress.js','paladin.js','necromancer.js','alchemist.js','game.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
+for(const f of ['skills.js','progress.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','game.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
 const run=s=>vm.runInContext(s,context),near=(a,b)=>assert(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 function setup(ids=[]){run(`progress.data.damageLevel=0;progress.data.rateLevel=0;progress.data.critChanceLevel=0;progress.data.critDamageLevel=0;progress.data.skillUpgrades=${JSON.stringify(ids)};resetGame();state.mode="playing";state.paladin=newPaladin("left");state.necromancer=newNecromancer("right");state.snake=[{id:1,x:100,y:100,hp:1000,maxHp:1000},{id:2,x:200,y:100,hp:1000,maxHp:1000}];state.headDistance=-1000;`)}
 function pcard(id){run(`paladinUpgradePool().find(c=>c.id===${JSON.stringify(id)}).apply()`)}
