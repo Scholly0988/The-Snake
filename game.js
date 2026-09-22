@@ -481,7 +481,7 @@ function destroySegment(index, offerUpgrade = true) {
   }
 }
 
-function roundUpgradePool() {
+function roundUpgradePool(includeHeroes = true) {
   const pool = [
     { rarity: "grey", label: "Grau", damage: 1, rate: 10, pierce: 1 },
     { rarity: "green", label: "Grün", damage: 2, rate: 20, pierce: 2 },
@@ -532,23 +532,31 @@ function roundUpgradePool() {
       apply: () => { state.weapon.parallel = true; state.weapon.spread = 0; }
     });
   }
-  return pool.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool(),runemasterUpgradePool());
+  return includeHeroes?pool.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool(),runemasterUpgradePool()):pool;
 }
 
 const RARITY_CHANCES = Object.freeze({grey:.60,green:.25,purple:.10,orange:.05});
+function takeWeightedUpgrade(remaining,random=Math.random) {
+  if(!remaining.length)return null;
+  const available=Object.keys(RARITY_CHANCES).filter(r=>remaining.some(c=>c.rarity===r));
+  const total=available.reduce((sum,r)=>sum+RARITY_CHANCES[r],0);
+  let roll=random()*total;
+  const rarity=available.find(r=>(roll-=RARITY_CHANCES[r])<0)||available[available.length-1];
+  const candidates=remaining.filter(c=>c.rarity===rarity);
+  const choice=candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))];
+  remaining.splice(remaining.indexOf(choice),1);
+  return choice;
+}
 function chooseUpgrades(random = Math.random) {
   const remaining = roundUpgradePool(), choices=[];
   for (let i=0;i<3 && remaining.length;i++) {
-    // Only eligible rarities participate; missing/exhausted tiers redistribute
-    // proportionally. Orange unlock can appear once, without duplicate cards.
-    const available=Object.keys(RARITY_CHANCES).filter(r=>remaining.some(c=>c.rarity===r));
-    const total=available.reduce((sum,r)=>sum+RARITY_CHANCES[r],0);
-    let roll=random()*total;
-    const rarity=available.find(r=>(roll-=RARITY_CHANCES[r])<0) || available[available.length-1];
-    const candidates=remaining.filter(c=>c.rarity===rarity);
-    const choice=candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))];
-    choices.push(choice);remaining.splice(remaining.indexOf(choice),1);
+    choices.push(takeWeightedUpgrade(remaining,random));
   }
+  // Slot four is deliberately isolated from all companion pools.
+  const used=new Set(choices.map(choice=>choice.rarity+"\u0000"+choice.name));
+  const standard=roundUpgradePool(false).filter(choice=>!used.has(choice.rarity+"\u0000"+choice.name));
+  const fourth=takeWeightedUpgrade(standard,random);
+  if(fourth)choices.push({...fourth,standardSlot:true});
   return choices;
 }
 
@@ -560,7 +568,7 @@ function openUpgrade() {
   upgradeChoices.replaceChildren();
   for (const choice of choices) {
     const button = document.createElement("button");
-    button.className = "upgrade-choice rarity-" + choice.rarity;
+    button.className = "upgrade-choice rarity-" + choice.rarity+(choice.standardSlot?" standard-upgrade-slot":"");
     button.innerHTML = `${choice.name}<span>${choice.text}</span>`;
     button.addEventListener("click", () => {
       if (state.mode !== "upgrade" || state.upgradeOfferId !== offerId) return;
@@ -1022,7 +1030,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 20.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 20.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
