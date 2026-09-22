@@ -1,5 +1,19 @@
 # The Snake
 
+## Version 20.0 – Level 2 bis 10
+
+Die Kampagne umfasst jetzt zehn vorbereitete Level. Level 1 verwendet weiterhin
+unverändert den bisherigen Referenzpfad. Level 2 bis 10 besitzen datengetriebene,
+deterministische Bewegungsmuster; Level 3, 5, 8 und 10 enthalten zwei technisch
+getrennte Schlangen. Automatisch zielende Angriffe bestimmen bei jedem neuen
+Schuss die zum Angriffsursprung nächstgelegene Schlange und berücksichtigen nur
+sichtbare Segmente. Alte Spielstände mit neun Erstabschluss-Einträgen werden
+automatisch auf zehn Level beziehungsweise 30 Kombinationen aus Level und
+Schwierigkeit erweitert. Technische Details: [LEVELS-2-10.md](LEVELS-2-10.md).
+
+Tests: `node test-game.cjs`, `node test-alchemist.cjs`, `node test-skills.cjs`,
+`node test-runemaster.cjs` und `node test-levels-2-10.cjs`.
+
 ## Version 19.0 – Kaelvar
 
 Kaelvar, der Meister der lebenden Runen, ist als vierter freischaltbarer

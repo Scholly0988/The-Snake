@@ -18,6 +18,7 @@ const context = vm.createContext({
 const storage = new Map();
 context.window.localStorage = {getItem:k=>storage.get(k) ?? null,setItem:(k,v)=>storage.set(k,v)};
 vm.runInContext(fs.readFileSync('skills.js','utf8'),context);
+vm.runInContext(fs.readFileSync('levels.js','utf8'),context);
 vm.runInContext(fs.readFileSync('progress.js','utf8'), context);
 vm.runInContext(fs.readFileSync('paladin.js','utf8'), context);
 vm.runInContext(fs.readFileSync('necromancer.js','utf8'), context);

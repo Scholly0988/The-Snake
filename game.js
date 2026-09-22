@@ -53,8 +53,10 @@ const state = {
   bullets: [],
   particles: [],
   snake: [],
+  snakes: [],
   trail: [],
   headDistance: 0,
+  minimumLevelPathLength: 0,
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
@@ -70,7 +72,7 @@ const SEGMENT_HIT_RADIUS = 25;
 const UPGRADE_INTERVAL = 5;
 const SEGMENTS_PER_SNAKE = 100;
 
-const LEVELS=[{first:5,last:5500},{first:15,last:9000},{first:32,last:14500}];
+const LEVELS=LEVEL_DEFINITIONS.map(level=>level.hp);
 function levelSegmentHp(level,index,count) {
   const {first,last}=LEVELS[level-1];
   if(count<=1)return first;
@@ -84,14 +86,15 @@ function renderLevelPicker() {
   document.querySelector("#rewardInfo").textContent="Münzen: "+level*multiplier+" / "+level*5*multiplier+" pro Segment · Abschluss +"+level*50*multiplier+" · "+(progress.data.firstClears[key]?"Erstbonus erhalten":"Erstbonus +"+level*100*multiplier);
   const locked=level>progress.data.completedLevels+1;
   document.querySelector("#levelName").textContent="Level "+level+(locked?" · Gesperrt":level<=progress.data.completedLevels?" · Abgeschlossen":"");
-  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":Math.round(config.first*multiplier)+"–"+Math.round(config.last*multiplier).toLocaleString("de-DE")+" Leben · 100 Segmente";
+  const snakeCount=levelDefinition(level).snakes.length;
+  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":Math.round(config.first*multiplier)+"–"+Math.round(config.last*multiplier).toLocaleString("de-DE")+" Leben · 100 Segmente · "+snakeCount+" "+(snakeCount===1?"Schlange":"Schlangen");
   document.querySelector("#previousLevel").disabled=level===1;
-  document.querySelector("#nextLevel").disabled=level===3;
+  document.querySelector("#nextLevel").disabled=level===LEVELS.length;
   document.querySelector("#startButton").disabled=locked;
 }
 function changeLevel(delta) {
   if(state.mode!=="start")return;
-  state.selectedLevel=Math.max(1,Math.min(3,state.selectedLevel+delta));
+  state.selectedLevel=Math.max(1,Math.min(LEVELS.length,state.selectedLevel+delta));
   if(state.selectedLevel<=progress.data.completedLevels+1){
     progress.data.selectedLevel=state.selectedLevel;progress.save();
   }
@@ -110,7 +113,7 @@ function completeLevel() {
   upgradeScreen.classList.add("hidden");
   document.querySelector("#resultEyebrow").textContent="SCHLANGE BESIEGT";
   document.querySelector("#resultTitle").textContent="Level "+state.level+" abgeschlossen!";
-  document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · Abschluss +"+completionCoins+(firstCoins?" · Erstabschluss +"+firstCoins:"")+" · "+(state.level<3?"Level "+(state.level+1)+" freigeschaltet":"Alle drei Level abgeschlossen");
+  document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · Abschluss +"+completionCoins+(firstCoins?" · Erstabschluss +"+firstCoins:"")+" · "+(state.level<LEVELS.length?"Level "+(state.level+1)+" freigeschaltet":"Alle zehn Level abgeschlossen");
   finalScore.textContent=state.score;
   gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();
 }
@@ -154,17 +157,18 @@ function resetGame() {
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
   state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
-  createSnake(SEGMENTS_PER_SNAKE);
+  createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
   refreshHud();
 }
 
 function createSnake(count) {
-  state.snake = [];
+  state.snake = [];state.snakes=[];
   for (let i = 0; i < count; i++) {
     const upgrade = i === 1 || (i > 1 && (i - 1) % UPGRADE_INTERVAL === 0);
     const scaledHp = Math.round(levelSegmentHp(state.level,i,count)*difficultyMultiplier(state.runDifficulty??.10));
     state.snake.push({
       id: state.nextId++,
+      snakeId: "A",
       pathOffset: (i + 1) * SEGMENT_SPACING,
       upgrade,
       hp: scaledHp,
@@ -173,6 +177,40 @@ function createSnake(count) {
       y: -40 - i * SEGMENT_SPACING
     });
   }
+}
+
+function createLevelSnakes(levelNumber,totalCount=SEGMENTS_PER_SNAKE) {
+  const definition=levelDefinition(levelNumber),minimum=level1ReferenceLength(state.width,state.height,state.player.y);
+  state.minimumLevelPathLength=minimum;state.snakes=[];state.snake=[];
+  const baseCount=Math.floor(totalCount/definition.snakes.length),extra=totalCount%definition.snakes.length;
+  let ordinal=0;
+  definition.snakes.forEach((snakeDefinition,index)=>{
+    const count=baseCount+(index<extra?1:0);
+    const instance={id:snakeDefinition.id,definition:snakeDefinition,segments:[],headDistance:0,
+      path:buildLevelPath(snakeDefinition.path,state.width,state.height,minimum)};
+    for(let localIndex=0;localIndex<count;localIndex++,ordinal++){
+      const upgrade=ordinal===1||(ordinal>1&&(ordinal-1)%UPGRADE_INTERVAL===0);
+      const scaledHp=Math.round(levelSegmentHp(levelNumber,ordinal,totalCount)*difficultyMultiplier(state.runDifficulty??.10));
+      instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(localIndex+1)*SEGMENT_SPACING,
+        upgrade,hp:scaledHp,maxHp:scaledHp,x:state.width/2,y:-40-localIndex*SEGMENT_SPACING});
+    }
+    state.snakes.push(instance);
+  });
+  rebuildSnakeView();syncSnakePositions();
+}
+
+function managedSnakeInstances() {
+  if(!state.snakes?.length)return [];
+  const segments=state.snakes.flatMap(s=>s.segments);
+  return segments.length===state.snake.length&&segments.every((segment,index)=>state.snake[index]===segment)?state.snakes:[];
+}
+function rebuildSnakeView(){state.snake=state.snakes.flatMap(s=>s.segments);}
+function snakeInstanceForSegment(segment){
+  return managedSnakeInstances().find(s=>s.segments.includes(segment))||null;
+}
+function livingSnakeInstances(){
+  const managed=managedSnakeInstances();
+  return managed.length?managed.filter(s=>s.segments.some(segment=>segment.hp>0)):[{id:"legacy",segments:state.snake,headDistance:state.headDistance,path:{level1:true}}];
 }
 
 function startGame() {
@@ -211,14 +249,41 @@ function pathPoint(distance) {
   };
 }
 
-function snakeHead() {
-  if (!state.snake.length) return null;
-  return pathPoint(state.headDistance - state.snake[0].pathOffset + SEGMENT_SPACING);
+function instancePathPoint(instance,distance) {
+  return instance?.path&&!instance.path.level1?pointOnSampledPath(instance.path,distance):pathPoint(distance);
 }
+function snakeHead(instance=null) {
+  const selected=instance||livingSnakeInstances()[0];
+  if (!selected?.segments.length) return null;
+  return instancePathPoint(selected,(selected.headDistance??state.headDistance)-selected.segments[0].pathOffset+SEGMENT_SPACING);
+}
+function snakeHeadForSegment(segment){
+  const instance=snakeInstanceForSegment(segment);
+  if(instance)return instance.segments[0]===segment?snakeHead(instance):null;
+  return state.snake[0]===segment?snakeHead():null;
+}
+function isFrontSegment(segment){
+  const instance=snakeInstanceForSegment(segment);
+  return instance?instance.segments[0]===segment:state.snake[0]===segment;
+}
+function firstVisibleSegment(instance){return instance?.segments.find(segment=>segment.hp>0&&isSegmentVisible(segment))||null;}
+function nearestSnakeSegment(originX,originY,predicate=()=>true,preferredId=null){
+  if(preferredId!=null){const preferred=state.snake.find(s=>s.id===preferredId&&s.hp>0&&isSegmentVisible(s));if(preferred)return preferred;}
+  const candidates=[];
+  for(const instance of livingSnakeInstances()){
+    const target=instance.segments.find(segment=>segment.hp>0&&isSegmentVisible(segment)&&predicate(segment));if(!target)continue;
+    const head=snakeHead(instance),reference=head&&isSegmentVisible(head)?head:target;
+    candidates.push({target,distance:Math.hypot(reference.x-originX,reference.y-originY)});
+  }
+  return candidates.sort((a,b)=>a.distance-b.distance)[0]?.target||null;
+}
+function nearestSnakeTarget(originX,originY,preferredId=null){return nearestSnakeSegment(originX,originY,()=>true,preferredId);}
 
 function syncSnakePositions() {
-  for (const segment of state.snake) {
-    Object.assign(segment, pathPoint(state.headDistance - segment.pathOffset));
+  const instances=managedSnakeInstances();
+  if(!instances.length){for(const segment of state.snake)Object.assign(segment,pathPoint(state.headDistance-segment.pathOffset));return;}
+  for(const instance of instances)for(const segment of instance.segments){
+    Object.assign(segment,instancePathPoint(instance,instance.headDistance-segment.pathOffset));
   }
 }
 
@@ -228,7 +293,9 @@ function update(dt) {
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const speed = Math.min(22 + state.elapsed * .25, 45) * (1-alchemistSlow());
-  state.headDistance += speed * dt;
+  const instances=managedSnakeInstances();
+  if(instances.length){for(const instance of instances)instance.headDistance+=speed*dt;state.headDistance=instances[0]?.headDistance||0;}
+  else state.headDistance += speed * dt;
 
   syncSnakePositions();
 
@@ -261,8 +328,8 @@ function update(dt) {
     bullet.previousY = bullet.y;
     if(bullet.owner==="paladin" && bullet.hammerPhase)advanceHammer(bullet,dt);
     else if(bullet.owner==="necromancer") {
-      const target=state.snake[0];
-      if(target)moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);
+      const target=nearestSnakeTarget(bullet.x,bullet.y,bullet.targetId);
+      if(target){bullet.targetId=target.id;moveHeroProjectile(bullet,target.x,target.y,510*.9,dt);}
       else bullet.dead=true;
     } else if(bullet.owner==="alchemist") {
       const target=alchemistProjectileTarget(bullet);
@@ -291,7 +358,7 @@ function update(dt) {
 
   if (state.snake.length === 0) {
     completeLevel();
-  } else if (snakeHead().y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22) {
+  } else if (livingSnakeInstances().some(instance=>snakeHead(instance)?.y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22)) {
     endGame();
   }
 }
@@ -340,8 +407,8 @@ function handleHits(random = Math.random) {
     if (bullet.dead || bullet.hammerPhase==="return") continue;
     bullet.hitIds ||= new Set();
     // Projectiles enter from below: resolve the nearest crossed target first.
-    const targets = state.snake.map((segment,i)=>({segment,head:i===0?snakeHead():null}))
-      .filter(({segment,head})=>isSegmentVisible(segment) && (bullet.owner!=="necromancer" || segment===state.snake[0]) && (bullet.owner!=="alchemist" || segment.id===bullet.targetId) && (bullet.owner!=="runemaster" || segment.id===bullet.targetId) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
+    const targets = state.snake.map(segment=>({segment,head:snakeHeadForSegment(segment)}))
+      .filter(({segment,head})=>isSegmentVisible(segment) && (bullet.owner!=="necromancer" || (bullet.targetId!=null?segment.id===bullet.targetId:isFrontSegment(segment))) && (bullet.owner!=="alchemist" || segment.id===bullet.targetId) && (bullet.owner!=="runemaster" || segment.id===bullet.targetId) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
       .sort((a,b)=>Math.max(b.segment.y,b.head?.y??-Infinity)-Math.max(a.segment.y,a.head?.y??-Infinity));
     for (const {segment} of targets) {
       if (!state.snake.includes(segment)) continue;
@@ -380,8 +447,18 @@ function handleHits(random = Math.random) {
 }
 
 function destroySegment(index, offerUpgrade = true) {
-  const [destroyed] = state.snake.splice(index, 1);
-  const neighbors=[state.snake[index-1],state.snake[index]].filter(Boolean);
+  const target=state.snake[index],instance=snakeInstanceForSegment(target);
+  let destroyed,neighbors,localIndex=index;
+  if(instance){
+    localIndex=instance.segments.indexOf(target);
+    [destroyed]=instance.segments.splice(localIndex,1);
+    neighbors=[instance.segments[localIndex-1],instance.segments[localIndex]].filter(Boolean);
+  }else{
+    [destroyed]=state.snake.splice(index,1);
+    neighbors=[state.snake[index-1],state.snake[index]].filter(Boolean);
+  }
+  if(!destroyed)return;
+  if(instance)rebuildSnakeView();
   if (state.runemaster) resolveRunemasterDeath(destroyed,neighbors);
   if (state.necromancer) state.necroDeaths.push({segment:destroyed,neighbors});
   if (state.alchemist) resolveAlchemistDeath(destroyed,neighbors);
@@ -394,7 +471,8 @@ function destroySegment(index, offerUpgrade = true) {
 
   // Nur der Abschnitt vor der Lücke (Richtung Kopf) fällt zurück.
   // Größere Pfad-Offsets bedeuten weiter hinten auf derselben Bahn.
-  for (let i = 0; i < index; i++) state.snake[i].pathOffset += SEGMENT_SPACING;
+  const retreat=instance?instance.segments:state.snake;
+  for (let i = 0; i < localIndex; i++) retreat[i].pathOffset += SEGMENT_SPACING;
   syncSnakePositions();
   refreshHud();
   if (destroyed.upgrade) {
@@ -727,8 +805,9 @@ function draw() {
   ctx.clearRect(0, 0, state.width, state.height);
   drawBackground();
   for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], false);
-  const head = snakeHead();
-  if (head) drawSegment(head, true);
+  for(const instance of livingSnakeInstances()){
+    const head=snakeHead(instance);if(head)drawSegment(head,true);
+  }
   // Nach allen Sprites zeichnen, damit Nachbarteile die Zahlen nicht verdecken.
   for (const segment of state.snake) drawHpLabel(segment);
   drawBullets();
@@ -943,7 +1022,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 19.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 20.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

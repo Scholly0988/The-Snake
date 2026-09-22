@@ -33,7 +33,8 @@ function alchemistTarget() {
   if(!visible.length){a.targetId=null;return null;}
   const current=visible.find(segment=>segment.id===a.targetId);
   if(current&&poisonStacks(current)<poisonLimit())return current;
-  const target=visible.find(segment=>poisonStacks(segment)<poisonLimit())||visible[0];
+  const x=alchemistX(),y=state.player.y+PLATFORM_SHOT_Y;
+  const target=nearestSnakeSegment(x,y,segment=>poisonStacks(segment)<poisonLimit())||nearestSnakeTarget(x,y)||visible[0];
   a.targetId=target.id;
   return target;
 }

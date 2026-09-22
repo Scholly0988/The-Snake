@@ -18,7 +18,7 @@ function necroDamage(segment,damage) {
 }
 function prepareNecroHit(segment,hit,random) {
   const n=state.necromancer;
-  if (segment===state.snake[0] && n.markCooldown<=0) {
+  if (isFrontSegment(segment) && n.markCooldown<=0) {
     n.markCooldown=skillValue("necromancer","markChance",1,.75);
     if (random()<n.markChance) {
       const candidates=visibleTargets().filter(s=>!s.soulMark);
@@ -103,11 +103,10 @@ function soulContactTime(soul, target) {
 }
 function hitVortexSoul(soul) {
   if(soul.dead)return;
-  const head=snakeHead();
-  const contacts=state.snake.map((segment,index)=>({
+  const contacts=state.snake.map(segment=>({
     segment,
     time:Math.min(soulContactTime(soul,segment),
-      index===0&&head?soulContactTime(soul,head):Infinity)
+      snakeHeadForSegment(segment)?soulContactTime(soul,snakeHeadForSegment(segment)):Infinity)
   })).filter(c=>isSegmentVisible(c.segment)&&Number.isFinite(c.time)&&!soul.hitIds.has(c.segment.id))
     .sort((a,b)=>a.time-b.time);
   const batch=new Map(), damage=soulDamage(soul);
@@ -156,8 +155,8 @@ function updateNecromancer(dt) {
   n.pulse=Math.max(0,n.pulse-dt);
   n.fireTimer-=dt;
   if (n.fireTimer<=0) {
-    state.bullets.push({owner:"necromancer",x:necromancerX(),y:state.player.y+PLATFORM_SHOT_Y,
-      vx:0,vy:-510*.9,hitsLeft:1+state.weapon.pierce,dead:false});
+    const x=necromancerX(),y=state.player.y+PLATFORM_SHOT_Y,target=nearestSnakeTarget(x,y);
+    if(target)state.bullets.push({owner:"necromancer",x,y,vx:0,vy:-510*.9,hitsLeft:1+state.weapon.pierce,dead:false,targetId:target.id});
     n.fireTimer+=1/(state.weapon.shotsPerSecond*.85);n.pulse=.2;
   }
   if (n.ultimate) {

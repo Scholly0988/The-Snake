@@ -29,9 +29,8 @@ function runemasterRateMultiplier(){
   const resonance=marked>=3?r.resonanceBonus:0;
   return .95*(1+resonance+(r.rateBuff>0?r.ultimateRate:0));
 }
-function runemasterTarget(preferredId=null){
-  const visible=visibleTargets();
-  return visible.find(s=>s.id===preferredId)||visible[0]||null;
+function runemasterTarget(preferredId=null,originX=runemasterX(),originY=state.player.y+PLATFORM_SHOT_Y){
+  return nearestSnakeTarget(originX,originY,preferredId);
 }
 function runemasterHitRoll(segment,bullet,random=Math.random){
   const critical=random()*100<(state.weapon.critChance||0);
@@ -48,8 +47,8 @@ function runeEffect(kind,segment,color="#58bfff",radius=20){
   state.runemaster?.effects.push({kind,x:segment.x,y:segment.y,color,radius,life:.55,maxLife:.55});
 }
 function runeNeighbors(segment){
-  const index=state.snake.indexOf(segment);
-  return [state.snake[index-1],state.snake[index+1]].filter(s=>s&&isSegmentVisible(s)&&s.hp>0);
+  const instance=snakeInstanceForSegment(segment),list=instance?.segments||state.snake,index=list.indexOf(segment);
+  return [list[index-1],list[index+1]].filter(s=>s&&isSegmentVisible(s)&&s.hp>0);
 }
 function triggerRuneBreak(batch,segment,options={},random=Math.random){
   const r=state.runemaster;
@@ -124,12 +123,12 @@ function resolveRunemasterDeath(segment,neighbors,random=Math.random){
   }
 }
 function fireRuneProjectile(){
-  const r=state.runemaster,target=runemasterTarget();if(!r||!target)return;
+  const r=state.runemaster,x=runemasterX(),y=state.player.y+PLATFORM_SHOT_Y,target=runemasterTarget(null,x,y);if(!r||!target)return;
   r.shots++;
   const runeStrike=r.strikeRemaining<=0;
   if(runeStrike)r.strikeRemaining=r.strikeCooldown;
   const perfect=r.perfect&&!runeStrike&&r.shots%skillValue("runemaster","perfect",10,8)===0;
-  state.bullets.push({owner:"runemaster",x:runemasterX(),y:state.player.y+PLATFORM_SHOT_Y,
+  state.bullets.push({owner:"runemaster",x,y,
     vx:0,vy:-510,hitsLeft:1,dead:false,targetId:target.id,runeStrike,perfect});
   r.pulse=.18;
 }
