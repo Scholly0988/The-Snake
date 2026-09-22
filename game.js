@@ -190,7 +190,10 @@ function createLevelSnakes(levelNumber,totalCount=SEGMENTS_PER_SNAKE) {
       path:buildLevelPath(snakeDefinition.path,state.width,state.height,minimum)};
     for(let localIndex=0;localIndex<count;localIndex++,ordinal++){
       const upgrade=ordinal===1||(ordinal>1&&(ordinal-1)%UPGRADE_INTERVAL===0);
-      const scaledHp=Math.round(levelSegmentHp(levelNumber,ordinal,totalCount)*difficultyMultiplier(state.runDifficulty??.10));
+      // Every snake receives the complete level curve independently. In dual
+      // encounters both enemies therefore start at the configured minimum and
+      // each reaches the configured maximum at its own final segment.
+      const scaledHp=Math.round(levelSegmentHp(levelNumber,localIndex,count)*difficultyMultiplier(state.runDifficulty??.10));
       instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(localIndex+1)*SEGMENT_SPACING,
         upgrade,hp:scaledHp,maxHp:scaledHp,x:state.width/2,y:-40-localIndex*SEGMENT_SPACING});
     }
@@ -1030,7 +1033,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 20.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 20.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
