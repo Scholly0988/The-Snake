@@ -1,5 +1,14 @@
 # The Snake
 
+## Version 20.1 – Vier Upgrade-Auswahlen
+
+Beim Zerstören eines besonderen Segments erscheinen jetzt vier unterschiedliche
+Upgrade-Karten. Die ersten drei Karten verwenden weiterhin den vollständigen
+Pool aus allgemeinen und ausgerüsteten Heldenfähigkeiten. Der vierte Platz ist
+fest als **Standard / Schütze** reserviert und kann ausschließlich allgemeinen
+Schaden, Feuerrate, Durchschlag, Krit-Upgrades und Schussfähigkeiten des
+Standardschützen anbieten. Heldenfähigkeiten können dort nicht erscheinen.
+
 ## Version 20.0 – Level 2 bis 10
 
 Die Kampagne umfasst jetzt zehn vorbereitete Level. Level 1 verwendet weiterhin
