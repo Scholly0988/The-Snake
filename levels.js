@@ -20,9 +20,10 @@ const LEVEL_DEFINITIONS = Object.freeze([
     {id:"B",path:{type:"sCurve",cycles:15,amplitude:.35,phase:Math.PI}}
   ]},
   {number:9,name:"Komplexer Rundkurs",hp:{first:400,last:135000},snakes:[{id:"A",path:{type:"complex",cycles:14,amplitude:.40,phase:0}}]},
-  {number:10,name:"Finales Doppel",hp:{first:563,last:175000},snakes:[
-    {id:"A",path:{type:"finalWide",cycles:13,amplitude:.39,phase:0}},
-    {id:"B",path:{type:"finalTight",cycles:16,amplitude:.35,phase:Math.PI}}
+  {number:10,name:"Finales Trio",hp:{first:563,last:175000},snakes:[
+    {id:"A",side:"left",path:{type:"wave",cycles:22,amplitude:.22,center:.27,phase:0}},
+    {id:"B",side:"center",rage:{interval:15,duration:3,multiplier:1.2},path:{type:"finalTight",cycles:26,amplitude:.39,center:.5,phase:0}},
+    {id:"C",side:"right",path:{type:"wave",cycles:22,amplitude:.22,center:.73,phase:Math.PI}}
   ]}
 ]);
 

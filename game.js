@@ -190,13 +190,13 @@ function createLevelSnakes(levelNumber,totalCount=SEGMENTS_PER_SNAKE) {
   let ordinal=0;
   definition.snakes.forEach((snakeDefinition,index)=>{
     const count=baseCount+(index<extra?1:0);
-    const instance={id:snakeDefinition.id,definition:snakeDefinition,segments:[],headDistance:0,
+    const instance={id:snakeDefinition.id,definition:snakeDefinition,segments:[],headDistance:0,rageActive:false,
       path:buildLevelPath(snakeDefinition.path,state.width,state.height,minimum)};
     for(let localIndex=0;localIndex<count;localIndex++,ordinal++){
       const upgrade=ordinal===1||(ordinal>1&&(ordinal-1)%UPGRADE_INTERVAL===0);
-      // Every snake receives the complete level curve independently. In dual
-      // encounters both enemies therefore start at the configured minimum and
-      // each reaches the configured maximum at its own final segment.
+      // Every snake receives the complete level curve independently. In
+      // multi-snake encounters every enemy therefore starts at the configured
+      // minimum and reaches the configured maximum at its own final segment.
       const scaledHp=Math.round(levelSegmentHp(levelNumber,localIndex,count)*difficultyMultiplier(state.runDifficulty??.10));
       instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(localIndex+1)*SEGMENT_SPACING,
         upgrade,hp:scaledHp,maxHp:scaledHp,x:state.width/2,y:-40-localIndex*SEGMENT_SPACING});
@@ -294,6 +294,14 @@ function syncSnakePositions() {
   }
 }
 
+function snakeSpeedMultiplier(instance,elapsed=state.elapsed) {
+  const definition=instance?.definition||{},rage=definition.rage;
+  if(!rage){if(instance)instance.rageActive=false;return definition.speedMultiplier??1;}
+  const active=elapsed>=rage.interval&&((elapsed-rage.interval)%rage.interval)<rage.duration;
+  instance.rageActive=active;
+  return (definition.speedMultiplier??1)*(active?rage.multiplier:1);
+}
+
 function update(dt) {
   if (state.mode !== "playing") return;
   if(!state.snake.length){completeLevel();return;}
@@ -301,7 +309,7 @@ function update(dt) {
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const speed = Math.min(22 + state.elapsed * .25, 45) * (1-alchemistSlow());
   const instances=managedSnakeInstances();
-  if(instances.length){for(const instance of instances)instance.headDistance+=speed*dt;state.headDistance=instances[0]?.headDistance||0;}
+  if(instances.length){for(const instance of instances)instance.headDistance+=speed*snakeSpeedMultiplier(instance)*dt;state.headDistance=instances[0]?.headDistance||0;}
   else state.headDistance += speed * dt;
 
   syncSnakePositions();
@@ -856,7 +864,7 @@ function draw() {
   drawBackground();
   for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], false);
   for(const instance of livingSnakeInstances()){
-    const head=snakeHead(instance);if(head)drawSegment(head,true);
+    const head=snakeHead(instance);if(head){drawSegment(head,true);if(instance.rageActive){ctx.save();ctx.strokeStyle="#ff5a45";ctx.fillStyle="#ffb06b";ctx.shadowColor="#ff3b28";ctx.shadowBlur=16;ctx.lineWidth=3;ctx.beginPath();ctx.arc(head.x,head.y,23,0,Math.PI*2);ctx.stroke();ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.fillText("RAGE",head.x,head.y-27);ctx.restore();}}
   }
   // Nach allen Sprites zeichnen, damit Nachbarteile die Zahlen nicht verdecken.
   for (const segment of state.snake) drawHpLabel(segment);
@@ -1074,7 +1082,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 21.1 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 21.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
