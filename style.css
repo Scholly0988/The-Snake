@@ -268,6 +268,7 @@ body { padding: 0; background: #111c21; }
 #gameOverScreen button { background: linear-gradient(#e6c884,#b98b46); color: #302417; }
 #gameOverScreen .share-run-button { background: linear-gradient(#78dddc,#3d9faa); color: #08282d; }
 .share-run-status { min-height: 1.25em; margin: 5px 0; color: #c9f7f2; font-size: 11px; }
+.shooter-combat-status { min-height: 14px; margin: -2px 0 4px; color: #fff0b5; font: bold 9px Georgia,serif; text-align: center; text-shadow: 0 1px 3px #000; }
 @media (max-width: 350px) {
   .game-shell { padding-left: 16px; padding-right: 16px; }
   .stat-icon { width: 20px; height: 20px; padding: 3px; }

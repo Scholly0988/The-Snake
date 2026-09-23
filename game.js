@@ -60,9 +60,9 @@ const state = {
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
-  alchemist: null, runemaster: null, pendingUpgrades: 0, upgradeOfferId: 0,
+  alchemist: null, runemaster: null, shooter: null, pendingUpgrades: 0, upgradeOfferId: 0,
   runStartSegments: 100,
-  runUpgradeHistory: {paladin:[],necromancer:[],alchemist:[],runemaster:[]},
+  runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
 };
 
@@ -141,10 +141,11 @@ function resetGame() {
   state.necromancer = newNecromancer(progress.data.necromancerSlot);
   state.alchemist = newAlchemist(progress.data.alchemistSlot);
   state.runemaster = newRunemaster(progress.data.runemasterSlot);
+  state.shooter = newShooter();
   state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
   state.holyEffects = [];
   state.pendingUpgrades = 0;
-  state.runUpgradeHistory = {paladin:[],necromancer:[],alchemist:[],runemaster:[]};
+  state.runUpgradeHistory = {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[]};
   state.keyboardLeft = false; state.keyboardRight = false;
   state.lastUpgrade=null;
   state.score = 0;
@@ -307,15 +308,17 @@ function update(dt) {
 
   const keyboardDirection=(state.keyboardRight?1:0)-(state.keyboardLeft?1:0);
   if(keyboardDirection)state.player.targetX=clampPlayerX(state.player.targetX+keyboardDirection*state.player.speed*dt);
+  const playerBeforeX=state.player.x;
   const dx = state.player.targetX - state.player.x;
   const maxStep = state.player.speed * dt;
   state.player.x += Math.sign(dx) * Math.min(Math.abs(dx), maxStep);
   state.player.x = clampPlayerX(state.player.x);
+  updateShooter(dt,Math.abs(state.player.x-playerBeforeX)>.001);
 
   state.fireTimer -= dt;
   if (state.fireTimer <= 0) {
     fireWeapon();
-    state.fireTimer += 1 / state.weapon.shotsPerSecond;
+    state.fireTimer += 1 / (state.weapon.shotsPerSecond*shooterRateMultiplier());
   }
 
   updatePaladin(dt);
@@ -345,6 +348,10 @@ function update(dt) {
       const target=runemasterTarget(bullet.targetId);
       if(target){bullet.targetId=target.id;moveHeroProjectile(bullet,target.x,target.y,510,dt);}
       else bullet.dead=true;
+    } else if(bullet.owner==="shooter"&&bullet.shooterHoming){
+      const target=nearestSnakeTarget(bullet.x,bullet.y,bullet.targetId);
+      if(target){bullet.targetId=target.id;moveHeroProjectile(bullet,target.x,target.y,510*shooterProjectileSpeedMultiplier(),dt);}
+      else bullet.dead=true;
     } else {
       bullet.x += bullet.vx * dt;
       bullet.y += bullet.vy * dt;
@@ -370,15 +377,7 @@ function update(dt) {
 }
 
 function fireWeapon() {
-  const count = state.weapon.bullets;
-  for (let i = 0; i < count; i++) {
-    const offset = (i - (count - 1) / 2) * state.weapon.spread;
-    const spacing = count > 1 ? Math.min(10, (state.width - 12) / (count - 1)) : 0;
-    const halfWidth = (count - 1) * spacing / 2;
-    const center = Math.max(6 + halfWidth, Math.min(state.width - 6 - halfWidth, state.player.x));
-    const x = state.weapon.parallel ? center + (i - (count - 1) / 2) * spacing : state.player.x;
-    state.bullets.push({ x, y: state.player.y + PLATFORM_SHOT_Y, vx: state.weapon.parallel ? 0 : offset * 3, vy: -510*(state.weapon.parallel?skillValue("shooter","parallel",1,1.2):1), hitsLeft: state.weapon.pierce + 1, dead: false });
-  }
+  fireShooterWeapon();
 }
 
 function rollHit(random = Math.random, damage = state.weapon.damage) {
@@ -391,7 +390,7 @@ function projectileHits(bullet, target) {
   const ax = bullet.previousX ?? bullet.x, ay = bullet.previousY ?? bullet.y;
   const dx = bullet.x-ax, dy = bullet.y-ay;
   const t = dx*dx+dy*dy ? Math.max(0,Math.min(1,((target.x-ax)*dx+(target.y-ay)*dy)/(dx*dx+dy*dy))) : 0;
-  const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : 0);
+  const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : bullet.owner==="shooter"?3*Math.max(0,(bullet.size||1)-1):0);
   return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
 }
 function segmentDamageMultiplier(segment) {
@@ -436,10 +435,13 @@ function handleHits(random = Math.random) {
         if(state.mode!=="playing")return;
         continue outer;
       }
-      const hit = isNecro ? necromancerHitRoll(random) : rollHit(random,isPaladin ? paladinDirectDamage(bullet) : state.weapon.damage*skillValue("shooter","attack",1,1.2));
+      const isShooter=bullet.owner==="shooter"||!bullet.owner;
+      const hit = isNecro ? necromancerHitRoll(random) : isShooter&&state.shooter ? shooterHitRoll(segment,bullet,random) : rollHit(random,isPaladin ? paladinDirectDamage(bullet) : state.weapon.damage*skillValue("shooter","attack",1,1.2));
       if (isNecro) prepareNecroHit(segment,hit,random);
       const batch = new Map([[segment.id,hit.damage]]);
       if (isPaladin) paladinHit(batch,segment,hit,random);
+      if (isShooter&&state.shooter)shooterAfterHit(batch,segment,hit,bullet,random);
+      if(isShooter)bullet.hitsDone=(bullet.hitsDone||0)+1;
       bullet.hitsLeft--;
       if (bullet.hitsLeft<=0 || isNecro) bullet.dead=true;
       burst(segment.x,segment.y,hit.critical?"#ff7954":isPaladin?"#ffe49b":"#63ef98",hit.critical?12:5);
@@ -538,7 +540,8 @@ function roundUpgradePool(includeHeroes = true) {
       apply: () => { state.weapon.parallel = true; state.weapon.spread = 0; }
     });
   }
-  return includeHeroes?pool.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool(),runemasterUpgradePool()):pool;
+  const standard=pool.concat(shooterUpgradePool());
+  return includeHeroes?standard.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool(),runemasterUpgradePool()):standard;
 }
 
 const RARITY_CHANCES = Object.freeze({grey:.60,green:.25,purple:.10,orange:.05});
@@ -595,9 +598,9 @@ function openUpgrade() {
 }
 
 function recordRunUpgrade(choice) {
-  const hero=choice.text.startsWith("Aldric ·")?"paladin":choice.text.startsWith("Vaelric ·")?"necromancer":choice.text.startsWith("Selvara ·")?"alchemist":choice.text.startsWith("Kaelvar ·")?"runemaster":null;
+  const hero=choice.text.startsWith("Schütze ·")?"shooter":choice.text.startsWith("Aldric ·")?"paladin":choice.text.startsWith("Vaelric ·")?"necromancer":choice.text.startsWith("Selvara ·")?"alchemist":choice.text.startsWith("Kaelvar ·")?"runemaster":null;
   if(!hero)return;
-  const text=choice.text.replace(/^(Aldric|Vaelric|Selvara|Kaelvar) · /,"");
+  const text=choice.text.replace(/^(Schütze|Aldric|Vaelric|Selvara|Kaelvar) · /,"");
   state.runUpgradeHistory[hero].push({name:choice.name,rarity:choice.rarity,text});
 }
 
@@ -663,6 +666,7 @@ function refreshHud() {
   scoreEl.textContent = state.score;
   damageEl.textContent = state.weapon.damage.toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2});
   fireRateEl.textContent = `${(state.weapon.shotsPerSecond / 2.7).toFixed(1)}×`;
+  document.querySelector("#shooterCombatStatus").textContent=shooterStatusText();
 }
 
 function renderProfile() {
@@ -858,6 +862,7 @@ function draw() {
   for (const segment of state.snake) drawHpLabel(segment);
   drawBullets();
   drawPlayer();
+  drawShooterEffects();
   drawPaladin();
   drawHolyEffects();
   drawNecromancer();
@@ -1069,7 +1074,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 20.3 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 21.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

@@ -1,5 +1,12 @@
 # Selvara – Meisterin der toxischen Essenzen
 
+## Balance 20.3
+
+Mit vollständig gekauften Skill-Aufwertungen und jeder Run-Fähigkeit einmal
+erreicht Selvara im gemeinsamen Vergleichsszenario ungefähr 310
+Einzelziel-DPS. Der zusätzliche Schaden verteilt sich auf Seuchenfläschchen,
+Toxische Mischung, Explosive Mischung, Giftregen und Giftwolke.
+
 Selvara ist ein Begleitheld für die linke oder rechte Plattform. Der erste
 freigeschaltete Begleiter kostet 100 Münzen, jeder weitere 300 Münzen.
 

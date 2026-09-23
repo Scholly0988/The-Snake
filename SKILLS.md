@@ -1,4 +1,4 @@
-# Helden-Skills – Version 17.0
+# Helden-Skills – Version 21.0
 
 Jeder Skill kostet einmalig 50 Münzen. Ein Kauf gilt für alle zugehörigen Seltenheiten, wird im Browser sowie im Export gespeichert und wirkt ab dem nächsten Run. Gesperrte Helden können angesehen, aber erst nach Freischaltung aufgewertet werden. Run-Upgrades werden durch einen Kauf nicht freigeschaltet. Alte Spielstände starten ohne Skill-Käufe.
 
@@ -22,6 +22,30 @@ Jeder Skill kostet einmalig 50 Münzen. Ein Kauf gilt für alle zugehörigen Sel
 | Mehrfachschuss | Grau | 2 statt 1 zusätzliches Geschoss je Auswahl. |
 | Engerer Mehrfachschuss | Grün | Verringert die Streuung um 60 %. |
 | Paralleler Mehrfachschuss | Lila | Parallele Pistolengeschosse fliegen 20 % schneller. |
+| Beschleunigte Geschosse | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte. |
+| Größere Kaliber | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte. |
+| Präzisionsschuss | Grau, Grün, Lila | Je Auswahl zusätzlich +5 Prozentpunkte; weiterhin unbegrenzt wählbar. |
+| Panzerbrecher | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte. |
+| Kritische Salve | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte. |
+| Schnelle Hände | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte Feuerrate. |
+| Schweres Geschoss | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte Schaden. |
+| Leichtmunition | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte Feuerrate. |
+| Durchschlagswucht | Grau, Grün, Lila | Je Stufe zusätzlich +10 Prozentpunkte. |
+| Splittergeschoss | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte Chance. |
+| Doppelschlag | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte Chance. |
+| Zielerfassung | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte. |
+| Dauerfeuer | Grau, Grün, Lila | Je Stufe zusätzlich +5 Prozentpunkte Feuerrate. |
+| Volltreffer | Grau, Grün, Lila | Je Stufe zusätzlich +10 Prozentpunkte. |
+| Dreifachsalve | Lila | Bereits jeder 7. statt 8. Schuss. |
+| Geschossregen | Lila | Bereits nach 18 statt 20 Projektilen. |
+| Perfekter Treffer | Lila | Bereits jeder 8. statt 10. Haupttreffer. |
+| Unaufhaltsam | Lila | +75 % statt +50 % Schaden. |
+| Überladung | Lila | Bereits nach 12 Schüssen und +125 % Schaden. |
+| Kettenprojektil | Lila | 30 % statt 20 % Chance. |
+| Salvenmeister | Lila | +40 % statt +30 % Schaden pro Salvenprojektil. |
+| Präzisionsmodus | Lila | Nach 1,5 s: +30 % Schaden und +12 Prozentpunkte Krit-Chance. |
+| Kugelhagel | Orange | Alle 22 s für 6 s. |
+| Meisterschütze | Orange | Jeder 4. Treffer verursacht +125 % Schaden und ist kritisch. |
 
 ## Aldric
 
@@ -29,23 +53,23 @@ Jeder Skill kostet einmalig 50 Münzen. Ein Kauf gilt für alle zugehörigen Sel
 
 | Skill | Seltenheiten | Aufwertung für 50 Münzen |
 |---|---|---|
-| Hammer des Morgenlichts | Basis | +20 % direkter Hammerschaden; keine Verstärkung der Explosionen. |
-| Heiliger Einschlag | Basis | +20 % Schaden dieser Explosion (50 → 60 %). |
-| Göttliches Urteil | Orange | 750 % statt 500 % Hammerschaden. |
+| Hammer des Morgenlichts | Basis | +45 % direkter Hammerschaden; keine Verstärkung der Explosionen. |
+| Heiliger Einschlag | Basis | 90 % statt 50 % Hammerschaden. |
+| Göttliches Urteil | Orange | 1.000 % statt 500 % Hammerschaden. |
 
 ### Upgrade-Skills
 
 | Skill | Seltenheiten | Aufwertung für 50 Münzen |
 |---|---|---|
-| Morgenlicht | Grün, Lila | Der Zusatztreffer verursacht 75 % statt 50 % Hammerschaden. |
-| Vergeltung | Lila | 100 % statt 50 % Zusatzschaden. |
-| Geweihter Hammer | Grau | +30 % statt +20 % je Auswahl. |
+| Morgenlicht | Grün, Lila | Der Zusatztreffer verursacht 110 % statt 50 % Hammerschaden. |
+| Vergeltung | Lila | 125 % statt 50 % Zusatzschaden. |
+| Geweihter Hammer | Grau | +40 % statt +20 % je Auswahl. |
 | Gesegneter Stahl | Grün | +25 % statt +15 % je Auswahl. |
 | Hammerflug | Grün | +30 % statt +20 % je Auswahl. |
 | Heilige Klinge | Orange | Spezialhammer verursacht +25 % direkten Trefferschaden. |
 | Hammer der Vorfahren | Lila | Heilige Klinge bei jedem 3. Wurf. |
 | Heilige Wucht | Grau, Grün, Lila | +20 / +35 / +55 % Radius je Auswahl. |
-| Lichtbrecher | Grau, Grün, Lila | +20 / +30 / +50 % je Auswahl. |
+| Lichtbrecher | Grau, Grün, Lila | +25 / +35 / +55 % je Auswahl. |
 | Richterspruch | Grün | Heiliger Einschlag bei jedem 2. Treffer. |
 | Göttlicher Zorn | Orange, Lila | Orange: 18 s Grundabklingzeit. Lila: 25 % kürzere Abklingzeit. |
 
@@ -83,8 +107,12 @@ Jeder Skill kostet einmalig 50 Münzen. Ein Kauf gilt für alle zugehörigen Sel
 
 ## Installation
 
-Neu hochladen: `skills.js`. Ersetzen: `index.html`, `style.css`, `game.js`, `progress.js`, `paladin.js`, `necromancer.js`. Alle Dateien liegen gemeinsam im Repository-Hauptordner.
+Neu hinzugekommen: `shooter.js` und `test-shooter.cjs`. Die geänderten Dateien
+`index.html`, `style.css`, `game.js`, `skills.js` und die Tests liegen gemeinsam
+im Repository-Hauptordner.
 
 ## Prüfung
 
-`node test-game.cjs`, `node test-progress.cjs`, `node test-skills.cjs`. Die Tests verwenden einen simulierten DOM/Canvas; eine visuelle Mobilbrowser-Prüfung wurde nicht durchgeführt.
+`node test-game.cjs`, `node test-shooter.cjs`, `node test-progress.cjs` und
+`node test-skills.cjs`. Die Tests verwenden einen simulierten DOM/Canvas; eine
+visuelle Mobilbrowser-Prüfung wurde nicht durchgeführt.

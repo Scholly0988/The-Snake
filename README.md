@@ -1,5 +1,20 @@
 # The Snake
 
+## Version 21.0 – Schützen-Arsenal
+
+- Der Standardschütze besitzt jetzt 14 neue dreistufige Runden-Upgrades sowie
+  zehn seltene Spezialfähigkeiten für Krit-, Schnellfeuer-, Mehrfachschuss-,
+  Durchschlag- und Präzisions-Builds.
+- Präzisionsschuss darf beliebig oft gewählt werden. Alle anderen Stufen gelten
+  einmal pro Run; Salvenmeister erscheint erst nach aktivem Mehrfachschuss.
+- Kugelhagel und Meisterschütze bilden die orangefarbenen Endgame-Fähigkeiten.
+  Geschossregen verursacht pro erzeugtem Geschoss 300 % Schaden.
+- Sämtliche neuen Fähigkeiten können im reservierten vierten Standard-Slot
+  erscheinen. Exklusive Fähigkeiten von Aldric, Vaelric, Selvara und Kaelvar
+  bleiben dort ausgeschlossen.
+- Für jede neue Fähigkeit steht im Schützen-Skillfenster eine dauerhafte
+  Aufwertung zur Verfügung. Laufende Effekte werden im Kampf-HUD angezeigt.
+
 ## Version 20.3 – Heldenbalance und Ergebnis teilen
 
 - Selvaras vollständig ausgebauter Einzelziel-Schaden wurde verteilt über Fläschchen, Gift, Explosive Mischung, Giftregen und Giftwolke auf ungefähr 310 DPS angehoben.
@@ -35,8 +50,9 @@ sichtbare Segmente. Alte Spielstände mit neun Erstabschluss-Einträgen werden
 automatisch auf zehn Level beziehungsweise 30 Kombinationen aus Level und
 Schwierigkeit erweitert. Technische Details: [LEVELS-2-10.md](LEVELS-2-10.md).
 
-Tests: `node test-game.cjs`, `node test-alchemist.cjs`, `node test-skills.cjs`,
-`node test-runemaster.cjs` und `node test-levels-2-10.cjs`.
+Tests: `node test-game.cjs`, `node test-shooter.cjs`, `node test-alchemist.cjs`,
+`node test-skills.cjs`, `node test-runemaster.cjs` und
+`node test-levels-2-10.cjs`.
 
 ## Version 19.0 – Kaelvar
 
