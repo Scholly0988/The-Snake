@@ -1,5 +1,16 @@
 # The Snake
 
+## Version 21.1 – Schneller Routeneinstieg und höhere Endlevel-HP
+
+- Alle generierten Schlangenrouten von Level 2 bis 10 beginnen mit einem kurzen
+  geraden Einlauf. Der Kopf erreicht den sichtbaren Bereich nun nach rund 24 px
+  statt erst nach langen unsichtbaren Kurven.
+- Die Segmentleben der Level 5 bis 10 wurden über die jeweilige vollständige
+  HP-Kurve um 25 % erhöht. Die neuen Endwerte reichen von 40.000 in Level 5 bis
+  175.000 in Level 10.
+- Die Mindestlänge aller Routen bleibt mindestens so groß wie der Referenzpfad
+  aus Level 1.
+
 ## Version 21.0 – Schützen-Arsenal
 
 - Der Standardschütze besitzt jetzt 14 neue dreistufige Runden-Upgrades sowie

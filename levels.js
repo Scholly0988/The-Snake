@@ -9,18 +9,18 @@ const LEVEL_DEFINITIONS = Object.freeze([
     {id:"B",side:"right",path:{type:"sideArc",cycles:8,amplitude:.19,center:.73,phase:Math.PI}}
   ]},
   {number:4,name:"S-Kurven",hp:{first:50,last:22000},snakes:[{id:"A",path:{type:"sCurve",cycles:14,amplitude:.40,phase:0}}]},
-  {number:5,name:"Kreuzende Wege",hp:{first:75,last:32000},snakes:[
+  {number:5,name:"Kreuzende Wege",hp:{first:94,last:40000},snakes:[
     {id:"A",path:{type:"cross",cycles:14,amplitude:.30,phase:0,direction:1}},
     {id:"B",path:{type:"cross",cycles:14,amplitude:.30,phase:Math.PI,direction:-1}}
   ]},
-  {number:6,name:"Große Bögen",hp:{first:110,last:45000},snakes:[{id:"A",path:{type:"arcs",cycles:12,amplitude:.41,phase:0}}]},
-  {number:7,name:"Wechselnde Kurvenradien",hp:{first:160,last:62000},snakes:[{id:"A",path:{type:"variable",cycles:13,amplitude:.40,phase:0}}]},
-  {number:8,name:"Geteilte Muster",hp:{first:230,last:82000},snakes:[
+  {number:6,name:"Große Bögen",hp:{first:138,last:56250},snakes:[{id:"A",path:{type:"arcs",cycles:12,amplitude:.41,phase:0}}]},
+  {number:7,name:"Wechselnde Kurvenradien",hp:{first:200,last:77500},snakes:[{id:"A",path:{type:"variable",cycles:13,amplitude:.40,phase:0}}]},
+  {number:8,name:"Geteilte Muster",hp:{first:288,last:102500},snakes:[
     {id:"A",path:{type:"wave",cycles:10,amplitude:.38,phase:0}},
     {id:"B",path:{type:"sCurve",cycles:15,amplitude:.35,phase:Math.PI}}
   ]},
-  {number:9,name:"Komplexer Rundkurs",hp:{first:320,last:108000},snakes:[{id:"A",path:{type:"complex",cycles:14,amplitude:.40,phase:0}}]},
-  {number:10,name:"Finales Doppel",hp:{first:450,last:140000},snakes:[
+  {number:9,name:"Komplexer Rundkurs",hp:{first:400,last:135000},snakes:[{id:"A",path:{type:"complex",cycles:14,amplitude:.40,phase:0}}]},
+  {number:10,name:"Finales Doppel",hp:{first:563,last:175000},snakes:[
     {id:"A",path:{type:"finalWide",cycles:13,amplitude:.39,phase:0}},
     {id:"B",path:{type:"finalTight",cycles:16,amplitude:.35,phase:Math.PI}}
   ]}
@@ -45,34 +45,38 @@ function level1ReferenceLength(width,height,playerY=height-50) {
 function rawLevelPoint(spec,t,width,height) {
   const edge=40,usable=Math.max(40,width-edge*2),amp=usable*(spec.amplitude??.38);
   const center=width*(spec.center??.5),phase=spec.phase||0,cycles=spec.cycles||12;
-  let y=-70+(height+125)*t;
-  const wave=n=>Math.sin(Math.PI*2*n*t+phase);
+  // Every generated route starts with a short vertical lead-in. Previously the
+  // high-frequency horizontal curve already ran above the screen, so a snake
+  // could travel hundreds of invisible pixels before reaching y=0.
+  const entrance=.035,routeT=Math.max(0,(t-entrance)/(1-entrance));
+  let y=-24+(height+79)*t;
+  const wave=n=>Math.sin(Math.PI*2*n*routeT+phase);
   let x=center;
   switch(spec.type){
     case "wave": x=center+amp*wave(cycles);break;
     case "sideWave": {
-      const theta=Math.PI*2*cycles*t;
+      const theta=Math.PI*2*cycles*routeT;
       x=center+amp*Math.sin(theta);y+=height*.20*(1-Math.cos(theta));break;
     }
     case "sideArc": {
-      const theta=Math.PI*2*cycles*t;
+      const theta=Math.PI*2*cycles*routeT;
       x=center+amp*(.78*Math.sin(theta+phase)+.22*Math.sin(theta*2+phase));
       y+=height*.22*(1-Math.cos(theta));break;
     }
-    case "sCurve": x=center+amp*Math.tanh(1.55*Math.sin(Math.PI*2*cycles*t+phase))/Math.tanh(1.55);break;
+    case "sCurve": x=center+amp*Math.tanh(1.55*Math.sin(Math.PI*2*cycles*routeT+phase))/Math.tanh(1.55);break;
     case "cross": {
-      const drift=(spec.direction||1)*usable*.18*Math.sin(Math.PI*2*t);
-      x=center+drift+amp*Math.sin(Math.PI*2*cycles*t+phase);break;
+      const drift=(spec.direction||1)*usable*.18*Math.sin(Math.PI*2*routeT);
+      x=center+drift+amp*Math.sin(Math.PI*2*cycles*routeT+phase);break;
     }
-    case "arcs": x=center+amp*Math.sin(Math.PI*2*cycles*t+phase-Math.sin(Math.PI*4*t)*.7);break;
+    case "arcs": x=center+amp*Math.sin(Math.PI*2*cycles*routeT+phase-Math.sin(Math.PI*4*routeT)*.7);break;
     case "variable": {
-      const variablePhase=Math.PI*2*(cycles*t+1.2*Math.sin(Math.PI*2*t));
-      const envelope=.58+.42*(.5+.5*Math.sin(Math.PI*6*t+.4));
+      const variablePhase=Math.PI*2*(cycles*routeT+1.2*Math.sin(Math.PI*2*routeT));
+      const envelope=.58+.42*(.5+.5*Math.sin(Math.PI*6*routeT+.4));
       x=center+amp*envelope*Math.sin(variablePhase+phase);break;
     }
-    case "complex": x=center+amp*(.72*wave(cycles)+.20*Math.sin(Math.PI*2*(cycles/2+1)*t+1.1)+.08*Math.sin(Math.PI*2*t));break;
-    case "finalWide": x=center+amp*(.78*wave(cycles)+.22*Math.sin(Math.PI*2*3*t+.6));break;
-    case "finalTight": x=center+amp*(.70*Math.tanh(1.5*wave(cycles))/Math.tanh(1.5)+.30*Math.sin(Math.PI*2*5*t+phase));break;
+    case "complex": x=center+amp*(.72*wave(cycles)+.20*Math.sin(Math.PI*2*(cycles/2+1)*routeT+1.1)+.08*Math.sin(Math.PI*2*routeT));break;
+    case "finalWide": x=center+amp*(.78*wave(cycles)+.22*Math.sin(Math.PI*2*3*routeT+.6));break;
+    case "finalTight": x=center+amp*(.70*Math.tanh(1.5*wave(cycles))/Math.tanh(1.5)+.30*Math.sin(Math.PI*2*5*routeT+phase));break;
   }
   return {x:Math.max(edge,Math.min(width-edge,x)),y};
 }
