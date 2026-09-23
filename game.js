@@ -61,6 +61,7 @@ const state = {
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, runemaster: null, pendingUpgrades: 0, upgradeOfferId: 0,
+  runStartSegments: 100,
   runUpgradeHistory: {paladin:[],necromancer:[],alchemist:[],runemaster:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
 };
@@ -158,6 +159,8 @@ function resetGame() {
   state.player.targetX = state.player.x;
   state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
+  state.runStartSegments=state.snake.length;
+  document.querySelector("#shareRunStatus").textContent="";
   refreshHud();
 }
 
@@ -621,6 +624,38 @@ function endGame() {
   gameOverScreen.classList.remove("hidden");
 }
 
+function reachedRunSegment() {
+  const total=Math.max(1,state.runStartSegments||SEGMENTS_PER_SNAKE);
+  if(state.mode==="victory")return total;
+  return Math.min(total,Math.max(1,total-state.snake.length+1));
+}
+
+function runShareText() {
+  return "Ich bin im Level "+state.level+" bis zum Segment "+reachedRunSegment()+
+    " gekommen und habe "+state.score.toLocaleString("de-DE")+" Punkte bekommen.";
+}
+
+async function shareRunResult() {
+  const button=document.querySelector("#shareRunButton"),status=document.querySelector("#shareRunStatus");
+  const text=runShareText();button.disabled=true;status.textContent="";
+  try {
+    if(typeof navigator!=="undefined"&&typeof navigator.share==="function") {
+      await navigator.share({title:"The Snake",text,url:window.location.href});
+      status.textContent="Ergebnis geteilt.";
+    } else if(typeof navigator!=="undefined"&&navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text+" "+window.location.href);
+      status.textContent="Ergebnis und Spiellink kopiert.";
+    } else {
+      const copy=document.createElement("textarea");copy.value=text+" "+window.location.href;
+      copy.setAttribute("readonly","");copy.style.position="fixed";copy.style.opacity="0";
+      document.body.append(copy);copy.select();document.execCommand("copy");copy.remove();
+      status.textContent="Ergebnis und Spiellink kopiert.";
+    }
+  } catch(error) {
+    if(error?.name!=="AbortError")status.textContent="Teilen war nicht möglich. Bitte versuche es erneut.";
+  } finally { button.disabled=false; }
+}
+
 function refreshHud() {
   refreshPaladinHud();
   document.querySelector("#critChance").textContent = hudNumber(state.weapon.critChance || 0) + " %";
@@ -1025,6 +1060,7 @@ window.addEventListener("blur",()=>{releaseDrag();state.keyboardLeft=false;state
 
 document.querySelector("#startButton").addEventListener("click", startGame);
 document.querySelector("#restartButton").addEventListener("click", startGame);
+document.querySelector("#shareRunButton").addEventListener("click", shareRunResult);
 window.addEventListener("resize", resizeCanvas);
 if (typeof ResizeObserver !== "undefined") new ResizeObserver(resizeCanvas).observe(wrap);
 
@@ -1033,7 +1069,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 20.2 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 20.3 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

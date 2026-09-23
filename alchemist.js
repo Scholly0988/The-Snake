@@ -17,7 +17,7 @@ function newAlchemist(slot) {
   } : null;
 }
 function alchemistX() { return state.player.x+(state.alchemist.slot==="left"?-36:36); }
-function alchemistDamage() { return Math.max(.1,state.weapon.damage-.2)*skillValue("alchemist","attack",1,1.2); }
+function alchemistDamage() { return Math.max(.1,state.weapon.damage-.2)*skillValue("alchemist","attack",1,1.26); }
 function alchemistHitRoll(random=Math.random) {
   const critical=random()*100<(state.weapon.critChance||0);
   return {critical,damage:alchemistDamage()*(critical?state.weapon.critDamage/100:1)};
@@ -60,7 +60,7 @@ function addPoison(segment,count=1,duration=null) {
 }
 function poisonDamagePerStack(segment) {
   const a=state.alchemist;
-  const base=skillValue("alchemist","poison",a.poisonDamage,a.poisonDamage*1.2);
+  const base=skillValue("alchemist","poison",a.poisonDamage,a.poisonDamage*1.3);
   let damage=base*(1+a.poisonBonus+a.experimentPoisonBonus+(a.experimentActive>0?.5:0));
   if(a.mutation&&segment.poisonAge>=skillValue("alchemist","mutation",4,3))damage*=1.5;
   if(poisonStacks(segment)>=poisonLimit())damage*=1+a.overdose;
@@ -111,7 +111,7 @@ function throwAlchemistBottle(options={}){
     vx:0,vy:-510*.9,hitsLeft:1,dead:false,targetId:target.id,mixture,...options});
   if(a.rain&&a.throws%10===0){
     const targets=[...visibleTargets()].sort(()=>Math.random()-.5).slice(0,5),batch=new Map();
-    for(const s of targets){addDamage(batch,s,alchemistDamage()*skillValue("alchemist","rain",.5,.6));addPoison(s,1);a.effects.push({x:s.x,y:s.y,radius:12,life:.35,maxLife:.35,color:"#b8ff64"});}
+    for(const s of targets){addDamage(batch,s,alchemistDamage()*skillValue("alchemist","rain",.5,.65));addPoison(s,1);a.effects.push({x:s.x,y:s.y,radius:12,life:.35,maxLife:.35,color:"#b8ff64"});}
     if(batch.size)applyDamageBatch(batch);
   }
 }
@@ -134,7 +134,7 @@ function alchemistHit(segment,hit,bullet,random=Math.random){
 function spawnPoisonCloud(){
   const a=state.alchemist,targets=visibleTargets().sort((x,y)=>y.y-x.y);if(!targets.length)return;
   const target=targets[0],batch=new Map(),duration=a.cloudDuration;
-  alchemistArea(batch,target,a.cloudRadius,state.weapon.damage+1,1);
+  alchemistArea(batch,target,a.cloudRadius,(state.weapon.damage+1)*skillValue("alchemist","cloud",1,1.1),1);
   if(Math.random()<a.cloudExtraChance)addPoison(target,1);
   a.clouds.push({x:target.x,y:target.y,radius:a.cloudRadius,life:duration,tick:1,direct:true});
   applyDamageBatch(batch);
@@ -199,7 +199,7 @@ function alchemistUpgradePool(){
       ["duration","Langlebiges Gift",skillValue("alchemist","duration",[1,2,4],[2,3,5]),v=>"+"+v+" Sekunden Giftdauer.",v=>a.poisonDuration+=v],
       ["stacks","Konzentriertes Toxin",skillValue("alchemist","stacks",[1,2,3],[2,3,4]),v=>"+"+v+" maximale Giftstapel.",v=>a.maxStacks+=v],
       ["transfer","Ansteckende Mischung",skillValue("alchemist","transfer",[.15,.30,.50],[.20,.35,.55]),v=>"+"+v*100+" Prozentpunkte Giftübertragung.",v=>a.transferChance=Math.min(1,a.transferChance+v)],
-      ["explosive","Explosive Mischung",skillValue("alchemist","explosive",[.20,.35,.50],[.25,.40,.55]),v=>Math.round(v*100)+" % Direktschaden als Flächenschaden.",v=>a.explosion+=v],
+      ["explosive","Explosive Mischung",skillValue("alchemist","explosive",[.20,.35,.50],[.28,.43,.58]),v=>Math.round(v*100)+" % Direktschaden als Flächenschaden.",v=>a.explosion+=v],
       ["bottles","Größere Flaschen",skillValue("alchemist","bottles",[.15,.30,.50],[.20,.35,.55]),v=>"+"+v*100+" % Explosionsradius.",v=>a.explosionRadius*=1+v],
       ["corrosive","Ätzendes Gift",skillValue("alchemist","corrosive",[.05,.10,.20],[.10,.15,.25]),v=>"+"+v*100+" % Direktschaden gegen vergiftete Segmente.",v=>a.corrosive+=v],
       ["cloudPower","Verdorbene Wolke",skillValue("alchemist","cloudPower",[[.20,0],[.35,1],[.50,2]],[[.30,0],[.45,1],[.60,2]]),v=>"+"+v[0]*100+" % Wolkenradius"+(v[1]?" und +"+v[1]+" s Dauer.":"."),v=>{a.cloudRadius*=1+v[0];a.cloudDuration+=v[1];}],

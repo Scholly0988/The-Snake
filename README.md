@@ -1,5 +1,20 @@
 # The Snake
 
+## Version 20.3 – Heldenbalance und Ergebnis teilen
+
+- Selvaras vollständig ausgebauter Einzelziel-Schaden wurde verteilt über Fläschchen, Gift, Explosive Mischung, Giftregen und Giftwolke auf ungefähr 310 DPS angehoben.
+- Aldrics vollständig ausgebauter Einzelziel-Schaden wurde verteilt über Feuerrate, Hammer, Heiligen Einschlag, Morgenlicht, Vergeltung und Göttliches Urteil auf ungefähr 285 DPS angehoben.
+- Nach Sieg und Niederlage kann das Rundenergebnis über das native Teilen-Menü geteilt werden. Ohne Web-Share-Unterstützung werden Text und Spiellink kopiert.
+- Der Teiltext nennt Level, erreichtes Segment und Punktestand.
+
+## Version 20.2 – Vollständige HP-Kurve bei zwei Schlangen
+
+In Level 3, 5, 8 und 10 verwendet jetzt jede der beiden Schlangen unabhängig
+die vollständige HP-Kurve des Levels. Das erste Segment beider Schlangen besitzt
+den jeweiligen Minimalwert; das letzte Segment beider Schlangen erreicht den
+Maximalwert. Alle dazwischenliegenden Segmentleben steigen pro Schlange
+prozentual und streng an. Schwierigkeit bleibt als Multiplikator erhalten.
+
 ## Version 20.1 – Vier Upgrade-Auswahlen
 
 Beim Zerstören eines besonderen Segments erscheinen jetzt vier unterschiedliche

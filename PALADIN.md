@@ -10,7 +10,7 @@ Speicherung rollt Käufe und Platzwechsel zurück.
 
 ## Grundwerte
 
-2 Schaden, 0,65× Feuerrate gegenüber der Pistole, 0 % Krit-Chance, 150 %
+2 Schaden, 0,75× Feuerrate gegenüber der Pistole, 0 % Krit-Chance, 150 %
 Krit-Schaden, 85 % Projektilgeschwindigkeit, 140 % Projektilgröße, Durchschlag 0.
 Die permanente Startschaden-Erhöhung addiert sich; allgemeine Runden-Upgrades
 für Schaden, Feuerrate, Krit und Durchschlag wirken auch auf Aldric. Mehrfachschuss
@@ -24,6 +24,11 @@ Nachbarschaden. Flächentreffer erhöhen den Trefferzähler nicht und würfeln k
 weiteren Krit. Kopf und erstes Körperteil zählen pro Projektil nur einmal.
 
 ## Festgelegte Upgrades
+
+Mit vollständig gekauften Skill-Aufwertungen und jeder Run-Fähigkeit einmal
+erreicht Aldric im gemeinsamen Vergleichsszenario von Version 20.3 ungefähr
+286 Einzelziel-DPS. Der Zuwachs verteilt sich auf Hammer, Einschlag,
+Morgenlicht, Vergeltung und Urteil.
 
 | Karte | Seltenheit | Effekt |
 | --- | --- | --- |

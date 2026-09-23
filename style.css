@@ -266,6 +266,8 @@ body { padding: 0; background: #111c21; }
 .overlay:not(.fantasy-menu) .panel { border: 2px solid #dfbb72; background: linear-gradient(145deg,#18314a,#0a192b); box-shadow: inset 0 0 0 2px #6f532c, 0 14px 35px #0008; }
 .overlay:not(.fantasy-menu) h2 { color: #ffe5a2; font-family: Georgia,serif; }
 #gameOverScreen button { background: linear-gradient(#e6c884,#b98b46); color: #302417; }
+#gameOverScreen .share-run-button { background: linear-gradient(#78dddc,#3d9faa); color: #08282d; }
+.share-run-status { min-height: 1.25em; margin: 5px 0; color: #c9f7f2; font-size: 11px; }
 @media (max-width: 350px) {
   .game-shell { padding-left: 16px; padding-right: 16px; }
   .stat-icon { width: 20px; height: 20px; padding: 3px; }
