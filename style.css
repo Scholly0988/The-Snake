@@ -300,6 +300,8 @@ body { padding: 0; background: #111c21; }
 .paladin-card img { height:160px; width:150px; object-fit:contain; }
 .paladin-card h3 { margin:4px; color:#ffdf91; font: bold 24px Georgia,serif; }
 .paladin-card p { margin:6px 0; }
+.paladin-card.ilyra-card { border-color:#a8eaff; background:linear-gradient(145deg,#173551,#102b45); box-shadow:inset 0 0 24px #79dfff18; }
+.paladin-card.ilyra-card h3 { color:#c9f4ff; text-shadow:0 0 10px #6edfff88; }
 .hero-equip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 #paladinStats { font-size:9px; }
 

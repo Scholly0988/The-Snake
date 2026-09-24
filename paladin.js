@@ -208,6 +208,21 @@ function heroDetailRows(hero) {
       ["Runenmeisterschaft",r.mastery?"aktiv":"nicht aktiv"],["Domino-Glyphe",r.domino?"aktiv":"nicht aktiv"]
     ];
   }
+  if(hero==="ilyra"){
+    const i=state.ilyra,stacks=state.snake.reduce((sum,s)=>sum+frostStacks(s),0);
+    return [
+      ["Direktschaden",hudNumber(ilyraDirectDamage())],["Feuerrate",hudNumber(ilyraRateMultiplier())+"×"],
+      ["Krit-Chance",hudNumber(state.weapon.critChance)+" %"],["Krit-Schaden",hudNumber(state.weapon.critDamage)+" %"],
+      ["Froststapel",stacks],["Eisbruch-Schwelle",ilyraFrostGoal()],
+      ["Frostdauer",hudNumber(i.frostDuration)+" s"],["Frost-Slow",hudNumber(i.frostSlow*100)+" % je Stapel"],
+      ["Eisbruch",hudNumber(i.icebreakDamage*(1+i.icebreakBonus))+" Schaden"],["Kristallexplosion",hudNumber(i.explosionDamage)+" Schaden"],
+      ["Frostnova",Math.ceil(i.novaRemaining)+" / "+i.novaCooldown+" s"],["Nova-Radius",hudNumber(i.novaRadius*(1+i.novaRadiusBonus))+" px"],
+      ["Durchschlag",i.pierce],["Splitterbruch",i.splitterCount?i.splitterCount+" × "+hudNumber(i.splitterDamage):"nicht aktiv"],
+      ["Absolute Kälte",i.absoluteCold?"aktiv":"nicht aktiv"],["Frostseuche",i.frostPlague?"aktiv":"nicht aktiv"],
+      ["Gletscherherz",i.glacierHeart?"aktiv":"nicht aktiv"],["Eiszeit",i.iceAge?i.icebreakCount%skillValue("ilyra","iceAge",5,4)+" / "+skillValue("ilyra","iceAge",5,4):"nicht aktiv"],
+      ["Schwarzes Eis",i.blackIce?"aktiv":"nicht aktiv"],["Winterstille",i.nullPoint?(i.winterActive>0?"aktiv":Math.ceil(i.winterRemaining)+" s"):"gesperrt"]
+    ];
+  }
   const a=state.alchemist;
   return [
     ["Direktschaden",hudNumber(alchemistDamage())],["Feuerrate",hudNumber(state.weapon.shotsPerSecond*.9/2.7)+"×"],
@@ -232,7 +247,7 @@ function desktopHeroDetails(hero) {
 }
 function companionHudContent(side) {
   const label=side==="left"?"LINKS":"RECHTS";
-  const p=state.paladin,n=state.necromancer,a=state.alchemist,r=state.runemaster;
+  const p=state.paladin,n=state.necromancer,a=state.alchemist,r=state.runemaster,i=state.ilyra;
   let title="",lines=[];
   if(p?.slot===side) {
     title="Aldric";
@@ -271,8 +286,18 @@ function companionHudContent(side) {
       "Runenschlag "+Math.ceil(r.strikeRemaining)+" s · Sturm "+(r.storm?r.breakCount%5+"/5":"gesperrt"),
       r.ultimate?"Runenkreis: "+Math.ceil(r.ultimateRemaining)+" s":"Runenkreis: gesperrt"
     ];
+  } else if(i?.slot===side) {
+    title="Ilyra";
+    const instance=livingSnakeInstances().sort((x,y)=>ilyraSnakeSlow(y)-ilyraSnakeSlow(x))[0];
+    lines=[
+      "Angriff "+hudNumber(ilyraDirectDamage())+" · Rate "+hudNumber(ilyraRateMultiplier())+"×",
+      "Krit "+hudNumber(state.weapon.critChance)+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
+      "Frost "+state.snake.reduce((sum,s)=>sum+frostStacks(s),0)+" · Ziel "+ilyraFrostGoal()+" Stapel · Slow "+hudNumber(ilyraSnakeSlow(instance)*100)+" %",
+      "Frostnova "+Math.ceil(i.novaRemaining)+" s · Eisbrüche "+i.icebreakCount,
+      i.nullPoint?(i.winterActive>0?"Winterstille: aktiv":"Winterstille: "+Math.ceil(i.winterRemaining)+" s"):"Winterstille: gesperrt"
+    ];
   }
-  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":r?.slot===side?"runemaster":null;
+  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":r?.slot===side?"runemaster":i?.slot===side?"ilyra":null;
   return "<strong>"+label+" · "+(title||"Frei")+"</strong><div class=\"platform-compact\">"+
     (title?lines.map(line=>"<span>"+line+"</span>").join(""):"<span>Kein Held ausgerüstet</span>")+"</div>"+(hero?desktopHeroDetails(hero):"");
 }

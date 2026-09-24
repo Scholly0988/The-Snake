@@ -25,6 +25,8 @@ const alchemistSprite = new Image();
 alchemistSprite.src = "selvara-front.png?v=18-2";
 const runemasterSprite = new Image();
 runemasterSprite.src = "kaelvar-front.png?v=19-0";
+const ilyraSprite = new Image();
+ilyraSprite.src = "ilyra-front.png?v=22-0";
 const hammerSprite = new Image();
 hammerSprite.src = "holy-hammer.png";
 // Keep only the 32px centre platform in bounds; side companions may overhang.
@@ -60,9 +62,9 @@ const state = {
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
-  alchemist: null, runemaster: null, shooter: null, pendingUpgrades: 0, upgradeOfferId: 0,
+  alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], shooter: null, pendingUpgrades: 0, upgradeOfferId: 0,
   runStartSegments: 100,
-  runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[]},
+  runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
 };
 
@@ -141,11 +143,12 @@ function resetGame() {
   state.necromancer = newNecromancer(progress.data.necromancerSlot);
   state.alchemist = newAlchemist(progress.data.alchemistSlot);
   state.runemaster = newRunemaster(progress.data.runemasterSlot);
+  state.ilyra = newIlyra(progress.data.ilyraSlot);
   state.shooter = newShooter();
-  state.souls=[]; state.soulEffects=[]; state.necroDeaths=[];
+  state.souls=[]; state.soulEffects=[]; state.necroDeaths=[]; state.ilyraDeaths=[];
   state.holyEffects = [];
   state.pendingUpgrades = 0;
-  state.runUpgradeHistory = {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[]};
+  state.runUpgradeHistory = {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[]};
   state.keyboardLeft = false; state.keyboardRight = false;
   state.lastUpgrade=null;
   state.score = 0;
@@ -307,10 +310,10 @@ function update(dt) {
   if(!state.snake.length){completeLevel();return;}
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
-  const speed = Math.min(22 + state.elapsed * .25, 45) * (1-alchemistSlow());
+  const baseSpeed = Math.min(22 + state.elapsed * .25, 45);
   const instances=managedSnakeInstances();
-  if(instances.length){for(const instance of instances)instance.headDistance+=speed*snakeSpeedMultiplier(instance)*dt;state.headDistance=instances[0]?.headDistance||0;}
-  else state.headDistance += speed * dt;
+  if(instances.length){for(const instance of instances){const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;}state.headDistance=instances[0]?.headDistance||0;}
+  else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null))) * dt;
 
   syncSnakePositions();
 
@@ -336,6 +339,8 @@ function update(dt) {
   updateAlchemist(dt);
   if (state.mode !== "playing") return;
   updateRunemaster(dt);
+  if (state.mode !== "playing") return;
+  updateIlyra(dt);
   if (state.mode !== "playing") return;
   for (const effect of state.holyEffects) effect.life -= dt;
   state.holyEffects = state.holyEffects.filter(effect => effect.life > 0);
@@ -398,7 +403,7 @@ function projectileHits(bullet, target) {
   const ax = bullet.previousX ?? bullet.x, ay = bullet.previousY ?? bullet.y;
   const dx = bullet.x-ax, dy = bullet.y-ay;
   const t = dx*dx+dy*dy ? Math.max(0,Math.min(1,((target.x-ax)*dx+(target.y-ay)*dy)/(dx*dx+dy*dy))) : 0;
-  const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : bullet.owner==="shooter"?3*Math.max(0,(bullet.size||1)-1):0);
+  const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : ["shooter","ilyra"].includes(bullet.owner)?3*Math.max(0,(bullet.size||1)-1):0);
   return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
 }
 function segmentDamageMultiplier(segment) {
@@ -412,6 +417,7 @@ function applyDamageBatch(batch) {
     if (isSegmentVisible(segment) && batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id)*segmentDamageMultiplier(segment))*1e10)/1e10;
   }
   for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
+  resolveIlyraDeaths();
   resolveNecroDeaths();
   if (state.snake.length && state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
 }
@@ -430,6 +436,7 @@ function handleHits(random = Math.random) {
       const isNecro = bullet.owner === "necromancer" && state.necromancer;
       const isAlchemist = bullet.owner === "alchemist" && state.alchemist;
       const isRunemaster = bullet.owner === "runemaster" && state.runemaster;
+      const isIlyra = bullet.owner === "ilyra" && state.ilyra;
       if(isAlchemist){
         const hit=alchemistHitRoll(random);bullet.dead=true;bullet.hitIds.add(segment.id);
         alchemistHit(segment,hit,bullet,random);
@@ -442,6 +449,13 @@ function handleHits(random = Math.random) {
         burst(segment.x,segment.y,hit.critical?"#ff7954":"#63caff",hit.critical?12:7);
         if(state.mode!=="playing")return;
         continue outer;
+      }
+      if(isIlyra){
+        const hit=ilyraHitRoll(segment,bullet,random);bullet.hitsLeft--;if(bullet.hitsLeft<=0)bullet.dead=true;
+        ilyraHit(segment,hit,bullet,random);burst(segment.x,segment.y,hit.critical?"#fff2b4":"#a9ecff",hit.critical?13:8);
+        if(state.mode!=="playing")return;
+        if(bullet.dead)continue outer;
+        continue;
       }
       const isShooter=bullet.owner==="shooter"||!bullet.owner;
       const hit = isNecro ? necromancerHitRoll(random) : isShooter&&state.shooter ? shooterHitRoll(segment,bullet,random) : rollHit(random,isPaladin ? paladinDirectDamage(bullet) : state.weapon.damage*skillValue("shooter","attack",1,1.2));
@@ -478,6 +492,7 @@ function destroySegment(index, offerUpgrade = true) {
   if (state.runemaster) resolveRunemasterDeath(destroyed,neighbors);
   if (state.necromancer) state.necroDeaths.push({segment:destroyed,neighbors});
   if (state.alchemist) resolveAlchemistDeath(destroyed,neighbors);
+  if (state.ilyra) queueIlyraDeath(destroyed,instance);
   state.score += destroyed.upgrade ? 100 : 25;
   const coins = (destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   state.runCoins += coins;
@@ -549,7 +564,7 @@ function roundUpgradePool(includeHeroes = true) {
     });
   }
   const standard=pool.concat(shooterUpgradePool());
-  return includeHeroes?standard.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool(),runemasterUpgradePool()):standard;
+  return includeHeroes?standard.concat(paladinUpgradePool(),necromancerUpgradePool(),alchemistUpgradePool(),runemasterUpgradePool(),ilyraUpgradePool()):standard;
 }
 
 const RARITY_CHANCES = Object.freeze({grey:.60,green:.25,purple:.10,orange:.05});
@@ -606,9 +621,9 @@ function openUpgrade() {
 }
 
 function recordRunUpgrade(choice) {
-  const hero=choice.text.startsWith("Schütze ·")?"shooter":choice.text.startsWith("Aldric ·")?"paladin":choice.text.startsWith("Vaelric ·")?"necromancer":choice.text.startsWith("Selvara ·")?"alchemist":choice.text.startsWith("Kaelvar ·")?"runemaster":null;
+  const hero=choice.text.startsWith("Schütze ·")?"shooter":choice.text.startsWith("Aldric ·")?"paladin":choice.text.startsWith("Vaelric ·")?"necromancer":choice.text.startsWith("Selvara ·")?"alchemist":choice.text.startsWith("Kaelvar ·")?"runemaster":choice.text.startsWith("Ilyra ·")?"ilyra":null;
   if(!hero)return;
-  const text=choice.text.replace(/^(Schütze|Aldric|Vaelric|Selvara|Kaelvar) · /,"");
+  const text=choice.text.replace(/^(Schütze|Aldric|Vaelric|Selvara|Kaelvar|Ilyra) · /,"");
   state.runUpgradeHistory[hero].push({name:choice.name,rarity:choice.rarity,text});
 }
 
@@ -685,6 +700,7 @@ function renderProfile() {
   renderNecromancerProfile();
   renderAlchemistProfile();
   renderRunemasterProfile();
+  renderIlyraProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
@@ -876,6 +892,7 @@ function draw() {
   drawNecromancer();
   drawAlchemist();
   drawRunemaster();
+  drawIlyra();
   drawParticles();
 }
 
@@ -981,6 +998,8 @@ function drawBullets() {
       ctx.save();ctx.shadowColor="#7cff59";ctx.shadowBlur=12;ctx.fillStyle=bullet.mixture==="fire"?"#ff9d45":bullet.mixture==="frost"?"#70dfff":bullet.mixture==="acid"?"#e9ff5b":bullet.mixture==="plague"?"#bb76ff":"#78ee59";ctx.beginPath();ctx.arc(bullet.x,bullet.y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#e9f4d5";ctx.fillRect(bullet.x-3,bullet.y-8,6,4);ctx.restore();
     } else if (bullet.owner === "runemaster") {
       ctx.save();ctx.translate(bullet.x,bullet.y);ctx.rotate(performance.now()/250);ctx.strokeStyle=bullet.runeStrike?"#d6b6ff":"#6ed6ff";ctx.shadowColor="#4caeff";ctx.shadowBlur=14;ctx.lineWidth=2;ctx.beginPath();ctx.rect(-5,-5,10,10);ctx.stroke();ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.stroke();ctx.restore();
+    } else if (bullet.owner === "ilyra") {
+      ctx.save();ctx.translate(bullet.x,bullet.y);ctx.rotate(Math.atan2(bullet.vy,bullet.vx)+Math.PI/2);ctx.shadowColor="#8de8ff";ctx.shadowBlur=14;ctx.fillStyle="#e9fdff";ctx.beginPath();ctx.moveTo(0,-8*(bullet.size||1));ctx.lineTo(4*(bullet.size||1),5*(bullet.size||1));ctx.lineTo(0,3*(bullet.size||1));ctx.lineTo(-4*(bullet.size||1),5*(bullet.size||1));ctx.closePath();ctx.fill();ctx.strokeStyle="#8bdfff";ctx.beginPath();ctx.moveTo(0,5);ctx.lineTo(0,13);ctx.stroke();ctx.restore();
     } else if (bullet.owner === "paladin") {
       const size=12*(bullet.size||1.4);
       ctx.shadowColor = bullet.charged ? "#fff5c2" : "#ffc84a";
@@ -1082,7 +1101,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 21.4 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 22.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -1122,6 +1141,7 @@ document.querySelector("#nextLevel").addEventListener("click",()=>changeLevel(1)
 bindNecromancerMenu();
 bindAlchemistMenu();
 bindRunemasterMenu();
+bindIlyraMenu();
 bindSkillsMenu();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);

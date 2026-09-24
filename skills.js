@@ -124,7 +124,37 @@ const HERO_SKILLS = [
   ["runemaster","domino","upgrade","Domino-Glyphe",["purple"],"Runenbruch-Tod gibt der stärksten sichtbaren Rune +1 Ladung.","Bei leerer Schlange erhält ein zufälliges sichtbares Segment die Ladung."],
   ["runemaster","storm","upgrade","Runensturm",["orange"],"Nach 5 Runenbrüchen treffen 8 Geschosse zufällige sichtbare Segmente.","10 statt 8 Runengeschosse."],
   ["runemaster","mirror","upgrade","Spiegelglyphe",["orange"],"Spiegelt verbrauchte Ladungen einmalig auf ein anderes sichtbares Segment.","Gespiegelter Runenbruch verursacht +20 % Schaden."],
-  ["runemaster","perfect","upgrade","Perfekte Schrift",["orange"],"Jeder 10. normale Schuss vollendet sofort eine Rune.","Bereits jeder 8. normale Schuss." ]
+  ["runemaster","perfect","upgrade","Perfekte Schrift",["orange"],"Jeder 10. normale Schuss vollendet sofort eine Rune.","Bereits jeder 8. normale Schuss." ],
+  ["ilyra","attack","attack","Frostzepter",[],"0,9 Direktschaden bei 0,80× Feuerrate; Treffer erzeugen Frost.","+20 % direkter Frostzepter-Schaden."],
+  ["ilyra","frost","attack","Froststapel",[],"Bis Eisbruch teilen sich die Stapel einen erneuerbaren 4-Sekunden-Timer.","5 statt 4 Sekunden Grunddauer."],
+  ["ilyra","icebreak","attack","Eisbruch",[],"Bei 5 Froststapeln: 1,5 Schaden und kurzer Schlangen-Slow.","+20 % Eisbruch-Schaden."],
+  ["ilyra","nova","attack","Frostnova",[],"Automatisch alle 18 Sekunden; 100 px Radius, Schaden, Frost und Slow.","+20 % Hauptziel- und Flächenschaden."],
+  ["ilyra","winterControl","attack","Winterstille",["orange"],"Wird durch Nullpunkt freigeschaltet und verlangsamt sichtbare Schlangen um 30 %.","35 % statt 30 % Verlangsamung."],
+  ["ilyra","bite","upgrade","Frostbiss",["grey","green","purple"],"+15 / +30 / +50 % Eisbruch-Schaden; Stufen addieren sich.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["ilyra","deepCold","upgrade","Tiefe Kälte",["grey","green","purple"],"+1,25 / +1,5 / +2 % Slow je Froststapel; normales Limit 15 %.","Je Stufe zusätzlich +0,25 Prozentpunkte."],
+  ["ilyra","permafrost","upgrade","Permafrost",["grey","green","purple"],"Frostdauer 5 / 6 / 8 Sekunden; höchste Stufe zählt.","6 / 7 / 9 Sekunden."],
+  ["ilyra","precision","upgrade","Eisige Präzision",["grey","green","purple"],"+5 / +10 / +20 % Direktschaden gegen vereiste Segmente.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["ilyra","crystalCrit","upgrade","Kristallkrit",["grey","green","purple"],"25 / 50 / 100 % Chance auf zusätzlichen Frost bei Krit.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["ilyra","chain","upgrade","Kältekette",["grey","green","purple"],"20 / 40 / 70 % Chance auf Frost an einem Nachbarsegment.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["ilyra","splitter","upgrade","Splitterbruch",["grey","green","purple"],"1×0,30 / 2×0,35 / 3×0,45 Schaden; höchste Stufe zählt.","Alle Splitter verursachen +20 % Schaden."],
+  ["ilyra","explosion","upgrade","Kristallexplosion",["grey","green","purple"],"0,50 / 0,75 / 1,10 Schaden beim Eisbruch-Tod.","Alle festen Schadenswerte +20 %."],
+  ["ilyra","breakRadius","upgrade","Größerer Frostbruch",["grey","green","purple"],"+15 / +30 / +50 % Radius auf 55 px Basis.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["ilyra","projectile","upgrade","Gletscherprojektil",["grey","green","purple"],"+10 / +20 / +35 % Projektilgröße.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["ilyra","pierce","upgrade","Eisdurchstoß",["grey","green","purple"],"+1 / +2 / +3 Durchschlag; jeder Treffer erzeugt Frost.","Je Stufe +1 weiterer Durchschlag."],
+  ["ilyra","quickFrost","upgrade","Schnellfrost",["grey","green","purple"],"Verstärkt den Auslösetreffer oder senkt Eisbruch auf 4 Stapel.","Die beiden +20-%-Boni werden zu +30 %."],
+  ["ilyra","novaRadius","upgrade","Große Frostnova",["grey","green","purple"],"+20 / +35 / +55 % Frostnova-Radius.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["ilyra","novaFocus","upgrade","Konzentrierte Frostnova",["grey","green","purple"],"20 / 50 / 100 % Chance auf einen zusätzlichen Froststapel.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["ilyra","winterBreath","upgrade","Winteratem",["grey","green","purple"],"Frostnova-Slow: 18 %/2 s, 22 %/2,5 s, 30 %/3 s.","Je Stufe +3 Prozentpunkte und +0,5 Sekunden."],
+  ["ilyra","novaQuick","upgrade","Schnellere Frostnova",["grey","green","purple"],"Frostnova-Cooldown 16 / 14 / 11 Sekunden.","15 / 13 / 10 Sekunden."],
+  ["ilyra","longWinter","upgrade","Langer Winter",["grey","green","purple"],"Nach Nullpunkt: Winterstille dauert 7 / 8 / 10 Sekunden.","8 / 9 / 11 Sekunden."],
+  ["ilyra","winterRule","upgrade","Eisige Herrschaft",["grey","green","purple"],"Während Winterstille +15 / +30 / +50 % Eisbruch-Schaden.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["ilyra","winterComes","upgrade","Winter kommt",["grey","green","purple"],"Winterstille-Cooldown 27 / 24 / 20 Sekunden.","25 / 22 / 18 Sekunden."],
+  ["ilyra","absoluteCold","upgrade","Absolute Kälte",["purple"],"Nach Eisbruch bleibt 1 Froststapel bestehen.","2 statt 1 Froststapel bleiben bestehen."],
+  ["ilyra","frostPlague","upgrade","Frostseuche",["orange"],"Eisbruch-Tod gibt zwei nahen sichtbaren Segmenten derselben Schlange Frost.","Drei statt zwei Segmente."],
+  ["ilyra","glacierHeart","upgrade","Gletscherherz",["purple"],"Ab 20 % Schlangen-Slow +30 % Direktschaden.","+40 % statt +30 % Direktschaden."],
+  ["ilyra","iceAge","upgrade","Eiszeit",["purple"],"Nach 5 Eisbrüchen entsteht eine kleine Frostnova.","Bereits nach 4 Eisbrüchen."],
+  ["ilyra","blackIce","upgrade","Schwarzes Eis",["orange"],"0,05 Schaden pro Froststapel und Sekunde in zwei gemeinsamen Ticks.","0,065 statt 0,05 Schaden pro Sekunde."],
+  ["ilyra","nullPoint","upgrade","Nullpunkt",["orange"],"Schaltet Winterstille frei; währenddessen Eisbruch bei 3 Stapeln.","Winterstille gibt beim Sichtbarwerden 2 statt 1 Froststapel."]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
 function hasSkill(hero,key) { return (state.skillUpgrades || []).includes(hero+"."+key); }
 function skillValue(hero,key,base,upgraded) { return hasSkill(hero,key)?upgraded:base; }
@@ -145,7 +175,7 @@ function closeHeroSkills() {
 }
 function renderHeroSkills() {
   if(!selectedSkillHero)return;
-  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar"};
+  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra"};
   document.querySelector("#skillsTitle").textContent=names[selectedSkillHero]+" · Skills";
   document.querySelector("#skillsCoins").textContent=progress.data.coins+" Münzen · Jede Aufwertung einmalig 50 Münzen";
   const list=document.querySelector("#skillsList");list.replaceChildren();
@@ -176,7 +206,7 @@ function renderHeroSkills() {
   }
 }
 function bindSkillsMenu(){
-  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
+  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
   document.querySelector("#closeSkills").addEventListener("click",closeHeroSkills);
 }
 
