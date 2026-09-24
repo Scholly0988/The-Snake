@@ -14,7 +14,7 @@ const LEVEL_DEFINITIONS = Object.freeze([
     {id:"B",path:{type:"cross",cycles:14,amplitude:.36,phase:Math.PI,direction:-1}}
   ]},
   {number:6,name:"Große Bögen",hp:{first:138,last:56250},snakes:[{id:"A",path:{type:"arcs",cycles:12,amplitude:.49,phase:0}}]},
-  {number:7,name:"Wechselnde Kurvenradien",hp:{first:200,last:77500},snakes:[{id:"A",path:{type:"variable",cycles:13,amplitude:.50,phase:0}}]},
+  {number:7,name:"Wechselnde Kurvenradien",hp:{first:200,last:77500},snakes:[{id:"A",path:{type:"variable",cycles:13,amplitude:.50,phase:0,bottomCompression:.16}}]},
   {number:8,name:"Geteilte Muster",hp:{first:288,last:102500},snakes:[
     {id:"A",path:{type:"wave",cycles:10,amplitude:.49,phase:0}},
     {id:"B",path:{type:"sCurve",cycles:15,amplitude:.49,phase:Math.PI}}
@@ -73,7 +73,10 @@ function rawLevelPoint(spec,t,width,height) {
     }
     case "arcs": x=center+amp*Math.sin(Math.PI*2*cycles*routeT+phase-Math.sin(Math.PI*4*routeT)*.7);break;
     case "variable": {
-      const variablePhase=Math.PI*2*(cycles*routeT+1.2*Math.sin(Math.PI*2*routeT));
+      // Optional quadratic phase compression adds its extra turns gradually:
+      // almost unchanged at the top, increasingly dense toward the bottom.
+      const compressedT=routeT+(spec.bottomCompression||0)*routeT*routeT;
+      const variablePhase=Math.PI*2*(cycles*compressedT+1.2*Math.sin(Math.PI*2*routeT));
       const envelope=.58+.42*(.5+.5*Math.sin(Math.PI*6*routeT+.4));
       x=center+amp*envelope*Math.sin(variablePhase+phase);break;
     }
