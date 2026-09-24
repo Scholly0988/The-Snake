@@ -3,27 +3,27 @@
 // Data-only campaign setup. Level 1 deliberately keeps the original path in game.js.
 const LEVEL_DEFINITIONS = Object.freeze([
   {number:1,name:"Referenzpfad",hp:{first:5,last:5500},snakes:[{id:"A",path:{type:"level1"}}]},
-  {number:2,name:"Große Wellen",hp:{first:15,last:9000},snakes:[{id:"A",path:{type:"wave",cycles:10,amplitude:.39,phase:-.25}}]},
+  {number:2,name:"Große Wellen",hp:{first:15,last:9000},snakes:[{id:"A",path:{type:"wave",cycles:10,amplitude:.49,phase:-.25}}]},
   {number:3,name:"Getrennte Seiten",hp:{first:32,last:14500},snakes:[
-    {id:"A",side:"left",path:{type:"sideWave",cycles:9,amplitude:.18,center:.27,phase:0}},
-    {id:"B",side:"right",path:{type:"sideArc",cycles:8,amplitude:.19,center:.73,phase:Math.PI}}
+    {id:"A",side:"left",path:{type:"sideWave",cycles:9,amplitude:.25,center:.26,phase:0}},
+    {id:"B",side:"right",path:{type:"sideArc",cycles:8,amplitude:.25,center:.74,phase:Math.PI}}
   ]},
-  {number:4,name:"S-Kurven",hp:{first:50,last:22000},snakes:[{id:"A",path:{type:"sCurve",cycles:14,amplitude:.40,phase:0}}]},
+  {number:4,name:"S-Kurven",hp:{first:50,last:22000},snakes:[{id:"A",path:{type:"sCurve",cycles:14,amplitude:.49,phase:0}}]},
   {number:5,name:"Kreuzende Wege",hp:{first:94,last:40000},snakes:[
-    {id:"A",path:{type:"cross",cycles:14,amplitude:.30,phase:0,direction:1}},
-    {id:"B",path:{type:"cross",cycles:14,amplitude:.30,phase:Math.PI,direction:-1}}
+    {id:"A",path:{type:"cross",cycles:14,amplitude:.36,phase:0,direction:1}},
+    {id:"B",path:{type:"cross",cycles:14,amplitude:.36,phase:Math.PI,direction:-1}}
   ]},
-  {number:6,name:"Große Bögen",hp:{first:138,last:56250},snakes:[{id:"A",path:{type:"arcs",cycles:12,amplitude:.41,phase:0}}]},
-  {number:7,name:"Wechselnde Kurvenradien",hp:{first:200,last:77500},snakes:[{id:"A",path:{type:"variable",cycles:13,amplitude:.40,phase:0}}]},
+  {number:6,name:"Große Bögen",hp:{first:138,last:56250},snakes:[{id:"A",path:{type:"arcs",cycles:12,amplitude:.49,phase:0}}]},
+  {number:7,name:"Wechselnde Kurvenradien",hp:{first:200,last:77500},snakes:[{id:"A",path:{type:"variable",cycles:13,amplitude:.50,phase:0}}]},
   {number:8,name:"Geteilte Muster",hp:{first:288,last:102500},snakes:[
-    {id:"A",path:{type:"wave",cycles:10,amplitude:.38,phase:0}},
-    {id:"B",path:{type:"sCurve",cycles:15,amplitude:.35,phase:Math.PI}}
+    {id:"A",path:{type:"wave",cycles:10,amplitude:.49,phase:0}},
+    {id:"B",path:{type:"sCurve",cycles:15,amplitude:.49,phase:Math.PI}}
   ]},
-  {number:9,name:"Komplexer Rundkurs",hp:{first:400,last:135000},snakes:[{id:"A",path:{type:"complex",cycles:14,amplitude:.40,phase:0}}]},
+  {number:9,name:"Komplexer Rundkurs",hp:{first:400,last:135000},snakes:[{id:"A",path:{type:"complex",cycles:14,amplitude:.53,phase:0}}]},
   {number:10,name:"Finales Trio",hp:{first:563,last:175000},snakes:[
-    {id:"A",side:"left",path:{type:"wave",cycles:22,amplitude:.22,center:.27,phase:0}},
-    {id:"B",side:"center",rage:{interval:15,duration:3,multiplier:1.2},path:{type:"finalTight",cycles:26,amplitude:.39,center:.5,phase:0}},
-    {id:"C",side:"right",path:{type:"wave",cycles:22,amplitude:.22,center:.73,phase:Math.PI}}
+    {id:"A",side:"left",path:{type:"wave",cycles:22,amplitude:.25,center:.26,phase:0}},
+    {id:"B",side:"center",rage:{interval:15,duration:3,multiplier:1.2},path:{type:"finalTight",cycles:26,amplitude:.49,center:.5,phase:0}},
+    {id:"C",side:"right",path:{type:"wave",cycles:22,amplitude:.25,center:.74,phase:Math.PI}}
   ]}
 ]);
 
@@ -44,7 +44,9 @@ function level1ReferenceLength(width,height,playerY=height-50) {
 }
 
 function rawLevelPoint(spec,t,width,height) {
-  const edge=40,usable=Math.max(40,width-edge*2),amp=usable*(spec.amplitude??.38);
+  // Keep only enough margin for the scaled 44 px head sprite. The route data
+  // deliberately reaches this boundary so the visible arena is used broadly.
+  const edge=22,usable=Math.max(40,width-edge*2),amp=usable*(spec.amplitude??.38);
   const center=width*(spec.center??.5),phase=spec.phase||0,cycles=spec.cycles||12;
   // Every generated route starts with a short vertical lead-in. Previously the
   // high-frequency horizontal curve already ran above the screen, so a snake
