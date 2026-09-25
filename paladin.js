@@ -223,6 +223,22 @@ function heroDetailRows(hero) {
       ["Schwarzes Eis",i.blackIce?"aktiv":"nicht aktiv"],["Winterstille",i.nullPoint?(i.winterActive>0?"aktiv":Math.ceil(i.winterRemaining)+" s"):"gesperrt"]
     ];
   }
+  if(hero==="seraphine"){
+    const s=state.seraphine,stacks=state.snake.reduce((sum,segment)=>sum+burnStacks(segment),0);
+    return [
+      ["Direktschaden",hudNumber(seraphineDirectDamage())],["Feuerrate",hudNumber(seraphineRateMultiplier())+"×"],
+      ["Krit-Chance",hudNumber(state.weapon.critChance)+" %"],["Krit-Schaden",hudNumber(state.weapon.critDamage)+" %"],
+      ["Brandstapel",stacks],["Überhitzungsgrenze",seraphineThreshold()],
+      ["Brenndauer",hudNumber(s.burnDuration)+" s"],["Brand je Stapel",hudNumber(s.burnDps)+"/s"],
+      ["Explosion",hudNumber(s.explosionMain*(1+s.explosionBonus))+" Schaden"],["Explosionsradius",hudNumber(s.explosionRadius*(1+s.explosionRadiusBonus))+" px"],
+      ["Feuerwelle",Math.ceil(s.waveRemaining)+" / "+s.waveCooldown+" s"],["Wellenradius",hudNumber(s.waveRadius*(1+s.waveRadiusBonus))+" px"],
+      ["Durchschlag",s.pierce],["Feuerfunken",s.sparkCount?s.sparkCount+" × "+hudNumber(s.sparkDamage):"nicht aktiv"],
+      ["Übertragung",hudNumber(s.transferChance*100)+" %"],["Feuererbe",s.transferCount+" Stapel"],
+      ["Ewige Glut",s.eternalEmber?"aktiv":"nicht aktiv"],["Flammenpfad",s.flamePath?"aktiv":"nicht aktiv"],
+      ["Feuerseuche",s.firePlague?"aktiv":"nicht aktiv"],["Höllenglut",s.hellEmber?"aktiv":"nicht aktiv"],
+      ["Feuersturm",s.firestorm?s.explosionCount%skillValue("seraphine","firestorm",5,4)+" / "+skillValue("seraphine","firestorm",5,4):"nicht aktiv"],["Inferno",s.infernoActive>0?"aktiv":Math.ceil(s.infernoRemaining)+" s"]
+    ];
+  }
   const a=state.alchemist;
   return [
     ["Direktschaden",hudNumber(alchemistDamage())],["Feuerrate",hudNumber(state.weapon.shotsPerSecond*.9/2.7)+"×"],
@@ -247,7 +263,7 @@ function desktopHeroDetails(hero) {
 }
 function companionHudContent(side) {
   const label=side==="left"?"LINKS":"RECHTS";
-  const p=state.paladin,n=state.necromancer,a=state.alchemist,r=state.runemaster,i=state.ilyra;
+  const p=state.paladin,n=state.necromancer,a=state.alchemist,r=state.runemaster,i=state.ilyra,s=state.seraphine;
   let title="",lines=[];
   if(p?.slot===side) {
     title="Aldric";
@@ -296,8 +312,17 @@ function companionHudContent(side) {
       "Frostnova "+Math.ceil(i.novaRemaining)+" s · Eisbrüche "+i.icebreakCount,
       i.nullPoint?(i.winterActive>0?"Winterstille: aktiv":"Winterstille: "+Math.ceil(i.winterRemaining)+" s"):"Winterstille: gesperrt"
     ];
+  } else if(s?.slot===side) {
+    title="Seraphine";
+    lines=[
+      "Angriff "+hudNumber(seraphineDirectDamage())+" · Rate "+hudNumber(seraphineRateMultiplier())+"×",
+      "Krit "+hudNumber(state.weapon.critChance)+" % · Krit-Schaden "+hudNumber(state.weapon.critDamage)+" %",
+      "Brand "+state.snake.reduce((sum,segment)=>sum+burnStacks(segment),0)+" · Ziel "+seraphineThreshold()+" Stapel · "+hudNumber(s.burnDps)+"/s",
+      "Feuerwelle "+(s.waveRemaining===0?"bereit":Math.ceil(s.waveRemaining)+" s")+" · Explosionen "+s.explosionCount,
+      s.infernoActive>0?"Inferno: aktiv":"Inferno: "+Math.ceil(s.infernoRemaining)+" s"
+    ];
   }
-  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":r?.slot===side?"runemaster":i?.slot===side?"ilyra":null;
+  const hero=p?.slot===side?"paladin":n?.slot===side?"necromancer":a?.slot===side?"alchemist":r?.slot===side?"runemaster":i?.slot===side?"ilyra":s?.slot===side?"seraphine":null;
   return "<strong>"+label+" · "+(title||"Frei")+"</strong><div class=\"platform-compact\">"+
     (title?lines.map(line=>"<span>"+line+"</span>").join(""):"<span>Kein Held ausgerüstet</span>")+"</div>"+(hero?desktopHeroDetails(hero):"");
 }

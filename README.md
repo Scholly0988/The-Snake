@@ -1,5 +1,73 @@
 # The Snake
 
+## Version 23.0 – Seraphine
+
+- Seraphine – Meisterin der Glut ist als sechste Seitenheldin vollständig
+  integriert und von Beginn an für 0 Münzen freigeschaltet.
+- Ihr Glutstab verbindet Direktschaden mit erneuerbaren Brandstapeln,
+  Überhitzungsexplosionen, Feuerübertragung und echten Kettenreaktionen.
+- Feuerwelle und Inferno werden automatisch ausgelöst; sämtliche Seraphine-
+  Schadensquellen unterstützen die gemeinsame Krit- und Schadensskalierung.
+- Der magische Feuerring besteht vollständig aus animierten Canvas-Ebenen und
+  ersetzt für Seraphine die normale Plattformgrafik.
+- Alle 24 Run-Fähigkeiten und fünf Basismechaniken besitzen eine eigene
+  einmalige 50-Münzen-Aufwertung. Seraphines Karten bleiben auf Slot 1 bis 3
+  beschränkt; Slot 4 bleibt dem Standardschützen vorbehalten.
+- Neue Dateien: `seraphine.js`, `seraphine-front.png`, `SERAPHINE.md` und
+  `test-seraphine.cjs`.
+- Geprüft mit `node test-game.cjs`, `node test-levels-2-10.cjs`,
+  `node test-alchemist.cjs`, `node test-runemaster.cjs`, `node test-ilyra.cjs`,
+  `node test-shooter.cjs`, `node test-skills.cjs` und
+  `node test-seraphine.cjs`.
+
+## Version 22.0 – Ilyra
+
+- Ilyra – Hüterin des Winterherzens ist als fünfte Seitenheldin vollständig
+  integriert und kostet 0 Münzen.
+- Frostzepter, Froststapel, Eisbruch, Frostnova und die durch Nullpunkt
+  freigeschaltete Winterstille sind aktiv.
+- Alle bestätigten Grau-, Grün-, Lila- und Orange-Fähigkeiten sowie die
+  einmaligen 50-Münzen-Aufwertungen stehen im Helden- und Skillfenster bereit.
+- Ilyras exklusive Karten bleiben auf die ersten drei Upgrade-Slots beschränkt;
+  Slot 4 bleibt ausschließlich Standard / Schütze.
+- Die Seitenplattform besitzt Frostleuchten und Kristallpartikel. Die neue
+  transparente Charaktergrafik ist für mobile Ladezeiten optimiert.
+- Technische Details: [ILYRA.md](ILYRA.md).
+
+Tests: `node test-game.cjs`, `node test-shooter.cjs`, `node test-alchemist.cjs`,
+`node test-runemaster.cjs`, `node test-ilyra.cjs`, `node test-skills.cjs` und
+`node test-levels-2-10.cjs`.
+
+## Version 21.4 – Längere Level-7-Route
+
+- Der Pfad von Level 7 ist ungefähr 15 % länger.
+- Die zusätzlichen Kurven werden progressiv in den unteren Bereich gelegt:
+  oben bleibt der Einstieg nahezu unverändert, nach unten wird das Muster enger.
+- Spielfeldbreite, schneller Routeneintritt und alle Level-10-Regeln bleiben
+  unverändert erhalten.
+
+## Version 21.3 – Breite Levelrouten
+
+- Die Bewegungsmuster aller Level von 2 bis 10 nutzen nun nahezu die gesamte
+  sichtbare Spielfeldbreite.
+- Der sichere Seitenabstand wurde passend zum skalierten Schlangenkopf auf 22 px
+  reduziert. Die getestete Gesamtabdeckung reicht in jedem Level bis höchstens
+  28 px an beide Bildschirmränder heran.
+- Einzelne Wellen, Bögen, S-Kurven und komplexe Muster wurden verbreitert; bei
+  Mehrschlangen-Leveln zählt die gemeinsame Abdeckung aller Routen.
+- Das Level-10-Trio, die längere Mittelroute und der Rage-Zyklus bleiben erhalten.
+
+## Version 21.2 – Level-10-Trio und Rage
+
+- Level 10 startet mit drei technisch getrennten Schlangen auf linker, mittlerer
+  und rechter Route.
+- Die beiden äußeren Schlangen bewegen sich mit der normalen
+  Levelgeschwindigkeit.
+- Die mittlere Schlange besitzt die längste Route. Ab Sekunde 15 aktiviert sie
+  alle 15 Sekunden für 3 Sekunden Rage und bewegt sich dabei 20 % schneller.
+- Ein roter Ring und die Beschriftung `RAGE` zeigen den aktiven Modus direkt am
+  Kopf der mittleren Schlange an.
+
 ## Version 21.1 – Schneller Routeneinstieg und höhere Endlevel-HP
 
 - Alle generierten Schlangenrouten von Level 2 bis 10 beginnen mit einem kurzen

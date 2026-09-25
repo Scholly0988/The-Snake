@@ -154,7 +154,36 @@ const HERO_SKILLS = [
   ["ilyra","glacierHeart","upgrade","Gletscherherz",["purple"],"Ab 20 % Schlangen-Slow +30 % Direktschaden.","+40 % statt +30 % Direktschaden."],
   ["ilyra","iceAge","upgrade","Eiszeit",["purple"],"Nach 5 Eisbrüchen entsteht eine kleine Frostnova.","Bereits nach 4 Eisbrüchen."],
   ["ilyra","blackIce","upgrade","Schwarzes Eis",["orange"],"0,05 Schaden pro Froststapel und Sekunde in zwei gemeinsamen Ticks.","0,065 statt 0,05 Schaden pro Sekunde."],
-  ["ilyra","nullPoint","upgrade","Nullpunkt",["orange"],"Schaltet Winterstille frei; währenddessen Eisbruch bei 3 Stapeln.","Winterstille gibt beim Sichtbarwerden 2 statt 1 Froststapel."]
+  ["ilyra","nullPoint","upgrade","Nullpunkt",["orange"],"Schaltet Winterstille frei; währenddessen Eisbruch bei 3 Stapeln.","Winterstille gibt beim Sichtbarwerden 2 statt 1 Froststapel."],
+  ["seraphine","attack","attack","Glutstab",[],"1,0 Direktschaden bei 0,85× Feuerrate; Treffer erzeugen Brand.","+20 % direkter Glutstab-Schaden."],
+  ["seraphine","burn","attack","Brennen",[],"0,20 Schaden pro Sekunde und Stapel; gemeinsamer erneuerbarer 4-Sekunden-Timer.","0,25 statt 0,20 Schaden pro Sekunde."],
+  ["seraphine","overheat","attack","Überhitzungsexplosion",[],"Bei vollem Brand löst der nächste Brandkontakt 1,5 Haupt- und 0,5 Flächenschaden aus.","+20 % Haupt- und Flächenschaden."],
+  ["seraphine","wave","attack","Feuerwelle",[],"Automatisch nach 18 Sekunden; 100 px Radius, Schaden und Brand.","+20 % Hauptziel- und Flächenschaden."],
+  ["seraphine","inferno","attack","Inferno",[],"Alle 30 Sekunden für 6 Sekunden: mehr Brand, Brandschaden und Feuerübertragung.","65 % statt 50 % zusätzlicher Brandschaden."],
+  ["seraphine","emberPower","upgrade","Glutverstärkung",["grey","green","purple"],"+15 / +30 / +50 % Brandschaden; Stufen addieren sich.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["seraphine","longFlame","upgrade","Langanhaltende Flamme",["grey","green","purple"],"Brenndauer 5 / 6 / 8 Sekunden; höchste Stufe zählt.","6 / 7 / 9 Sekunden."],
+  ["seraphine","fuel","upgrade","Brennstoff",["grey","green","purple"],"+1 / +2 / +3 maximale Brandstapel; höchste Stufe zählt.","Je Stufe +1 weiterer maximaler Stapel."],
+  ["seraphine","explosive","upgrade","Explosive Glut",["grey","green","purple"],"+15 / +30 / +50 % Explosionsschaden; Stufen addieren sich.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["seraphine","radius","upgrade","Flammenradius",["grey","green","purple"],"+15 / +30 / +50 % Radius auf 55 px Basis.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["seraphine","chain","upgrade","Flammenkette",["grey","green","purple"],"40 / 55 / 75 % Feuerübertragungs-Chance; höchste Stufe zählt.","50 / 65 / 85 %."],
+  ["seraphine","legacy","upgrade","Feuererbe",["grey","green","purple"],"Bis zu 2 / 3 / 4 Stapel je übertragenem Ziel.","Je Stufe ein weiterer übertragbarer Stapel."],
+  ["seraphine","precision","upgrade","Brennende Präzision",["grey","green","purple"],"+5 / +10 / +20 % Direktschaden gegen bereits brennende Segmente.","Je Stufe zusätzlich +5 Prozentpunkte."],
+  ["seraphine","criticalFlame","upgrade","Kritische Flamme",["grey","green","purple"],"25 / 50 / 100 % Chance auf zusätzlichen Brand bei Krit.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["seraphine","pierce","upgrade","Glutdurchstoß",["grey","green","purple"],"+1 / +2 / +3 Durchschlag; je Treffer eine vollständige Feuerwelle.","Je Stufe +1 weiterer Durchschlag."],
+  ["seraphine","sparks","upgrade","Feuerfunken",["grey","green","purple"],"1×0,30 / 2×0,35 / 3×0,45 Schaden; höchste Stufe zählt.","Alle Funken verursachen +20 % Schaden."],
+  ["seraphine","quickOverheat","upgrade","Schnellere Überhitzung",["grey","green","purple"],"Verstärkt den Auslösetreffer oder senkt die aktuelle Schwelle um 1.","Die beiden +20-%-Boni werden zu +30 %."],
+  ["seraphine","waveRadius","upgrade","Große Feuerwelle",["grey","green","purple"],"+20 / +35 / +55 % Feuerwellenradius.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["seraphine","hotWave","upgrade","Heiße Feuerwelle",["grey","green","purple"],"20 / 50 / 100 % Chance auf einen zusätzlichen Brandstapel.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["seraphine","waveQuick","upgrade","Schnellere Feuerwelle",["grey","green","purple"],"Feuerwellen-Cooldown 16 / 14 / 11 Sekunden.","15 / 13 / 10 Sekunden."],
+  ["seraphine","longInferno","upgrade","Langes Inferno",["grey","green","purple"],"Inferno dauert 7 / 8 / 10 Sekunden.","8 / 9 / 11 Sekunden."],
+  ["seraphine","burningInferno","upgrade","Brennendes Inferno",["grey","green","purple"],"Während Inferno zusätzlich +15 / +30 / +50 % Brandschaden.","Je Stufe zusätzlich +10 Prozentpunkte."],
+  ["seraphine","infernoCall","upgrade","Inferno-Ruf",["grey","green","purple"],"Inferno-Cooldown 27 / 24 / 20 Sekunden.","25 / 22 / 18 Sekunden."],
+  ["seraphine","eternalEmber","upgrade","Ewige Glut",["purple"],"Nach einer Explosion bleibt 1 Brandstapel bestehen.","2 statt 1 Brandstapel bleiben bestehen."],
+  ["seraphine","flamePath","upgrade","Flammenpfad",["orange"],"Explosions-Tod entzündet zwei nahe sichtbare Segmente derselben Schlange.","Drei statt zwei Segmente."],
+  ["seraphine","firePlague","upgrade","Feuerseuche",["purple"],"Alle 3 Sekunden 30 % Chance, ein angrenzendes Segment zu entzünden.","40 % statt 30 % Chance."],
+  ["seraphine","hellEmber","upgrade","Höllenglut",["orange"],"+0,05 Schaden je Brandstapel und Halbsekunden-Tick.","0,065 statt 0,05 Schaden."],
+  ["seraphine","firestorm","upgrade","Feuersturm",["purple"],"Nach 5 Explosionen entsteht eine kleine Feuerwelle.","Bereits nach 4 Explosionen."],
+  ["seraphine","sunCore","upgrade","Sonnenkern",["orange"],"Während Inferno liegt die Überhitzungsgrenze fest bei 2 Stapeln.","Überhitzungsexplosionen verursachen während Inferno zusätzlich +15 % Schaden."]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
 function hasSkill(hero,key) { return (state.skillUpgrades || []).includes(hero+"."+key); }
 function skillValue(hero,key,base,upgraded) { return hasSkill(hero,key)?upgraded:base; }
@@ -175,7 +204,7 @@ function closeHeroSkills() {
 }
 function renderHeroSkills() {
   if(!selectedSkillHero)return;
-  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra"};
+  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra",seraphine:"Seraphine"};
   document.querySelector("#skillsTitle").textContent=names[selectedSkillHero]+" · Skills";
   document.querySelector("#skillsCoins").textContent=progress.data.coins+" Münzen · Jede Aufwertung einmalig 50 Münzen";
   const list=document.querySelector("#skillsList");list.replaceChildren();
@@ -206,7 +235,7 @@ function renderHeroSkills() {
   }
 }
 function bindSkillsMenu(){
-  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
+  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra","seraphine"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
   document.querySelector("#closeSkills").addEventListener("click",closeHeroSkills);
 }
 
