@@ -48,6 +48,30 @@ function seraphineReaction(blockTransfer=false) {
   const s=state.seraphine;
   return {id:++s.reactionId,exploded:new Set(),blockTransfer};
 }
+function seraphineReactionTargets(reaction) {
+  if(reaction.targetSnakeSize===state.snake.length&&reaction.targetGrid)return reaction;
+  const cellSize=64,targets=visibleTargets(),grid=new Map();
+  for(const target of targets){
+    const key=Math.floor(target.x/cellSize)+":"+Math.floor(target.y/cellSize);
+    if(!grid.has(key))grid.set(key,[]);
+    grid.get(key).push(target);
+  }
+  reaction.targetSnakeSize=state.snake.length;
+  reaction.targetCellSize=cellSize;
+  reaction.targetList=targets;
+  reaction.targetGrid=grid;
+  return reaction;
+}
+function seraphineTargetsInArea(center,radius,reaction) {
+  seraphineReactionTargets(reaction);
+  const size=reaction.targetCellSize,reach=radius+SEGMENT_HIT_RADIUS,targets=[];
+  const minX=Math.floor((center.x-reach)/size),maxX=Math.floor((center.x+reach)/size);
+  const minY=Math.floor((center.y-reach)/size),maxY=Math.floor((center.y+reach)/size);
+  for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)for(const target of reaction.targetGrid.get(x+":"+y)||[]){
+    if(segmentInArea(target,center,radius))targets.push(target);
+  }
+  return targets;
+}
 function seraphineTarget() {
   const x=seraphineX(),y=state.player.y+PLATFORM_SHOT_Y,candidates=[];
   for(const instance of livingSnakeInstances()){
@@ -71,7 +95,8 @@ function seraphineEffect(kind,center,radius=18,color="#ff8138") {
     if(effect.kind===kind&&Math.hypot(effect.x-center.x,effect.y-center.y)<12){effect.life=duration;effect.maxLife=duration;return;}
   }
   effects.push({kind,x:center.x,y:center.y,radius,color,life:duration,maxLife:duration});
-  if(effects.length>36)effects.splice(0,effects.length-36);
+  const limit=state.renderStats?.seraphineEffectLimit||36;
+  if(effects.length>limit)effects.splice(0,effects.length-limit);
 }
 function addSeraphineDamage(batch,segment,base,random=Math.random) {
   const hit=seraphineCriticalDamage(seraphineBaseDamage(base),random);addDamage(batch,segment,hit.damage);return hit;
@@ -117,7 +142,7 @@ function triggerOverheatExplosion(batch,segment,options={},random=Math.random) {
   const mainHit=addSeraphineDamage(batch,segment,s.explosionMain*bonus,random);
   segment.seraphineExplosionDeath={reaction,stacks:snapshot,blockTransfer:reaction.blockTransfer};
   const radius=s.explosionRadius*(1+s.explosionRadiusBonus);
-  for(const target of [...visibleTargets()])if(target!==segment&&segmentInArea(target,segment,radius)){
+  for(const target of seraphineTargetsInArea(segment,radius,reaction))if(target!==segment){
     const areaHit=addSeraphineDamage(batch,target,s.explosionArea*bonus,random);
     const existingMarker=target.seraphineExplosionDeath;
     const deathMarker=existingMarker||{reaction,stacks:burnStacks(target),blockTransfer:reaction.blockTransfer};
@@ -126,7 +151,7 @@ function triggerOverheatExplosion(batch,segment,options={},random=Math.random) {
     if(!existingMarker&&target.seraphineExplosionDeath===deathMarker)deathMarker.stacks=Math.max(deathMarker.stacks,burnStacks(target));
   }
   if(s.sparkCount){
-    const allTargets=visibleTargets().filter(target=>target!==segment),unused=[...allTargets];
+    const allTargets=seraphineReactionTargets(reaction).targetList.filter(target=>target!==segment&&target.hp>0&&isSegmentVisible(target)),unused=[...allTargets];
     for(let n=0;n<s.sparkCount&&allTargets.length;n++){
       const source=unused.length?unused:allTargets,index=Math.min(source.length-1,Math.floor(random()*source.length)),target=source[index];
       if(unused.length)unused.splice(index,1);

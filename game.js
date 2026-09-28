@@ -106,6 +106,21 @@ const state = {
   runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
 };
+state.renderStats={sampleStart:0,frames:0,fps:60,seraphineEffectLimit:36};
+
+function updateRenderStats(time) {
+  const stats=state.renderStats;
+  if(!stats.sampleStart)stats.sampleStart=time;
+  stats.frames++;
+  const elapsed=time-stats.sampleStart;
+  if(elapsed<1000)return;
+  stats.fps=stats.frames*1000/elapsed;
+  stats.frames=0;stats.sampleStart=time;
+  if(stats.seraphineEffectLimit===36&&stats.fps<50)stats.seraphineEffectLimit=20;
+  else if(stats.seraphineEffectLimit===20&&stats.fps<40)stats.seraphineEffectLimit=12;
+  else if(stats.seraphineEffectLimit===12&&stats.fps>54)stats.seraphineEffectLimit=20;
+  else if(stats.seraphineEffectLimit===20&&stats.fps>58)stats.seraphineEffectLimit=36;
+}
 
 const SNAKE_SCALE = .9;
 const SEGMENT_SPACING = 33 * SNAKE_SCALE;
@@ -162,7 +177,9 @@ function completeLevel() {
 function resizeCanvas() {
   // CSS owns layout; bitmap resolution must never enlarge the grid or canvas.
   const rect = canvas.getBoundingClientRect();
-  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const coarsePointer=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
+  const mobileCanvas=coarsePointer||rect.width<=520;
+  const ratio = Math.min(window.devicePixelRatio || 1, mobileCanvas?1.5:2);
   canvas.width = Math.round(rect.width * ratio);
   canvas.height = Math.round(rect.height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -1187,6 +1204,7 @@ window.addEventListener("error",event=>reportGameError(event.error||event.messag
 function loop(time) {
   try {
     if(state.mode==="error")return;
+    updateRenderStats(time);
     const dt = Math.max(0, Math.min((time - (state.lastTime || time)) / 1000, .033));
     state.lastTime = time;
     if (state.mode === "playing") update(dt);
