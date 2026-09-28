@@ -219,6 +219,11 @@ button:active { transform: scale(.98); }
 .menu-nav svg { display: block; margin: 0 auto 4px; width: 40px; height: 40px; padding: 7px; border: 2px solid #bc9454; border-radius: 50%; background: radial-gradient(#53697e,#172d40); fill: #b8cede; stroke: #fff3c8; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 2px 2px #000); }
 .menu-nav #navHome svg { background: radial-gradient(#8baa54,#304c2a); }
 .menu-version { margin: 0; text-align: center; font-size: 9px; color: #ead8b2; flex-shrink: 0; }
+.season-banner { display:none; }
+.season-options { margin:0 0 22px; padding:12px; border:1px solid #b89555; border-radius:12px; background:#071a28cc; }
+.season-options h3 { margin-top:0; color:#ffe1a1; }
+.season-options label { display:block; margin-bottom:7px; color:#d4e1e8; font-size:12px; font-weight:800; }
+.season-options select { width:100%; min-height:46px; padding:8px 10px; border:1px solid #d1ad68; border-radius:9px; background:#10283a; color:#fff4d0; font:700 12px system-ui,sans-serif; }
 .menu-sheet { overflow-y: auto; overscroll-behavior: contain; background: #0b202feb; border: 1px solid #d7b46c; border-radius: 16px; padding: 20px 16px; margin: 8px 0; line-height: 1.5; overflow-wrap: anywhere; }
 .menu-sheet h2 { font: bold 32px Georgia,serif; color: #ffdf92; margin: 7px 0 15px; }
 .menu-sheet h3 { font-size: 16px; }
@@ -238,6 +243,116 @@ button:active { transform: scale(.98); }
   .menu-title > span, .menu-title p { display: none; }
   .menu-nav svg { width: 30px; height: 30px; padding: 4px; }
   .play-button { font-size: 23px; padding: 7px; }
+}
+
+/* Seasonal Halloween menu. The class is driven by the device's local date or
+   the explicit option selected by the player. Gameplay remains unchanged. */
+html.halloween-theme body { background:#090519; }
+.halloween-theme .fantasy-menu {
+  isolation:isolate;
+  background:
+    linear-gradient(180deg,rgba(4,2,17,.18) 0%,rgba(11,5,27,.04) 42%,rgba(8,2,15,.72) 78%,rgba(4,1,9,.94) 100%),
+    url('halloween-menu-background.webp') center / cover no-repeat;
+  color:#fff0d0;
+}
+.halloween-theme .fantasy-menu::before {
+  content:""; position:absolute; z-index:-1; inset:40% -25% 8%; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 25% 45%,rgba(150,105,218,.24),transparent 43%),
+    radial-gradient(ellipse at 75% 62%,rgba(92,61,154,.28),transparent 46%);
+  filter:blur(11px); animation:halloweenFog 9s ease-in-out infinite alternate;
+}
+.halloween-theme .fantasy-menu > * { position:relative; z-index:1; }
+@keyframes halloweenFog { from { transform:translateX(-3%) scale(1); opacity:.72; } to { transform:translateX(3%) scale(1.08); opacity:1; } }
+.halloween-theme .menu-topbar { filter:drop-shadow(0 5px 6px #020008cc); }
+.halloween-theme .menu-profile,
+.halloween-theme .coin-counter {
+  border:2px solid #ee983f; background:linear-gradient(145deg,#291544f2,#100b25f2);
+  box-shadow:inset 0 0 0 2px #58336d,0 3px 0 #30142e,0 6px 15px #000b;
+}
+.halloween-theme .menu-profile { color:#ffad49; }
+.halloween-theme .menu-profile small { color:#d5c2ef; }
+.halloween-theme .coin-counter { color:#ffd268; }
+.halloween-theme .menu-title { padding-top:2px; text-shadow:0 3px 6px #080113,0 0 18px #331453; }
+.halloween-theme .menu-title > span { color:#f9bd68; }
+.halloween-theme .menu-title h1 {
+  color:#ffb344; font-size:clamp(39px,12vw,58px); margin:1px 0;
+  text-shadow:0 2px 0 #8b3c1b,0 4px 0 #3d1625,0 0 15px #ff6a2488,0 7px 12px #000;
+}
+.halloween-theme .menu-title p { margin:2px 0; color:#f3d9d0; }
+.halloween-theme .season-banner {
+  display:inline-block; margin-top:5px; padding:5px 12px; border:1px solid #f09342;
+  border-radius:999px; color:#ffd27d; background:#1a0c2bd9; font:800 10px Georgia,serif;
+  letter-spacing:.1em; box-shadow:0 0 13px #ff6f2c66;
+}
+.halloween-theme .home-actions { margin-top:auto; padding:0 3px 2px; }
+.halloween-theme .level-picker {
+  margin:0 auto 6px; max-width:390px; border:2px solid #e78337; border-radius:13px;
+  background:linear-gradient(145deg,#2b1744ed,#100a21f2); color:#ffe0a0;
+  box-shadow:inset 0 0 0 2px #5a356f,0 5px 12px #000a;
+}
+.halloween-theme .level-picker button { border-color:#a65037; background:#35184f; color:#ffad4a; }
+.halloween-theme .home-actions .difficulty-picker {
+  max-width:390px; margin:0 auto; padding:6px; border:2px solid #8b4c92;
+  background:linear-gradient(#1f1036ed,#0d091ceb); box-shadow:0 5px 12px #0009;
+}
+.halloween-theme .home-actions .difficulty-picker legend { color:#ffc875; }
+.halloween-theme .home-actions .difficulty-picker span { border-color:#754886; background:#190d2b; color:#e8d8f7; }
+.halloween-theme .home-actions .difficulty-picker input:checked + span {
+  border-color:#ff9b42; background:linear-gradient(#ffb245,#c95423); color:#241025;
+  box-shadow:0 0 14px #ff762777;
+}
+.halloween-theme .play-button {
+  display:block; width:min(72%,260px); min-height:94px; margin:9px auto 5px; padding:8px 14px;
+  border:4px solid #ffbf55; outline:2px solid #512347; border-radius:50%; color:#311123;
+  background:radial-gradient(ellipse at 50% 36%,#ffd96d 0%,#ffad31 43%,#e25c20 78%,#7c281e 100%);
+  box-shadow:inset 0 0 0 4px #8e351d,inset 0 0 22px #fff09a99,0 5px 0 #43182c,0 10px 24px #000c,0 0 24px #ff6a2a88;
+  font:bold 28px Georgia,serif; text-shadow:0 1px 0 #ffe599;
+}
+.halloween-theme .play-button .play-icon { display:block; height:34px; font-size:0; line-height:34px; }
+.halloween-theme .play-button .play-icon::after { content:"▶"; font-size:34px; color:#481628; filter:drop-shadow(0 2px 0 #ffdf7a); }
+.halloween-theme .play-button small { color:#5c2030; }
+.halloween-theme .menu-records { margin:5px 0 2px; color:#fff1cf; }
+.halloween-theme .menu-nav {
+  border:2px solid #e17b38; background:linear-gradient(#2e1747f5,#10091ff8); padding:5px;
+  box-shadow:inset 0 0 0 2px #57336d,0 5px 15px #000c;
+}
+.halloween-theme .menu-nav button { color:#f4d7b2; }
+.halloween-theme .menu-nav button.selected { border-color:#ffad45; background:linear-gradient(#763566cc,#291633); color:#ffd778; }
+.halloween-theme .menu-nav svg { border-color:#d77a37; background:radial-gradient(#743966,#201330); fill:#c4a4e5; stroke:#ffd37d; }
+.halloween-theme .menu-nav #navHome svg { background:radial-gradient(#e4772f,#4b1c35); }
+.halloween-theme .menu-version { color:#cdb9df; text-shadow:0 2px 3px #000; }
+.halloween-theme .menu-sheet { border-color:#dc773a; background:linear-gradient(155deg,#24113bf5,#0d091bf7); box-shadow:inset 0 0 30px #6b2e5a33; }
+.halloween-theme .menu-sheet h2,
+.halloween-theme .menu-sheet h3 { color:#ffbd64; }
+.halloween-theme .menu-sheet button { border-color:#ffad56; background:linear-gradient(#f5a543,#b94728); color:#2b1021; }
+.halloween-theme .season-options { border-color:#c26642; background:#160c29d9; }
+.halloween-theme .season-options select { border-color:#db7f43; background:#281442; color:#ffe2a4; }
+.halloween-theme .game-shell {
+  background:#0b061b url('halloween-arena-background.webp') center / 100% 100% no-repeat;
+}
+.halloween-theme .hud div {
+  border-color:#f08a3c; background:linear-gradient(145deg,#30164df2,#120a29f5);
+  box-shadow:inset 0 0 0 1px #5e326f,inset 0 0 0 3px #a34a39,0 3px 7px #000b;
+}
+.halloween-theme .hud div::before,
+.halloween-theme .hud div::after { border-color:#ffc15f; background:#7d3555; }
+.halloween-theme .hud span { color:#ffbd68; }
+.halloween-theme .hud strong { color:#fff0d1; text-shadow:0 0 8px #ff6d2f77,0 2px 3px #000; }
+.halloween-theme .stat-icon { border-color:#eb843f; background:#160b2c; fill:#b977ef; stroke:#ffd06e; }
+.halloween-theme .crit-stats,
+.halloween-theme .shooter-combat-status { color:#ffe0a0; background:#170b2be8; border-color:#a3577f; }
+.halloween-theme .game-wrap {
+  border-color:#f09240; background:#100825;
+  box-shadow:0 0 0 2px #4e214d,0 0 0 4px #9f4b48,0 8px 22px #000c,0 0 18px #813ab855;
+}
+.halloween-theme .hint { color:#ffd395; }
+@media (prefers-reduced-motion:reduce) { .halloween-theme .fantasy-menu::before { animation:none; } }
+@media (max-height:620px) {
+  .halloween-theme .season-banner { margin-top:1px; padding:3px 9px; }
+  .halloween-theme .play-button { min-height:73px; width:min(64%,220px); font-size:23px; margin-top:5px; }
+  .halloween-theme .play-button .play-icon { height:23px; line-height:23px; }
+  .halloween-theme .play-button .play-icon::after { font-size:24px; }
 }
 
 /* Arena 10: stone scenery, gold borders, clear blue combat surface. */

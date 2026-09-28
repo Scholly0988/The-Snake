@@ -14,9 +14,9 @@ vorbehalten.
   Stapeln des Segments einen erneuerbaren 4-Sekunden-Timer.
 - Bei 3 Stapeln ist das Segment überhitzt. Der nächste branderzeugende Kontakt
   löst nach seinem normalen Schaden 1,5 Haupt- und 0,5 Flächenschaden in einem
-  Radius von 55 px aus. Ein überschüssiger Stapel derselben Wirkung kann die
+  Radius von 35 px aus. Ein überschüssiger Stapel derselben Wirkung kann die
   Explosion sofort auslösen.
-- Brennende Segmente übertragen beim Tod mit 25 % Chance Brand auf ein zufälliges
+- Brennende Segmente übertragen beim Tod mit 70 % Chance Brand auf ein zufälliges
   direkt angrenzendes sichtbares Segment derselben Schlange.
 - Feuerwelle wird nach 18 Sekunden bereit und startet ihren nächsten Cooldown
   erst nach dem ersten tatsächlichen Treffer. Sie besitzt 100 px Radius,

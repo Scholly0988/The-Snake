@@ -12,9 +12,14 @@ const gameOverScreen = document.querySelector("#gameOverScreen");
 const upgradeChoices = document.querySelector("#upgradeChoices");
 const finalScore = document.querySelector("#finalScore");
 const headSprite = new Image();
-headSprite.src = "snake-head.png";
 const bodySprite = new Image();
-bodySprite.src = "snake-body.png";
+const halloweenArenaSprite = new Image();
+halloweenArenaSprite.src = "halloween-arena-background.webp";
+function setSeasonalSnakeSprites(active=document.documentElement?.classList?.contains("halloween-theme")) {
+  headSprite.src = active ? "halloween-snake-head.png" : "snake-head.png";
+  bodySprite.src = active ? "halloween-snake-body.png" : "snake-body.png";
+}
+setSeasonalSnakeSprites();
 const playerSprite = new Image();
 playerSprite.src = "player-front.png";
 const paladinSprite = new Image();
@@ -43,6 +48,38 @@ const progress = SnakeProgress.open({
   getItem: key => window.localStorage.getItem(key),
   setItem: (key, value) => window.localStorage.setItem(key, value)
 });
+
+const HALLOWEEN_THEME_KEY="the-snake.theme.halloween";
+function isHalloweenSeason(date=new Date()) {
+  return date.getMonth()===9||(date.getMonth()===10&&date.getDate()<=2);
+}
+function halloweenThemeMode() {
+  try {const mode=window.localStorage.getItem(HALLOWEEN_THEME_KEY);return ["auto","on","off"].includes(mode)?mode:"auto";}
+  catch {return "auto";}
+}
+function halloweenThemeActive(date=new Date(),mode=halloweenThemeMode()) {
+  return mode==="on"||(mode==="auto"&&isHalloweenSeason(date));
+}
+function applyHalloweenTheme(date=new Date()) {
+  const mode=halloweenThemeMode(),active=halloweenThemeActive(date,mode),root=document.documentElement,body=document.body;
+  for(const target of [root,body])if(target?.classList)target.classList[active?"add":"remove"]("halloween-theme");
+  const select=document.querySelector("#halloweenThemeMode");if(select)select.value=mode;
+  const status=document.querySelector("#halloweenThemeStatus");
+  if(status)status.textContent=active?(mode==="auto"?"Halloween ist aufgrund des Gerätedatums automatisch aktiv.":"Halloween ist dauerhaft eingeschaltet."):(mode==="off"?"Halloween ist ausgeschaltet.":"Halloween wird am 1. Oktober automatisch aktiviert.");
+  const themeColor=document.querySelector('meta[name="theme-color"]');if(themeColor)themeColor.content=active?"#140923":"#07131b";
+  setSeasonalSnakeSprites(active);
+  return active;
+}
+function setHalloweenThemeMode(mode,date=new Date()) {
+  if(!["auto","on","off"].includes(mode))return false;
+  try {window.localStorage.setItem(HALLOWEEN_THEME_KEY,mode);}catch{return false;}
+  applyHalloweenTheme(date);return true;
+}
+function bindHalloweenTheme() {
+  const select=document.querySelector("#halloweenThemeMode");
+  if(select)select.addEventListener("change",()=>setHalloweenThemeMode(select.value));
+  applyHalloweenTheme();
+}
 
 const state = {
   mode: "start",
@@ -915,13 +952,19 @@ function draw() {
 }
 
 function drawBackground() {
-  const field = ctx.createLinearGradient(0, 0, state.width, state.height);
-  field.addColorStop(0, "#142e48");
-  field.addColorStop(.5, "#0c2036");
-  field.addColorStop(1, "#142c43");
-  ctx.fillStyle = field;
-  ctx.fillRect(0, 0, state.width, state.height);
-  ctx.strokeStyle = "rgba(88, 154, 192, .18)";
+  const halloween=document.documentElement?.classList?.contains("halloween-theme");
+  if(halloween&&halloweenArenaSprite.complete&&halloweenArenaSprite.naturalWidth){
+    ctx.drawImage(halloweenArenaSprite,0,0,state.width,state.height);
+    ctx.fillStyle="rgba(11,5,32,.22)";ctx.fillRect(0,0,state.width,state.height);
+  }else{
+    const field = ctx.createLinearGradient(0, 0, state.width, state.height);
+    field.addColorStop(0, "#142e48");
+    field.addColorStop(.5, "#0c2036");
+    field.addColorStop(1, "#142c43");
+    ctx.fillStyle = field;
+    ctx.fillRect(0, 0, state.width, state.height);
+  }
+  ctx.strokeStyle = halloween ? "rgba(142, 84, 220, .22)" : "rgba(88, 154, 192, .18)";
   ctx.lineWidth = 1;
   for (let y = 20; y < state.height; y += 40) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(state.width, y); ctx.stroke();
@@ -930,7 +973,7 @@ function drawBackground() {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, state.height); ctx.stroke();
   }
   const danger = state.player.y - 34;
-  ctx.strokeStyle = "rgba(245, 115, 105, .75)";
+  ctx.strokeStyle = halloween ? "rgba(255, 126, 43, .88)" : "rgba(245, 115, 105, .75)";
   ctx.setLineDash([8, 9]);
   ctx.beginPath(); ctx.moveTo(0, danger); ctx.lineTo(state.width, danger); ctx.stroke();
   ctx.setLineDash([]);
@@ -1121,7 +1164,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 23.0 · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 23.2 Test · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -1164,6 +1207,7 @@ bindRunemasterMenu();
 bindIlyraMenu();
 bindSeraphineMenu();
 bindSkillsMenu();
+bindHalloweenTheme();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);
 restoreDifficulty();

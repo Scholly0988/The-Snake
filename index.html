@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#07131b">
   <title>The Snake</title>
-  <link rel="stylesheet" href="style.css?v=seraphine-23-0">
+  <script>
+    (()=>{try{const mode=localStorage.getItem("the-snake.theme.halloween")||"auto",now=new Date(),automatic=now.getMonth()===9||(now.getMonth()===10&&now.getDate()<=2);if(mode==="on"||(mode==="auto"&&automatic))document.documentElement.classList.add("halloween-theme");}catch{}})();
+  </script>
+  <link rel="stylesheet" href="style.css?v=halloween-test-2">
 </head>
 <body>
   <main class="game-shell">
@@ -28,7 +31,7 @@
       <div id="startScreen" class="overlay fantasy-menu">
         <div class="menu-topbar"><span class="menu-profile">❖ <span>DEIN ABENTEUER<small>Lokaler Spielstand</small></span></span><span class="coin-counter">◉ <strong id="menuCoins">0</strong></span></div>
         <section id="menuHome" class="menu-page home-page" aria-label="Hauptmenü">
-          <div class="menu-title"><span>VERTEIDIGE DEINE WELT</span><h1>The Snake</h1><p>Dein nächstes Abenteuer wartet.</p></div>
+          <div class="menu-title"><span>VERTEIDIGE DEINE WELT</span><h1>The Snake</h1><p>Dein nächstes Abenteuer wartet.</p><strong class="season-banner">🎃 HALLOWEEN-EVENT 🎃</strong></div>
           <div class="home-actions">
           <div class="level-picker" aria-label="Levelauswahl">
             <button id="previousLevel" aria-label="Vorheriges Level">❮</button>
@@ -41,7 +44,7 @@
             <label><input type="radio" name="difficulty" value="0.20"><span>Schwer<small>2× Leben · 2× Münzen</small></span></label>
           </fieldset>
           <p id="rewardInfo" class="menu-records" aria-live="polite"></p>
-          <button id="startButton" class="play-button"><span aria-hidden="true">⚔</span> SPIELEN <small>Stell dich der Schlange ›</small></button>
+          <button id="startButton" class="play-button"><span class="play-icon" aria-hidden="true">⚔</span> SPIELEN <small>Stell dich der Schlange ›</small></button>
           <p id="profileStats" class="menu-records"></p>
           </div>
         </section>
@@ -107,6 +110,16 @@
         </section>
         <section id="menuOptions" class="menu-page menu-sheet hidden" aria-label="Optionen">
           <p class="eyebrow">DEIN FORTSCHRITT</p><h2>Optionen</h2>
+          <section class="season-options" aria-labelledby="seasonTitle">
+            <h3 id="seasonTitle">Saisonales Design</h3>
+            <label for="halloweenThemeMode">Halloween-Stil</label>
+            <select id="halloweenThemeMode">
+              <option value="auto">Automatisch · 1. Oktober bis 2. November</option>
+              <option value="on">Immer aktiv</option>
+              <option value="off">Deaktiviert</option>
+            </select>
+            <p id="halloweenThemeStatus" class="menu-note" role="status" aria-live="polite"></p>
+          </section>
           <section class="measurement-card" aria-labelledby="measurementTitle">
             <h3 id="measurementTitle">Spielfeldgröße messen</h3>
             <p>Öffne diese Seite auf dem Gerät, dessen Spielfeldgröße als Vorlage dienen soll. Tippe auf den Knopf, wenn die Browserleisten so stehen wie beim normalen Spielen.</p>
@@ -129,7 +142,7 @@
           <button id="navHeroes" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10a7 7 0 0 1 14 0v10l-5-3V11h-4v6z M5 10l5 2m4 0 5-2M12 3v5"/></svg><span>Helden</span></button>
           <button id="navOptions" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 4 4 1 1 6-4 2-1 5h-6l-2-4-5-1V9l4-2z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></svg><span>Optionen</span></button>
         </nav>
-        <p class="menu-version">Version 23.0 · Seraphine – Meisterin der Glut</p>
+        <p class="menu-version">Version 23.2 Test · Halloween-Arena</p>
       </div>
 
       <div id="upgradeScreen" class="overlay hidden">
@@ -177,6 +190,6 @@
   <script src="ilyra.js?v=seraphine-23-0"></script>
   <script src="seraphine.js?v=seraphine-23-0"></script>
   <script src="shooter.js?v=seraphine-23-0"></script>
-  <script src="game.js?v=seraphine-23-0"></script>
+  <script src="game.js?v=halloween-test-2"></script>
 </body>
 </html>
