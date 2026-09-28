@@ -7,7 +7,7 @@ function newSeraphine(slot) {
     maxBurn:3, burnBonus:0, precision:0, criticalBurnChance:0,
     projectileSize:1.10, projectileSpeed:.95, pierce:0,
     explosionMain:1.5, explosionArea:.5, explosionBonus:0, explosionRadius:35, explosionRadiusBonus:0,
-    transferChance:.70, transferCount:1, sparkCount:0, sparkDamage:0,
+    transferChance:.50, transferCount:1, sparkCount:0, sparkDamage:0,
     thresholdReduction:0, triggerHitBonus:0,
     waveRadius:100, waveRadiusBonus:0, waveMain:1.2, waveArea:.6,
     waveExtraChance:0, waveCooldown:18, waveRemaining:18, waveInFlight:false,
@@ -151,7 +151,7 @@ function resolveSeraphineDeaths(random=Math.random) {
     while(state.seraphineDeaths.length){
       const death=state.seraphineDeaths.shift(),batch=new Map(),reaction=death.reaction||seraphineReaction(death.blockTransfer);
       if(!death.blockTransfer&&death.stacks>0){
-        const inferno=s.infernoActive>0?.25:0,procs=seraphineProcCount(s.transferChance+inferno,random);
+        const inferno=s.infernoActive>0?.25:0,procs=seraphineProcCount(Math.min(.50,s.transferChance+inferno),random);
         const available=death.neighbors.filter(n=>state.snake.includes(n)&&n.hp>0&&isSegmentVisible(n));let first=null;
         for(let n=0;n<procs&&available.length;n++){
           let target;
@@ -269,7 +269,7 @@ function seraphineUpgradePool() {
   const fixed=[
     ["longFlame","Langanhaltende Flamme",skillValue("seraphine","longFlame",[5,6,8],[6,7,9]),v=>`Brand hält ${v} Sekunden.`,v=>s.burnDuration=Math.max(s.burnDuration,v)],
     ["fuel","Brennstoff",skillValue("seraphine","fuel",[1,2,3],[2,3,4]),v=>`+${v} maximale Brandstapel.`,v=>s.maxBurn=Math.max(s.maxBurn,3+v)],
-    ["chain","Flammenkette",skillValue("seraphine","chain",[.40,.55,.75],[.50,.65,.85]),v=>`${v*100} % Feuerübertragungs-Chance.`,v=>s.transferChance=Math.max(s.transferChance,v)],
+    ["chain","Flammenkette",skillValue("seraphine","chain",[.40,.45,.50],[.45,.50,.50]),v=>`${v*100} % Feuerübertragungs-Chance (Maximum 50 %).`,v=>s.transferChance=Math.max(s.transferChance,v)],
     ["legacy","Feuererbe",skillValue("seraphine","legacy",[2,3,4],[3,4,5]),v=>`Bis zu ${v} Brandstapel je übertragenem Ziel.`,v=>s.transferCount=Math.max(s.transferCount,v)],
     ["sparks","Feuerfunken",skillValue("seraphine","sparks",[[1,.30],[2,.35],[3,.45]],[[1,.36],[2,.42],[3,.54]]),v=>`${v[0]} Funken mit je ${v[1]} Schaden.`,v=>{if(v[0]>=s.sparkCount){s.sparkCount=v[0];s.sparkDamage=v[1];}}],
     ["waveQuick","Schnellere Feuerwelle",skillValue("seraphine","waveQuick",[16,14,11],[15,13,10]),v=>`Feuerwellen-Cooldown ${v} Sekunden.`,v=>{s.waveCooldown=Math.min(s.waveCooldown,v);s.waveRemaining=Math.min(s.waveRemaining,v);}],

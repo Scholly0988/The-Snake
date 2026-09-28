@@ -165,7 +165,7 @@ const HERO_SKILLS = [
   ["seraphine","fuel","upgrade","Brennstoff",["grey","green","purple"],"+1 / +2 / +3 maximale Brandstapel; höchste Stufe zählt.","Je Stufe +1 weiterer maximaler Stapel."],
   ["seraphine","explosive","upgrade","Explosive Glut",["grey","green","purple"],"+15 / +30 / +50 % Explosionsschaden; Stufen addieren sich.","Je Stufe zusätzlich +5 Prozentpunkte."],
   ["seraphine","radius","upgrade","Flammenradius",["grey","green","purple"],"+15 / +30 / +50 % Radius auf 55 px Basis.","Je Stufe zusätzlich +10 Prozentpunkte."],
-  ["seraphine","chain","upgrade","Flammenkette",["grey","green","purple"],"40 / 55 / 75 % Feuerübertragungs-Chance; höchste Stufe zählt.","50 / 65 / 85 %."],
+  ["seraphine","chain","upgrade","Flammenkette",["grey","green","purple"],"40 / 45 / 50 % Feuerübertragungs-Chance; höchste Stufe zählt, Maximum 50 %.","45 / 50 / 50 %."],
   ["seraphine","legacy","upgrade","Feuererbe",["grey","green","purple"],"Bis zu 2 / 3 / 4 Stapel je übertragenem Ziel.","Je Stufe ein weiterer übertragbarer Stapel."],
   ["seraphine","precision","upgrade","Brennende Präzision",["grey","green","purple"],"+5 / +10 / +20 % Direktschaden gegen bereits brennende Segmente.","Je Stufe zusätzlich +5 Prozentpunkte."],
   ["seraphine","criticalFlame","upgrade","Kritische Flamme",["grey","green","purple"],"25 / 50 / 100 % Chance auf zusätzlichen Brand bei Krit.","Je Stufe zusätzlich +10 Prozentpunkte."],
