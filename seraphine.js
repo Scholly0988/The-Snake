@@ -64,7 +64,14 @@ function seraphineNeighbors(segment,instance=snakeInstanceForSegment(segment)) {
   return [list[index-1],list[index+1]].filter(s=>s&&s.hp>0&&isSegmentVisible(s));
 }
 function seraphineEffect(kind,center,radius=18,color="#ff8138") {
-  state.seraphine?.effects.push({kind,x:center.x,y:center.y,radius,color,life:.65,maxLife:.65});
+  const effects=state.seraphine?.effects;if(!effects)return;
+  const duration={burn:.18,spark:.22,explosion:.32,wave:.48}[kind]||.35;
+  if(kind==="burn")for(let n=effects.length-1;n>=0;n--){
+    const effect=effects[n];
+    if(effect.kind===kind&&Math.hypot(effect.x-center.x,effect.y-center.y)<12){effect.life=duration;effect.maxLife=duration;return;}
+  }
+  effects.push({kind,x:center.x,y:center.y,radius,color,life:duration,maxLife:duration});
+  if(effects.length>36)effects.splice(0,effects.length-36);
 }
 function addSeraphineDamage(batch,segment,base,random=Math.random) {
   const hit=seraphineCriticalDamage(seraphineBaseDamage(base),random);addDamage(batch,segment,hit.damage);return hit;
@@ -304,9 +311,9 @@ function bindSeraphineMenu() {
 function drawSeraphine() {
   const s=state.seraphine;if(!s)return;
   for(const segment of state.snake)if(burnStacks(segment)>0&&isSegmentVisible(segment)){
-    const threshold=seraphineThreshold(),ratio=Math.min(1,burnStacks(segment)/threshold);ctx.save();ctx.strokeStyle=segment.overheated?"#fff08a":"#ff7132";ctx.fillStyle=`rgba(255,82,22,${.08+.18*ratio})`;ctx.shadowColor="#ff4a18";ctx.shadowBlur=5+ratio*12;ctx.lineWidth=1.5+ratio;ctx.beginPath();ctx.arc(segment.x,segment.y,17+ratio*3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#fff0a6";ctx.font="bold 9px system-ui";ctx.textAlign="center";ctx.fillText(segment.overheated?"HEISS":burnStacks(segment)+"/"+threshold,segment.x,segment.y+3);ctx.restore();
+    const threshold=seraphineThreshold(),ratio=Math.min(1,burnStacks(segment)/threshold);ctx.save();ctx.strokeStyle=segment.overheated?"#fff08a":"#ff7132";ctx.fillStyle=`rgba(255,82,22,${.08+.18*ratio})`;ctx.lineWidth=1.5+ratio;ctx.beginPath();ctx.arc(segment.x,segment.y,17+ratio*3,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#fff0a6";ctx.font="bold 9px system-ui";ctx.textAlign="center";ctx.fillText(segment.overheated?"HEISS":burnStacks(segment)+"/"+threshold,segment.x,segment.y+3);ctx.restore();
   }
-  for(const e of s.effects){const t=Math.max(0,e.life/e.maxLife);ctx.save();ctx.globalAlpha=t*.85;ctx.strokeStyle=e.color;ctx.shadowColor=e.color;ctx.shadowBlur=16;ctx.lineWidth=e.kind==="wave"?5:3;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*(1.2-t*.2),0,Math.PI*2);ctx.stroke();ctx.restore();}
+  for(const e of s.effects){const t=Math.max(0,e.life/e.maxLife);ctx.save();ctx.globalAlpha=t*.85;ctx.strokeStyle=e.color;ctx.lineWidth=e.kind==="wave"?4:e.kind==="explosion"?3:2;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*(1.2-t*.2),0,Math.PI*2);ctx.stroke();ctx.restore();}
   const x=seraphineX(),y=state.player.y,lift=3+Math.sin(state.elapsed*2.3)*1.5+(s.pulse>0?Math.sin(s.pulse/.18*Math.PI)*2:0);
   const inferno=s.infernoActive>0,flash=Math.min(1,s.ringPulse/.3),outer=inferno?27:21;
   ctx.save();ctx.translate(x,y+34);ctx.globalCompositeOperation="lighter";

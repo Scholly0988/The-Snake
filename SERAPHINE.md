@@ -16,8 +16,9 @@ vorbehalten.
   löst nach seinem normalen Schaden 1,5 Haupt- und 0,5 Flächenschaden in einem
   Radius von 35 px aus. Ein überschüssiger Stapel derselben Wirkung kann die
   Explosion sofort auslösen.
-- Brennende Segmente übertragen beim Tod mit 70 % Chance Brand auf ein zufälliges
-  direkt angrenzendes sichtbares Segment derselben Schlange.
+- Brennende Segmente übertragen beim Tod mit 50 % Chance Brand auf ein zufälliges
+  direkt angrenzendes sichtbares Segment derselben Schlange. Chance-basierte
+  Brandweitergaben sind auch mit Flammenkette und Inferno auf 50 % begrenzt.
 - Feuerwelle wird nach 18 Sekunden bereit und startet ihren nächsten Cooldown
   erst nach dem ersten tatsächlichen Treffer. Sie besitzt 100 px Radius,
   verursacht 1,8 Schaden am Hauptziel und 0,6 an weiteren Zielen.
@@ -54,6 +55,11 @@ vorbehalten.
 magische Feuerring wird vollständig im Canvas gezeichnet: gegenläufige Ringe,
 Runen, wandernde Feuerpunkte und Funken reagieren auf Schüsse, Feuerwellen und
 Inferno. Während Inferno erscheint eine zweite äußere Feuerbahn.
+
+Für mobile Geräte sind gleichzeitig höchstens 36 kurze Seraphine-Effekte aktiv.
+Wiederholte Brandeffekte am selben Ort werden zusammengefasst; Explosionsringe
+und Brandanzeigen verzichten auf teure Canvas-Schatten. Die Spielmechanik und
+alle Schadenswerte bleiben davon unberührt.
 
 ## Tests
 
