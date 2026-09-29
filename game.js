@@ -101,11 +101,27 @@ const state = {
   player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
-  alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null, pendingUpgrades: 0, upgradeOfferId: 0,
+  alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null,
+  secondaryTeam: null, pendingUpgrades: 0, upgradeOfferId: 0,
   runStartSegments: 100,
   runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
 };
+state.renderStats={sampleStart:0,frames:0,fps:60,seraphineEffectLimit:36};
+
+function updateRenderStats(time) {
+  const stats=state.renderStats;
+  if(!stats.sampleStart)stats.sampleStart=time;
+  stats.frames++;
+  const elapsed=time-stats.sampleStart;
+  if(elapsed<1000)return;
+  stats.fps=stats.frames*1000/elapsed;
+  stats.frames=0;stats.sampleStart=time;
+  if(stats.seraphineEffectLimit===36&&stats.fps<50)stats.seraphineEffectLimit=20;
+  else if(stats.seraphineEffectLimit===20&&stats.fps<40)stats.seraphineEffectLimit=12;
+  else if(stats.seraphineEffectLimit===12&&stats.fps>54)stats.seraphineEffectLimit=20;
+  else if(stats.seraphineEffectLimit===20&&stats.fps>58)stats.seraphineEffectLimit=36;
+}
 
 const SNAKE_SCALE = .9;
 const SEGMENT_SPACING = 33 * SNAKE_SCALE;
@@ -129,9 +145,7 @@ function renderLevelPicker() {
   const locked=level>progress.data.completedLevels+1;
   document.querySelector("#levelName").textContent="Level "+level+(locked?" · Gesperrt":level<=progress.data.completedLevels?" · Abgeschlossen":"");
   const snakeCount=levelDefinition(level).snakes.length;
-  const segments=levelDefinition(level).fullLengthSnakes?SEGMENTS_PER_SNAKE*snakeCount:SEGMENTS_PER_SNAKE;
-  const segmentText=levelDefinition(level).fullLengthSnakes?SEGMENTS_PER_SNAKE+" je Schlange / "+segments+" gesamt":segments+" Segmente gesamt";
-  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":Math.round(config.first*multiplier)+"–"+Math.round(config.last*multiplier).toLocaleString("de-DE")+" Leben · "+segmentText+" · "+snakeCount+" "+(snakeCount===1?"Schlange":"Schlangen");
+  document.querySelector("#levelInfo").textContent=locked?"Schließe zuerst Level "+(level-1)+" ab.":Math.round(config.first*multiplier)+"–"+Math.round(config.last*multiplier).toLocaleString("de-DE")+" Leben · 100 Segmente · "+snakeCount+" "+(snakeCount===1?"Schlange":"Schlangen");
   document.querySelector("#previousLevel").disabled=level===1;
   document.querySelector("#nextLevel").disabled=level===LEVELS.length;
   document.querySelector("#startButton").disabled=locked;
@@ -157,14 +171,16 @@ function completeLevel() {
   upgradeScreen.classList.add("hidden");
   document.querySelector("#resultEyebrow").textContent="SCHLANGE BESIEGT";
   document.querySelector("#resultTitle").textContent="Level "+state.level+" abgeschlossen!";
-  document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · Abschluss +"+completionCoins+(firstCoins?" · Erstabschluss +"+firstCoins:"")+" · "+(state.level<LEVELS.length?"Level "+(state.level+1)+" freigeschaltet":"Alle 30 Level abgeschlossen");
+  document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · Abschluss +"+completionCoins+(firstCoins?" · Erstabschluss +"+firstCoins:"")+" · "+(state.level<LEVELS.length?"Level "+(state.level+1)+" freigeschaltet":"Alle zehn Level abgeschlossen");
   finalScore.textContent=state.score;
   gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();
 }
 function resizeCanvas() {
   // CSS owns layout; bitmap resolution must never enlarge the grid or canvas.
   const rect = canvas.getBoundingClientRect();
-  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const coarsePointer=typeof window.matchMedia==="function"&&window.matchMedia("(pointer: coarse)").matches;
+  const mobileCanvas=coarsePointer||rect.width<=520;
+  const ratio = Math.min(window.devicePixelRatio || 1, mobileCanvas?1.5:2);
   canvas.width = Math.round(rect.width * ratio);
   canvas.height = Math.round(rect.height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -204,6 +220,7 @@ function resetGame() {
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
   state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
+  state.secondaryTeam=createSecondaryTeam(progress.data.secondarySlots);
   createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
   state.runStartSegments=state.snake.length;
   document.querySelector("#shareRunStatus").textContent="";
@@ -231,15 +248,14 @@ function createSnake(count) {
 function createLevelSnakes(levelNumber,totalCount=SEGMENTS_PER_SNAKE) {
   const definition=levelDefinition(levelNumber),minimum=level1ReferenceLength(state.width,state.height,state.player.y);
   state.minimumLevelPathLength=minimum;state.snakes=[];state.snake=[];
-  const baseCount=definition.fullLengthSnakes?totalCount:Math.floor(totalCount/definition.snakes.length),extra=definition.fullLengthSnakes?0:totalCount%definition.snakes.length;
+  const baseCount=Math.floor(totalCount/definition.snakes.length),extra=totalCount%definition.snakes.length;
   let ordinal=0;
   definition.snakes.forEach((snakeDefinition,index)=>{
     const count=baseCount+(index<extra?1:0);
-    const instance={id:snakeDefinition.id,definition:snakeDefinition,segments:[],headDistance:snakeDefinition.startOffset||0,rageActive:false,
+    const instance={id:snakeDefinition.id,definition:snakeDefinition,segments:[],headDistance:0,rageActive:false,
       path:buildLevelPath(snakeDefinition.path,state.width,state.height,minimum)};
     for(let localIndex=0;localIndex<count;localIndex++,ordinal++){
-      const upgradeIndex=definition.fullLengthSnakes?localIndex:ordinal;
-      const upgrade=upgradeIndex===1||(upgradeIndex>1&&(upgradeIndex-1)%UPGRADE_INTERVAL===0);
+      const upgrade=ordinal===1||(ordinal>1&&(ordinal-1)%UPGRADE_INTERVAL===0);
       // Every snake receives the complete level curve independently. In
       // multi-snake encounters every enemy therefore starts at the configured
       // minimum and reaches the configured maximum at its own final segment.
@@ -386,6 +402,8 @@ function update(dt) {
   updateIlyra(dt);
   if (state.mode !== "playing") return;
   updateSeraphine(dt);
+  if (state.mode !== "playing") return;
+  updateSecondaryTeam(dt);
   if (state.mode !== "playing") return;
   for (const effect of state.holyEffects) effect.life -= dt;
   state.holyEffects = state.holyEffects.filter(effect => effect.life > 0);
@@ -942,6 +960,7 @@ function draw() {
   // Nach allen Sprites zeichnen, damit Nachbarteile die Zahlen nicht verdecken.
   for (const segment of state.snake) drawHpLabel(segment);
   drawBullets();
+  drawSecondaryTeam();
   drawPlayer();
   drawShooterEffects();
   drawPaladin();
@@ -1167,7 +1186,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 24.0 Test · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 23.2 Test · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -1190,6 +1209,7 @@ window.addEventListener("error",event=>reportGameError(event.error||event.messag
 function loop(time) {
   try {
     if(state.mode==="error")return;
+    updateRenderStats(time);
     const dt = Math.max(0, Math.min((time - (state.lastTime || time)) / 1000, .033));
     state.lastTime = time;
     if (state.mode === "playing") update(dt);

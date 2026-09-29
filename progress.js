@@ -3,14 +3,13 @@
 // No network requests: this profile belongs to this browser and site origin.
 const SnakeProgress = (() => {
   const KEY = "the-snake.progress.v1";
-  const CAMPAIGN_LEVELS = 30;
-  const FIRST_CLEAR_SLOTS = CAMPAIGN_LEVELS * 3;
   const fresh = () => ({
-    game: "the-snake", version: 1, skillUpgrades: [], completedLevels: 0, selectedLevel: 1, coins: 0, coinRemainder: 0, firstClears: Array(FIRST_CLEAR_SLOTS).fill(false), best: 0, defeated: 0,
+    game: "the-snake", version: 1, skillUpgrades: [], completedLevels: 0, selectedLevel: 1, coins: 0, coinRemainder: 0, firstClears: Array(30).fill(false), best: 0, defeated: 0,
     runs: 0, damageLevel: 0, rateLevel: 0, critChanceLevel: 0, critDamageLevel: 0, difficulty: 0.10,
     paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null,
     alchemistUnlocked: false, alchemistSlot: null, runemasterUnlocked: false, runemasterSlot: null,
-    ilyraUnlocked: true, ilyraSlot: null, seraphineUnlocked: true, seraphineSlot: null
+    ilyraUnlocked: true, ilyraSlot: null, seraphineUnlocked: true, seraphineSlot: null,
+    secondaryUnlocked: [], secondarySlots: {left:null,center:null,right:null}
   });
   function validate(value) {
     if (!value || value.game !== "the-snake" || value.version !== 1)
@@ -30,12 +29,12 @@ const SnakeProgress = (() => {
     result.coinRemainder=value.coinRemainder??0;
     if(![0,.5].includes(result.coinRemainder))throw new Error("Ungültiger Münzrest.");
     const firstClears=value.firstClears??[];
-    if(!Array.isArray(firstClears)||![0,9,30,FIRST_CLEAR_SLOTS].includes(firstClears.length)||firstClears.some(v=>typeof v!=="boolean"))throw new Error("Ungültige Erstabschlüsse.");
-    result.firstClears=[...firstClears,...Array(FIRST_CLEAR_SLOTS-firstClears.length).fill(false)];
+    if(!Array.isArray(firstClears)||![0,9,30].includes(firstClears.length)||firstClears.some(v=>typeof v!=="boolean"))throw new Error("Ungültige Erstabschlüsse.");
+    result.firstClears=[...firstClears,...Array(30-firstClears.length).fill(false)];
     result.completedLevels=value.completedLevels===undefined?0:value.completedLevels;
     result.selectedLevel=value.selectedLevel===undefined?1:value.selectedLevel;
-    if(!Number.isInteger(result.completedLevels)||result.completedLevels<0||result.completedLevels>CAMPAIGN_LEVELS ||
-       !Number.isInteger(result.selectedLevel)||result.selectedLevel<1||result.selectedLevel>Math.min(CAMPAIGN_LEVELS,result.completedLevels+1))
+    if(!Number.isInteger(result.completedLevels)||result.completedLevels<0||result.completedLevels>10 ||
+       !Number.isInteger(result.selectedLevel)||result.selectedLevel<1||result.selectedLevel>Math.min(10,result.completedLevels+1))
       throw new Error("Ungültiger Levelfortschritt.");
     for (const key of ["critChanceLevel", "critDamageLevel"]) {
       const level = value[key] === undefined ? 0 : value[key];
@@ -57,6 +56,21 @@ const SnakeProgress = (() => {
     }
     const occupied=[result.paladinSlot,result.necromancerSlot,result.alchemistSlot,result.runemasterSlot,result.ilyraSlot,result.seraphineSlot].filter(Boolean);
     if(new Set(occupied).size!==occupied.length)throw new Error("Ein Platz kann nur einen Helden enthalten.");
+    const secondaryUnlocked=value.secondaryUnlocked??[];
+    if(!Array.isArray(secondaryUnlocked)||new Set(secondaryUnlocked).size!==secondaryUnlocked.length||
+       secondaryUnlocked.some(id=>typeof id!=="string"||!/^[a-z][a-z0-9-]{0,47}$/.test(id)))
+      throw new Error("Ungültige Sekundärhelden-Freischaltung.");
+    result.secondaryUnlocked=[...secondaryUnlocked];
+    const secondarySlots=value.secondarySlots??{left:null,center:null,right:null};
+    if(!secondarySlots||typeof secondarySlots!=="object"||Array.isArray(secondarySlots))throw new Error("Ungültige Sekundärplätze.");
+    result.secondarySlots={left:null,center:null,right:null};
+    for(const slot of ["left","center","right"]){
+      const id=secondarySlots[slot]??null;
+      if(id!==null&&(!result.secondaryUnlocked.includes(id)))throw new Error("Nicht freigeschalteter Sekundärheld ausgerüstet.");
+      result.secondarySlots[slot]=id;
+    }
+    const secondaryOccupied=Object.values(result.secondarySlots).filter(Boolean);
+    if(new Set(secondaryOccupied).size!==secondaryOccupied.length)throw new Error("Ein Sekundärheld kann nur einen Platz belegen.");
     return result;
   }
   function open(storage) {
@@ -103,7 +117,7 @@ const SnakeProgress = (() => {
         save();
       },
       completeLevel(level, difficulty) {
-        if(!Number.isInteger(level)||level<1||level>CAMPAIGN_LEVELS||level>data.completedLevels+1)return false;
+        if(!Number.isInteger(level)||level<1||level>10||level>data.completedLevels+1)return false;
         if(difficulty!==undefined){
           const index=[.10,.15,.20].indexOf(difficulty);
           if(index<0)return false;
@@ -151,6 +165,21 @@ const SnakeProgress = (() => {
         if(slot)for(const other of heroes)if(other!==hero&&data[other+"Slot"]===slot)data[other+"Slot"]=previous;
         data[hero+"Slot"]=slot;
         if (!save()) { data=old;return false; }
+        return true;
+      },
+      unlockSecondary(id,cost=0) {
+        if(typeof id!=="string"||!/^[a-z][a-z0-9-]{0,47}$/.test(id)||!Number.isSafeInteger(cost)||cost<0||data.secondaryUnlocked.includes(id)||data.coins<cost)return false;
+        const old=JSON.parse(JSON.stringify(data));
+        data.coins-=cost;data.secondaryUnlocked.push(id);
+        if(!save()){data=old;return false;}
+        return true;
+      },
+      equipSecondary(id,slot) {
+        if(!["left","center","right"].includes(slot)||id!==null&&!data.secondaryUnlocked.includes(id))return false;
+        const old=JSON.parse(JSON.stringify(data));
+        if(id)for(const other of ["left","center","right"])if(other!==slot&&data.secondarySlots[other]===id)data.secondarySlots[other]=data.secondarySlots[slot];
+        data.secondarySlots[slot]=id;
+        if(!save()){data=old;return false;}
         return true;
       },
       unlockPaladin() { return this.unlockHero("paladin"); },

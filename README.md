@@ -1,18 +1,16 @@
 # The Snake
 
-## Version 24.0 Test – Kampagne bis Level 30
+## Version 23.3 Test – Sekundärslots
 
-- Die Kampagne wurde von 10 auf 30 Level erweitert.
-- Level 11 bis 30 mischen senkrechte Rückläufe, Diagonalen, Eckenrundkurse,
-  Diamantwege und rechteckige Spiralen im und gegen den Uhrzeigersinn.
-- Mehrschlangen-Level laufen synchronisiert, gespiegelt oder gegenläufig.
-- Level 20 besitzt drei Schlangen. Level 30 besitzt fünf leicht zeitversetzte
-  Schlangen mit jeweils 100 eigenen Segmenten und vollständiger HP-Kurve.
-- Die HP des ersten und letzten Segments steigt von Level zu Level; innerhalb
-  jeder Schlange steigen alle Zwischenwerte streng an.
-- Alte Spielstände werden auf 30 Level und 90 Erstabschluss-Kombinationen
-  erweitert. Details: [LEVELS-11-30.md](LEVELS-11-30.md).
-- Neuer Test: `node test-levels-11-30.cjs`.
+- Hinter den Hauptpositionen links, Mitte und rechts stehen drei zusätzliche
+  Sekundärslots für Unterstützer bereit.
+- Sekundärfiguren werden mit 80 Prozent der Hauptslot-Größe dargestellt und
+  erst gezeichnet, sobald dort tatsächlich ein Charakter ausgerüstet ist.
+- Das neue Registrierungs- und Laufzeitsystem unterstützt Fallen, Bodeneffekte,
+  Kontrolle, schwächere Angriffe und Buffs für den zugeordneten Hauptslot.
+- Freischaltungen und die drei Belegungen werden im vorhandenen lokalen
+  Spielstand gespeichert; bestehende Spielstände werden automatisch erweitert.
+- Technische Details: [SECONDARY.md](SECONDARY.md).
 
 ## Version 23.2 Test – Halloween-Arena
 
