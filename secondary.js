@@ -22,7 +22,8 @@ function registerSecondary(definition) {
     update:typeof definition.update==="function"?definition.update:null,
     draw:typeof definition.draw==="function"?definition.draw:null,
     modify:typeof definition.modify==="function"?definition.modify:null,
-    onEvent:typeof definition.onEvent==="function"?definition.onEvent:null
+    onEvent:typeof definition.onEvent==="function"?definition.onEvent:null,
+    upgradePool:typeof definition.upgradePool==="function"?definition.upgradePool:null
   });
   SECONDARY_REGISTRY.set(entry.id,entry);
   return entry;
@@ -39,7 +40,7 @@ function createSecondaryTeam(equipped={}) {
   for(const slot of SECONDARY_SLOTS){
     const id=equipped?.[slot],definition=id?SECONDARY_REGISTRY.get(id):null;
     if(!definition)continue;
-    const member={id,slot,definition,data:null};
+    const member={id,slot,definition,data:null,takenUpgrades:new Set(),upgrades:[]};
     member.data=definition.createState({slot,anchor:secondaryAnchor(slot),member})||{};
     slots[slot]=member;
   }
@@ -79,4 +80,28 @@ function addSecondaryEffect(effect) {
   state.secondaryTeam.effects.push({...effect});
   if(state.secondaryTeam.effects.length>24)state.secondaryTeam.effects.splice(0,state.secondaryTeam.effects.length-24);
   return true;
+}
+
+function secondaryUpgradePool() {
+  const pool=[];
+  for(const member of activeSecondaries()){
+    const cards=member.definition.upgradePool?.(member)||[];
+    for(const card of cards){
+      if(!card||typeof card.name!=="string"||typeof card.text!=="string"||typeof card.apply!=="function")continue;
+      const rarity=["grey","green","purple","orange"].includes(card.rarity)?card.rarity:"grey";
+      const localId=String(card.id||card.name),key=member.id+":"+localId;
+      if(!card.repeatable&&member.takenUpgrades.has(key))continue;
+      pool.push({
+        id:"secondary-"+key,rarity,name:card.name,
+        text:member.definition.name+" · "+card.text,
+        secondarySlot:member.slot,secondaryId:member.id,
+        apply:()=>{
+          card.apply(member);
+          if(!card.repeatable)member.takenUpgrades.add(key);
+          member.upgrades.push({id:localId,name:card.name,rarity,text:card.text});
+        }
+      });
+    }
+  }
+  return pool;
 }

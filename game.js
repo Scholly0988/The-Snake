@@ -10,6 +10,8 @@ const startScreen = document.querySelector("#startScreen");
 const upgradeScreen = document.querySelector("#upgradeScreen");
 const gameOverScreen = document.querySelector("#gameOverScreen");
 const upgradeChoices = document.querySelector("#upgradeChoices");
+const upgradeTitle = document.querySelector("#upgradeTitle");
+const upgradeDescription = document.querySelector("#upgradeDescription");
 const finalScore = document.querySelector("#finalScore");
 const headSprite = new Image();
 const bodySprite = new Image();
@@ -209,6 +211,7 @@ function resetGame() {
   state.runUpgradeHistory = {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]};
   state.keyboardLeft = false; state.keyboardRight = false;
   state.lastUpgrade=null;
+  state.lastSecondaryUpgrade=null;
   state.score = 0;
   state.runCoins = 0;
   state.elapsed = 0;
@@ -666,32 +669,61 @@ function chooseUpgrades(random = Math.random) {
   return choices;
 }
 
-function openUpgrade() {
-  const offerId = ++state.upgradeOfferId;
-  state.mode = "upgrade";
+function chooseSecondaryUpgrades(random=Math.random) {
+  const remaining=secondaryUpgradePool(),choices=[];
+  for(let i=0;i<3&&remaining.length;i++)choices.push(takeWeightedUpgrade(remaining,random));
+  return choices;
+}
+
+function renderUpgradeOffer(choices,phase,onChoice) {
+  const offerId=++state.upgradeOfferId;
+  state.mode="upgrade";
   releaseDrag();
-  const choices = chooseUpgrades();
+  upgradeTitle.textContent=phase==="secondary"?"Sekundär-Upgrade wählen":"Hauptupgrade wählen";
+  upgradeDescription.textContent=phase==="secondary"?"Wähle eine Fähigkeit für deine ausgerüsteten Unterstützer.":"Wähle zuerst eine Fähigkeit für deine Haupthelden.";
   upgradeChoices.replaceChildren();
-  for (const choice of choices) {
-    const button = document.createElement("button");
-    button.className = "upgrade-choice rarity-" + choice.rarity+(choice.standardSlot?" standard-upgrade-slot":"");
-    button.innerHTML = `${choice.name}<span>${choice.text}</span>`;
-    button.addEventListener("click", () => {
-      if (state.mode !== "upgrade" || state.upgradeOfferId !== offerId) return;
+  for(const choice of choices){
+    const button=document.createElement("button");
+    button.className="upgrade-choice rarity-"+choice.rarity+(choice.standardSlot?" standard-upgrade-slot":"")+(phase==="secondary"?" secondary-upgrade-slot":"");
+    button.innerHTML=`${choice.name}<span>${choice.text}</span>`;
+    button.addEventListener("click",()=>{
+      if(state.mode!=="upgrade"||state.upgradeOfferId!==offerId)return;
       state.upgradeOfferId++;
-      state.lastUpgrade=choice.name+" ("+choice.rarity+")";
-      choice.apply();
-      recordRunUpgrade(choice);
-      refreshHud();
-      state.pendingUpgrades = Math.max(0,state.pendingUpgrades-1);
-      if (state.pendingUpgrades>0) { openUpgrade(); return; }
-      upgradeScreen.classList.add("hidden");
-      state.mode = "playing";
-      state.lastTime = performance.now();
+      onChoice(choice);
     });
     upgradeChoices.append(button);
   }
   upgradeScreen.classList.remove("hidden");
+}
+
+function finishUpgradeCycle() {
+  state.pendingUpgrades=Math.max(0,state.pendingUpgrades-1);
+  if(state.pendingUpgrades>0){openUpgrade();return;}
+  upgradeScreen.classList.add("hidden");
+  state.mode="playing";
+  state.lastTime=performance.now();
+}
+
+function openSecondaryUpgrade() {
+  const choices=chooseSecondaryUpgrades();
+  if(!choices.length)return false;
+  renderUpgradeOffer(choices,"secondary",choice=>{
+    state.lastSecondaryUpgrade=choice.name+" ("+choice.rarity+")";
+    choice.apply();
+    refreshHud();
+    finishUpgradeCycle();
+  });
+  return true;
+}
+
+function openUpgrade() {
+  renderUpgradeOffer(chooseUpgrades(),"main",choice=>{
+      state.lastUpgrade=choice.name+" ("+choice.rarity+")";
+      choice.apply();
+      recordRunUpgrade(choice);
+      refreshHud();
+      if(!openSecondaryUpgrade())finishUpgradeCycle();
+  });
 }
 
 function recordRunUpgrade(choice) {
@@ -1186,7 +1218,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 23.2 Test · Level "+state.level+" · Upgrade: "+(state.lastUpgrade||"keines")+
+  const details="Version 23.4 Test · Level "+state.level+" · Hauptupgrade: "+(state.lastUpgrade||"keines")+" · Sekundärupgrade: "+(state.lastSecondaryUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
