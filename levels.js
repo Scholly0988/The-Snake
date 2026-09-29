@@ -24,6 +24,54 @@ const LEVEL_DEFINITIONS = Object.freeze([
     {id:"A",side:"left",path:{type:"wave",cycles:22,amplitude:.25,center:.26,phase:0}},
     {id:"B",side:"center",rage:{interval:15,duration:3,multiplier:1.2},path:{type:"finalTight",cycles:26,amplitude:.49,center:.5,phase:0}},
     {id:"C",side:"right",path:{type:"wave",cycles:22,amplitude:.25,center:.74,phase:Math.PI}}
+  ]},
+  {number:11,name:"Senkrechter Rücklauf",hp:{first:675,last:215000},snakes:[{id:"A",path:{type:"verticalReturn",dense:true}}]},
+  {number:12,name:"Diagonale Ecken",hp:{first:810,last:260000},snakes:[{id:"A",path:{type:"diagonalCorners",dense:true}}]},
+  {number:13,name:"Gekreuzte Diagonalen",hp:{first:972,last:315000},snakes:[
+    {id:"A",path:{type:"diagonalCorners",dense:true}},
+    {id:"B",path:{type:"diagonalCorners",mirrorX:true,dense:true}}
+  ]},
+  {number:14,name:"Spirale im Uhrzeigersinn",hp:{first:1166,last:380000},snakes:[{id:"A",path:{type:"rectSpiral"}}]},
+  {number:15,name:"Gegenspiralen",hp:{first:1399,last:460000},snakes:[
+    {id:"A",path:{type:"rectSpiral"}},
+    {id:"B",path:{type:"rectSpiral",mirrorX:true}}
+  ]},
+  {number:16,name:"Säulenwechsel",hp:{first:1679,last:555000},snakes:[{id:"A",path:{type:"verticalColumns",dense:true}}]},
+  {number:17,name:"Eckenrundkurs",hp:{first:2015,last:670000},snakes:[{id:"A",path:{type:"cornerCircuit",dense:true}}]},
+  {number:18,name:"Gespiegelter Rücklauf",hp:{first:2418,last:810000},snakes:[
+    {id:"A",path:{type:"verticalReturn",dense:true}},
+    {id:"B",path:{type:"verticalReturn",mirrorX:true,dense:true}}
+  ]},
+  {number:19,name:"Spirale gegen den Uhrzeigersinn",hp:{first:2902,last:980000},snakes:[{id:"A",path:{type:"rectSpiral",mirrorX:true}}]},
+  {number:20,name:"Synchrones Trio",hp:{first:3482,last:1180000},snakes:[
+    {id:"A",path:{type:"diagonalWeave",dense:true,xShift:-.035}},
+    {id:"B",path:{type:"diagonalWeave",mirrorX:true,dense:true}},
+    {id:"C",path:{type:"diagonalWeave",dense:true,xShift:.035}}
+  ]},
+  {number:21,name:"Diamantlauf",hp:{first:4178,last:1420000},snakes:[{id:"A",path:{type:"diamondSweep",dense:true}}]},
+  {number:22,name:"Enge Gegenspirale",hp:{first:5014,last:1710000},snakes:[{id:"A",path:{type:"rectSpiral",mirrorX:true,compact:true}}]},
+  {number:23,name:"Doppelter Diamant",hp:{first:6017,last:2060000},snakes:[
+    {id:"A",path:{type:"diamondSweep",dense:true}},
+    {id:"B",path:{type:"diamondSweep",mirrorX:true,dense:true}}
+  ]},
+  {number:24,name:"Senkrechter Wiederaufstieg",hp:{first:7220,last:2480000},snakes:[{id:"A",path:{type:"verticalReturn",dense:true}}]},
+  {number:25,name:"Gegenläufige Rundkurse",hp:{first:8664,last:2990000},snakes:[
+    {id:"A",path:{type:"cornerCircuit",dense:true}},
+    {id:"B",path:{type:"cornerCircuit",mirrorX:true,dense:true}}
+  ]},
+  {number:26,name:"Diagonales Geflecht",hp:{first:10397,last:3600000},snakes:[{id:"A",path:{type:"diagonalWeave",dense:true}}]},
+  {number:27,name:"Doppelte Innenspirale",hp:{first:12476,last:4340000},snakes:[{id:"A",path:{type:"rectSpiral",compact:true}}]},
+  {number:28,name:"Spiegelspiralen",hp:{first:14971,last:5230000},snakes:[
+    {id:"A",path:{type:"rectSpiral",compact:true}},
+    {id:"B",path:{type:"rectSpiral",mirrorX:true,compact:true}}
+  ]},
+  {number:29,name:"Meisterliches Geflecht",hp:{first:17965,last:6300000},snakes:[{id:"A",path:{type:"diagonalWeave",dense:true,reverse:true}}]},
+  {number:30,name:"Finale der Fünf",hp:{first:21558,last:7590000},fullLengthSnakes:true,snakes:[
+    {id:"A",startOffset:0,path:{type:"rectSpiral",compact:true,xShift:-.04}},
+    {id:"B",startOffset:-20,path:{type:"rectSpiral",mirrorX:true,compact:true,xShift:.04}},
+    {id:"C",startOffset:-40,path:{type:"rectSpiral",compact:true,xShift:.02}},
+    {id:"D",startOffset:-60,path:{type:"rectSpiral",mirrorX:true,compact:true,xShift:-.02}},
+    {id:"E",startOffset:-80,path:{type:"rectSpiral",compact:true}}
   ]}
 ]);
 
@@ -53,6 +101,8 @@ function rawLevelPoint(spec,t,width,height) {
   // could travel hundreds of invisible pixels before reaching y=0.
   const entrance=.035,routeT=Math.max(0,(t-entrance)/(1-entrance));
   let y=-24+(height+79)*t;
+  if(["verticalReturn","diagonalCorners","rectSpiral","verticalColumns","cornerCircuit","diagonalWeave","diamondSweep"].includes(spec.type))
+    return rawAdvancedLevelPoint(spec,t,width,height);
   const wave=n=>Math.sin(Math.PI*2*n*routeT+phase);
   let x=center;
   switch(spec.type){
@@ -85,6 +135,36 @@ function rawLevelPoint(spec,t,width,height) {
     case "finalTight": x=center+amp*(.70*Math.tanh(1.5*wave(cycles))/Math.tanh(1.5)+.30*Math.sin(Math.PI*2*5*routeT+phase));break;
   }
   return {x:Math.max(edge,Math.min(width-edge,x)),y};
+}
+
+function advancedRouteWaypoints(spec) {
+  const routes={
+    verticalReturn:[[.16,-.035],[.16,.82],[.38,.82],[.38,.10],[.62,.10],[.62,.82],[.84,.82],[.84,.16],[.28,.16],[.28,.76],[.72,.76],[.72,.28],[.48,.28],[.48,1.09]],
+    verticalColumns:[[.10,-.035],[.10,.82],[.26,.82],[.26,.08],[.42,.08],[.42,.82],[.58,.82],[.58,.08],[.74,.08],[.74,.82],[.90,.82],[.90,.22],[.50,.22],[.50,1.09]],
+    diagonalCorners:[[.08,-.035],[.92,.20],[.08,.39],[.92,.58],[.08,.76],[.92,.82],[.18,.66],[.82,.45],[.18,.25],[.82,.12],[.50,.50],[.10,.80],[.50,1.09]],
+    diagonalWeave:[[.06,-.035],[.94,.18],[.06,.34],[.94,.50],[.06,.66],[.94,.80],[.12,.82],[.88,.70],[.12,.54],[.88,.38],[.12,.22],[.88,.08],[.50,.56],[.50,1.09]],
+    diamondSweep:[[.50,-.035],[.94,.18],[.50,.38],[.06,.18],[.50,.04],[.90,.50],[.50,.72],[.10,.50],[.50,.30],[.86,.78],[.50,.82],[.14,.78],[.50,.58],[.50,1.09]],
+    cornerCircuit:[[.08,-.035],[.08,.18],[.92,.18],[.92,.80],[.08,.80],[.08,.30],[.80,.30],[.80,.70],[.20,.70],[.20,.42],[.68,.42],[.68,.60],[.32,.60],[.32,.50],[.50,.50],[.50,1.09]],
+    rectSpiral:[[.92,-.035],[.92,.82],[.08,.82],[.08,.10],[.84,.10],[.84,.78],[.16,.78],[.16,.18],[.76,.18],[.76,.72],[.24,.72],[.24,.26],[.68,.26],[.68,.66],[.32,.66],[.32,.34],[.60,.34],[.60,.58],[.40,.58],[.40,.42],[.54,.42],[.54,.52],[.50,.52],[.50,1.09]]
+  };
+  let points=routes[spec.type]||routes.diagonalWeave;
+  if(spec.dense)points=[...points.slice(0,-1),...points.slice(1,-1).reverse(),points.at(-1)];
+  if(spec.compact&&spec.type==="rectSpiral")points=[...points.slice(0,-1),[.46,.48],[.56,.48],[.50,.56],points.at(-1)];
+  if(spec.reverse)points=[points[0],...points.slice(1,-1).reverse(),points.at(-1)];
+  // Keep the first visible movement vertical so diagonal routes cannot spend
+  // a long distance travelling sideways above the screen.
+  points=[points[0],[points[0][0],0],...points.slice(1)];
+  return points.map(([x,y])=>[
+    Math.max(.03,Math.min(.97,(spec.mirrorX?1-x:x)+(spec.xShift||0))),y
+  ]);
+}
+
+function rawAdvancedLevelPoint(spec,t,width,height) {
+  const edge=22,usable=Math.max(40,width-edge*2),points=advancedRouteWaypoints(spec);
+  const scaled=t*(points.length-1),index=Math.min(points.length-2,Math.floor(scaled)),local=scaled-index;
+  // Smoothstep keeps the coordinated turns readable without overshooting the arena.
+  const eased=local*local*(3-2*local),a=points[index],b=points[index+1];
+  return {x:edge+usable*(a[0]+(b[0]-a[0])*eased),y:height*(a[1]+(b[1]-a[1])*eased)};
 }
 
 function samplePath(spec,width,height,samples=3200) {
