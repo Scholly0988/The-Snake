@@ -419,6 +419,13 @@ body { padding: 0; background: #111c21; }
 .paladin-card.ilyra-card { border-color:#a8eaff; background:linear-gradient(145deg,#173551,#102b45); box-shadow:inset 0 0 24px #79dfff18; }
 .paladin-card.ilyra-card h3 { color:#c9f4ff; text-shadow:0 0 10px #6edfff88; }
 .hero-equip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.secondary-formation { margin-top:12px; }
+.secondary-formation .hero-slot { border-color:#78c992; background:#112f2c; }
+.secondary-formation .hero-slot img { height:82px; }
+.secondary-equip { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.secondary-equip button { padding-inline:4px; font-size:11px; }
+.paladin-card.kiko-card { border-color:#80c95a; background:linear-gradient(145deg,#183c31,#102b2b); box-shadow:inset 0 0 24px #a7e35b14; }
+.paladin-card.kiko-card h3 { color:#e9f28c; }
 #paladinStats { font-size:9px; }
 
 

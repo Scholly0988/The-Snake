@@ -1,6 +1,22 @@
 # The Snake
 
-## Version 23.3 Test – Sekundärslots
+## Version 24.0 Test – Kiko
+
+- Kiko – der Bananenwerfer ist als erster vollständig spielbarer Sekundärheld
+  integriert und für 0 Münzen freigeschaltet.
+- Seine Schalen werden mit sichtbarer Flugkurve 1,5 Sekunden vor der nächsten
+  Schlange platziert. Kopfkontakte werden auf das nächste sichtbare Segment
+  umgeleitet.
+- Bananenschalen, Rutschfelder, Bananenhaufen, Goldene Banane, Bananenkette,
+  Affeninstinkt und Dschungelchaos sind vollständig aktiv.
+- Zwölf dreistufige Upgrade-Familien und drei einmalige Spezialfähigkeiten
+  erscheinen ausschließlich in der nachgelagerten Sekundär-Auswahl.
+- Kiko besitzt sieben ausgewogene dauerhafte 50-Münzen-Aufwertungen.
+- Neue Dateien: `kiko.js`, `kiko-front.png`, `KIKO.md` und `test-kiko.cjs`.
+- Welche Dateien beim Hochladen ersetzt oder ergänzt werden müssen, steht in
+  `PATCH-24.0-KIKO.txt`.
+
+## Version 23.4 Test – Sekundärslots und zweite Upgrade-Auswahl
 
 - Hinter den Hauptpositionen links, Mitte und rechts stehen drei zusätzliche
   Sekundärslots für Unterstützer bereit.
@@ -8,6 +24,8 @@
   erst gezeichnet, sobald dort tatsächlich ein Charakter ausgerüstet ist.
 - Das neue Registrierungs- und Laufzeitsystem unterstützt Fallen, Bodeneffekte,
   Kontrolle, schwächere Angriffe und Buffs für den zugeordneten Hauptslot.
+- Nach jeder Viererauswahl der Haupthelden folgt automatisch eine eigene
+  Dreierauswahl aus den Fähigkeiten der ausgerüsteten Sekundärhelden.
 - Freischaltungen und die drei Belegungen werden im vorhandenen lokalen
   Spielstand gespeichert; bestehende Spielstände werden automatisch erweitert.
 - Technische Details: [SECONDARY.md](SECONDARY.md).

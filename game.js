@@ -374,8 +374,8 @@ function update(dt) {
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const baseSpeed = Math.min(22 + state.elapsed * .25, 45);
   const instances=managedSnakeInstances();
-  if(instances.length){for(const instance of instances){const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;}state.headDistance=instances[0]?.headDistance||0;}
-  else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null))) * dt;
+  if(instances.length){for(const instance of instances){const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;}state.headDistance=instances[0]?.headDistance||0;}
+  else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null)+kikoSnakeSlow(null))) * dt;
 
   syncSnakePositions();
 
@@ -808,6 +808,7 @@ function renderProfile() {
   renderRunemasterProfile();
   renderIlyraProfile();
   renderSeraphineProfile();
+  renderKikoProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
@@ -1218,7 +1219,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 23.4 Test · Level "+state.level+" · Hauptupgrade: "+(state.lastUpgrade||"keines")+" · Sekundärupgrade: "+(state.lastSecondaryUpgrade||"keines")+
+  const details="Version 24.0 Test · Level "+state.level+" · Hauptupgrade: "+(state.lastUpgrade||"keines")+" · Sekundärupgrade: "+(state.lastSecondaryUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;
@@ -1261,6 +1262,7 @@ bindAlchemistMenu();
 bindRunemasterMenu();
 bindIlyraMenu();
 bindSeraphineMenu();
+bindKikoMenu();
 bindSkillsMenu();
 bindHalloweenTheme();
 resizeCanvas();

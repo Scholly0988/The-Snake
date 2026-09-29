@@ -1,0 +1,33 @@
+THE SNAKE – PATCH 24.0 KIKO
+
+VORHANDENE DATEIEN ERSETZEN:
+- README.md
+- game.js
+- index.html
+- progress.js
+- skills.js
+- style.css
+- test-alchemist.cjs
+- test-game.cjs
+- test-ilyra.cjs
+- test-levels-2-10.cjs
+- test-runemaster.cjs
+- test-secondary.cjs
+- test-seraphine.cjs
+- test-shooter.cjs
+- test-skills.cjs
+
+NEUE DATEIEN EINFÜGEN:
+- kiko.js
+- kiko-front.png
+- KIKO.md
+- PATCH-24.0-KIKO.txt
+- test-kiko.cjs
+
+EBENFALLS ENTHALTEN, FALLS DER VORHERIGE SEKUNDÄRSLOT-PATCH NOCH NICHT
+HOCHGELADEN WURDE:
+- secondary.js
+- SECONDARY.md
+
+Wichtig: Die Ordnerstruktur nicht verändern. Alle Dateien gehören direkt in
+das Hauptverzeichnis des Spiels neben index.html.

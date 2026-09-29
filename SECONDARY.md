@@ -25,3 +25,12 @@ begrenzten Effektliste verwaltet werden.
 Die Belegung wird als `secondarySlots.left`, `secondarySlots.center` und
 `secondarySlots.right` im bestehenden lokalen Spielstand gespeichert. Alte
 Spielstände werden automatisch mit drei leeren Sekundärslots erweitert.
+
+## Upgrade-Auswahl
+
+Nach jeder normalen Viererauswahl folgt eine zweite Auswahl mit bis zu drei
+Karten der aktuell ausgerüsteten Sekundärhelden. Die Karten aller belegten
+Sekundärslots werden dafür in einem gemeinsamen Pool gemischt. Leere Slots und
+Sekundärhelden ohne noch verfügbare Karten werden ignoriert. Während beider
+Auswahlschritte bleibt die gesamte Runde pausiert. Erst nach der Sekundärwahl
+wird das zugehörige Upgrade-Segment vollständig abgearbeitet.

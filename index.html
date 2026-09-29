@@ -8,7 +8,7 @@
   <script>
     (()=>{try{const mode=localStorage.getItem("the-snake.theme.halloween")||"auto",now=new Date(),automatic=now.getMonth()===9||(now.getMonth()===10&&now.getDate()<=2);if(mode==="on"||(mode==="auto"&&automatic))document.documentElement.classList.add("halloween-theme");}catch{}})();
   </script>
-  <link rel="stylesheet" href="style.css?v=halloween-test-2">
+  <link rel="stylesheet" href="style.css?v=kiko-24-0">
 </head>
 <body>
   <main class="game-shell">
@@ -96,6 +96,19 @@
           <div class="hero-equip"><button id="equipSeraphineleft">Links einsetzen</button><button id="equipSeraphineright">Rechts einsetzen</button></div>
           <button id="unequipSeraphine">Aus dem Team nehmen</button>
           <p class="menu-note">Ilyra und Seraphine sind kostenlos freigeschaltet. Erster kostenpflichtiger Begleiter: 100 Münzen · jeder weitere: 300 Münzen. Ein belegter Platz wird getauscht oder ersetzt.</p>
+          <h2>Sekundärhelden</h2>
+          <p>Sekundärhelden kämpfen in einer kleineren Reihe hinter deinem Hauptteam. Nach jedem Hauptupgrade folgt eine eigene Auswahl mit bis zu drei Sekundärfähigkeiten.</p>
+          <div class="hero-formation secondary-formation">
+            <div id="secondarySlotleft" class="hero-slot empty"><span aria-hidden="true">＋</span><strong>Links</strong><small>Noch frei</small></div>
+            <div id="secondarySlotcenter" class="hero-slot empty"><span aria-hidden="true">＋</span><strong>Mitte</strong><small>Noch frei</small></div>
+            <div id="secondarySlotright" class="hero-slot empty"><span aria-hidden="true">＋</span><strong>Rechts</strong><small>Noch frei</small></div>
+          </div>
+          <article class="paladin-card kiko-card"><img src="kiko-front.png?v=24-0" alt="Kiko, ein kleiner Affe mit grünem Halstuch und Bananentaschen"><h3>Kiko</h3><p>Der Bananenwerfer</p><p>Sekundärheld · Verlangsamung und Bodenkontrolle<br>Wirft Bananenschalen, Haufen und rutschige Flecken.</p></article>
+          <button id="skills-kiko">Kiko · Skills</button>
+          <button id="unlockKiko">Kiko freigeschaltet · 0 Münzen</button>
+          <div class="hero-equip secondary-equip"><button id="equipKikoleft">Links einsetzen</button><button id="equipKikocenter">Mitte einsetzen</button><button id="equipKikoright">Rechts einsetzen</button></div>
+          <button id="unequipKiko">Aus dem Team nehmen</button>
+          <p class="menu-note">Kiko ist kostenlos freigeschaltet und belegt ausschließlich einen Sekundärslot.</p>
           <p id="heroStatus" role="status" class="menu-note">Freischaltung und Platz werden im Browser gespeichert.</p>
           <h3>Seltenheiten</h3>
           <div class="rarity-preview"><span class="rarity-grey">60 %</span><span class="rarity-green">25 %</span><span class="rarity-purple">10 %</span><span class="rarity-orange">5 %</span></div>
@@ -180,10 +193,11 @@
 
     <p id="saveStatus" class="hint" role="status">Touch: wischen · PC: Pfeiltasten oder A/D</p>
   </main>
-  <script src="skills.js?v=seraphine-23-0"></script>
+  <script src="skills.js?v=kiko-24-0"></script>
   <script src="levels.js?v=seraphine-23-0"></script>
-  <script src="progress.js?v=secondary-slots-1"></script>
-  <script src="secondary.js?v=secondary-slots-1"></script>
+  <script src="progress.js?v=kiko-24-0"></script>
+  <script src="secondary.js?v=kiko-24-0"></script>
+  <script src="kiko.js?v=kiko-24-0"></script>
   <script src="paladin.js?v=seraphine-23-0"></script>
   <script src="necromancer.js?v=seraphine-23-0"></script>
   <script src="alchemist.js?v=seraphine-23-0"></script>
@@ -191,6 +205,6 @@
   <script src="ilyra.js?v=seraphine-23-0"></script>
   <script src="seraphine.js?v=seraphine-23-0"></script>
   <script src="shooter.js?v=seraphine-23-0"></script>
-  <script src="game.js?v=secondary-slots-1"></script>
+  <script src="game.js?v=kiko-24-0"></script>
 </body>
 </html>

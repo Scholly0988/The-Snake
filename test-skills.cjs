@@ -10,7 +10,7 @@ const canvasContext=new Proxy({createRadialGradient:()=>({addColorStop(){}}),cre
 const elements=new Map(),get=s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s)};
 const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
 const context=vm.createContext({document:{querySelector:get,createElement:()=>new Element()},window:{localStorage:storage,devicePixelRatio:1,addEventListener(){}},Image:class{},performance:{now:()=>0},requestAnimationFrame(){}});
-for(const f of ['skills.js','levels.js','progress.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','game.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
+for(const f of ['skills.js','levels.js','progress.js','secondary.js','kiko.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','ilyra.js','seraphine.js','shooter.js','game.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
 const run=s=>vm.runInContext(s,context),near=(a,b)=>assert(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 function setup(ids=[]){run(`progress.data.damageLevel=0;progress.data.rateLevel=0;progress.data.critChanceLevel=0;progress.data.critDamageLevel=0;progress.data.skillUpgrades=${JSON.stringify(ids)};resetGame();state.mode="playing";state.paladin=newPaladin("left");state.necromancer=newNecromancer("right");state.snake=[{id:1,x:100,y:100,hp:1000,maxHp:1000},{id:2,x:200,y:100,hp:1000,maxHp:1000}];state.headDistance=-1000;`)}
 function pcard(id){run(`paladinUpgradePool().find(c=>c.id===${JSON.stringify(id)}).apply()`)}
@@ -39,18 +39,18 @@ for(const hero of ['shooter','paladin','necromancer']){
 run('progress.data.coins=0;openHeroSkills("paladin")');assert(get('#skillsList').children.filter(n=>n.className==='skill-card').every(n=>n.children.at(-1).disabled));
 // Snapshot: permanent purchases only affect subsequent runs.
 setup();run('progress.data.skillUpgrades=["paladin.attack"]');near(run('paladinDirectDamage()'),2);
-run('resetGame();state.paladin=newPaladin("left")');near(run('paladinDirectDamage()'),2.4);near(run('paladinDamage()'),2);
+run('resetGame();state.paladin=newPaladin("left")');near(run('paladinDirectDamage()'),2.9);near(run('paladinDamage()'),2);
 // Exact agreed Aldric values, no direct damage leaking into explosions.
 setup(['paladin.attack','paladin.impact','paladin.judgment','paladin.morning','paladin.revenge','paladin.blade']);
-near(run('paladinDirectDamage({fullSweep:true})'),3);
-run('state.paladin.hits=3;var b=new Map();paladinHit(b,state.snake[0],{critical:false},()=>1)');near(run('b.get(1)'),1.2);
-run('state.paladin.morningChance=1;var b=new Map();paladinExplosion(b,state.snake[0],50,0,null,()=>0)');near(run('b.get(1)'),1.5);
-run('state.paladin.morningChance=0;state.paladin.hits=0;state.paladin.revenge=true;var b=new Map();paladinHit(b,state.snake[0],{critical:true},()=>1)');near(run('b.get(1)'),2);
-run('state.paladin.ultimate=true;state.paladin.charge=.1;state.paladin.fireTimer=100;updatePaladin(.1)');near(run('state.snake[0].hp'),985);
-for(const [skill,id,field,value] of [['consecrated','consecrated','damageMultiplier',1.3],['steel','steel','size',1.75],['flight','flight','speed',1.105],['verdict','verdict','impactEvery',2]]){
+near(run('paladinDirectDamage({fullSweep:true})'),3.625);
+run('state.paladin.hits=3;var b=new Map();paladinHit(b,state.snake[0],{critical:false},()=>1)');near(run('b.get(1)'),1.8);
+run('state.paladin.morningChance=1;var b=new Map();paladinExplosion(b,state.snake[0],50,0,null,()=>0)');near(run('b.get(1)'),2.2);
+run('state.paladin.morningChance=0;state.paladin.hits=0;state.paladin.revenge=true;var b=new Map();paladinHit(b,state.snake[0],{critical:true},()=>1)');near(run('b.get(1)'),2.5);
+run('state.paladin.ultimate=true;state.paladin.charge=.1;state.paladin.fireTimer=100;updatePaladin(.1)');near(run('state.snake[0].hp'),980);
+for(const [skill,id,field,value] of [['consecrated','consecrated','damageMultiplier',1.4],['steel','steel','size',1.75],['flight','flight','speed',1.105],['verdict','verdict','impactEvery',2]]){
  setup(['paladin.'+skill]);pcard(id);near(run('state.paladin.'+field),value);
 }
-for(const [tier,force,breaker] of [['grey',60,1.2],['green',67.5,1.3],['purple',77.5,1.5]]){
+for(const [tier,force,breaker] of [['grey',60,1.25],['green',67.5,1.35],['purple',77.5,1.55]]){
  setup(['paladin.force','paladin.breaker']);pcard('force-'+tier);pcard('breaker-'+tier);near(run('state.paladin.radius'),force);near(run('state.paladin.explosionMultiplier'),breaker);
 }
 setup(['paladin.ancestors','paladin.wrath']);pcard('blade');pcard('ancestors');near(run('state.paladin.bladeEvery'),3);pcard('wrath-unlock');near(run('state.paladin.cooldown'),18);pcard('wrath-cooldown');near(run('state.paladin.cooldown'),13.5);

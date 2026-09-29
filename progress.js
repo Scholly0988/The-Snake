@@ -9,7 +9,7 @@ const SnakeProgress = (() => {
     paladinUnlocked: false, paladinSlot: null, necromancerUnlocked: false, necromancerSlot: null,
     alchemistUnlocked: false, alchemistSlot: null, runemasterUnlocked: false, runemasterSlot: null,
     ilyraUnlocked: true, ilyraSlot: null, seraphineUnlocked: true, seraphineSlot: null,
-    secondaryUnlocked: [], secondarySlots: {left:null,center:null,right:null}
+    secondaryUnlocked: ["kiko"], secondarySlots: {left:null,center:null,right:null}
   });
   function validate(value) {
     if (!value || value.game !== "the-snake" || value.version !== 1)
@@ -61,6 +61,7 @@ const SnakeProgress = (() => {
        secondaryUnlocked.some(id=>typeof id!=="string"||!/^[a-z][a-z0-9-]{0,47}$/.test(id)))
       throw new Error("Ungültige Sekundärhelden-Freischaltung.");
     result.secondaryUnlocked=[...secondaryUnlocked];
+    if(!result.secondaryUnlocked.includes("kiko"))result.secondaryUnlocked.push("kiko");
     const secondarySlots=value.secondarySlots??{left:null,center:null,right:null};
     if(!secondarySlots||typeof secondarySlots!=="object"||Array.isArray(secondarySlots))throw new Error("Ungültige Sekundärplätze.");
     result.secondarySlots={left:null,center:null,right:null};
@@ -130,7 +131,8 @@ const SnakeProgress = (() => {
       },
       buySkill(id) {
         const skill=HERO_SKILLS.find(s=>s.id===id);
-        if(!skill || data.skillUpgrades.includes(id) || data.coins<50 || (skill.hero!=="shooter"&&!data[skill.hero+"Unlocked"]))return false;
+        const unlocked=skill?.hero==="shooter"||skill?.hero==="kiko"?skill?.hero==="shooter"||data.secondaryUnlocked.includes("kiko"):data[skill?.hero+"Unlocked"];
+        if(!skill || data.skillUpgrades.includes(id) || data.coins<50 || !unlocked)return false;
         const old={...data,skillUpgrades:[...data.skillUpgrades]};
         data.coins-=50;data.skillUpgrades.push(id);
         if(!save()){data=old;return false;}

@@ -183,7 +183,14 @@ const HERO_SKILLS = [
   ["seraphine","firePlague","upgrade","Feuerseuche",["purple"],"Alle 3 Sekunden 30 % Chance, ein angrenzendes Segment zu entzünden.","40 % statt 30 % Chance."],
   ["seraphine","hellEmber","upgrade","Höllenglut",["orange"],"+0,05 Schaden je Brandstapel und Halbsekunden-Tick.","0,065 statt 0,05 Schaden."],
   ["seraphine","firestorm","upgrade","Feuersturm",["purple"],"Nach 5 Explosionen entsteht eine kleine Feuerwelle.","Bereits nach 4 Explosionen."],
-  ["seraphine","sunCore","upgrade","Sonnenkern",["orange"],"Während Inferno liegt die Überhitzungsgrenze fest bei 2 Stapeln.","Überhitzungsexplosionen verursachen während Inferno zusätzlich +15 % Schaden."]
+  ["seraphine","sunCore","upgrade","Sonnenkern",["orange"],"Während Inferno liegt die Überhitzungsgrenze fest bei 2 Stapeln.","Überhitzungsexplosionen verursachen während Inferno zusätzlich +15 % Schaden."],
+  ["kiko","banana","attack","Bananenschale",[],"0,4 Schaden, 12 % Slow für 2,5 Sekunden.","0,5 statt 0,4 Grundschaden."],
+  ["kiko","slick","attack","Rutschiger Fleck",[],"0,15 Schaden; der Fleck bleibt 1,5 Sekunden.","0,20 Schaden und 1,8 Sekunden Grunddauer."],
+  ["kiko","pile","attack","Bananenhaufen",[],"Alle 18 Sekunden: 0,8 Schaden und 20 % Slow.","1,0 Schaden und 16 statt 18 Sekunden Cooldown."],
+  ["kiko","chaos","attack","Dschungelchaos",[],"Alle 30 Sekunden für 6 Sekunden; Chaos-Wurfintervall 1,5 Sekunden.","27 Sekunden Cooldown und 1,35 Sekunden Chaos-Wurfintervall."],
+  ["kiko","golden","upgrade","Goldene Banane",["orange"],"Nach Auswahl 20 % Chance auf doppelten Schaden und doppelte Slow-Dauer.","25 % statt 20 % Chance."],
+  ["kiko","chain","upgrade","Bananenkette",["purple"],"Nach Auswahl 35 % Chance auf +50 % Schaden für das nächste Bodenfeld.","45 % statt 35 % Chance."],
+  ["kiko","instinct","upgrade","Affeninstinkt",["purple"],"Ohne aktive Banane folgt der nächste Wurf nach 1 Sekunde.","Bereits nach 0,7 Sekunden."]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
 function hasSkill(hero,key) { return (state.skillUpgrades || []).includes(hero+"."+key); }
 function skillValue(hero,key,base,upgraded) { return hasSkill(hero,key)?upgraded:base; }
@@ -204,11 +211,11 @@ function closeHeroSkills() {
 }
 function renderHeroSkills() {
   if(!selectedSkillHero)return;
-  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra",seraphine:"Seraphine"};
+  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra",seraphine:"Seraphine",kiko:"Kiko"};
   document.querySelector("#skillsTitle").textContent=names[selectedSkillHero]+" · Skills";
   document.querySelector("#skillsCoins").textContent=progress.data.coins+" Münzen · Jede Aufwertung einmalig 50 Münzen";
   const list=document.querySelector("#skillsList");list.replaceChildren();
-  const unlocked=selectedSkillHero==="shooter"||progress.data[selectedSkillHero+"Unlocked"];
+  const unlocked=selectedSkillHero==="shooter"||selectedSkillHero==="kiko"?progress.data.secondaryUnlocked.includes("kiko")||selectedSkillHero==="shooter":progress.data[selectedSkillHero+"Unlocked"];
   for(const [group,title] of [["attack","Angriffe"],["upgrade","Upgrade-Skills"]]){
     const heading=document.createElement("h3");heading.textContent=title;list.append(heading);
     for(const skill of HERO_SKILLS.filter(s=>s.hero===selectedSkillHero&&s.group===group)){
@@ -235,7 +242,7 @@ function renderHeroSkills() {
   }
 }
 function bindSkillsMenu(){
-  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra","seraphine"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
+  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra","seraphine","kiko"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
   document.querySelector("#closeSkills").addEventListener("click",closeHeroSkills);
 }
 

@@ -20,10 +20,15 @@ context.window.localStorage = {getItem:k=>storage.get(k) ?? null,setItem:(k,v)=>
 vm.runInContext(fs.readFileSync('skills.js','utf8'),context);
 vm.runInContext(fs.readFileSync('levels.js','utf8'),context);
 vm.runInContext(fs.readFileSync('progress.js','utf8'), context);
+vm.runInContext(fs.readFileSync('secondary.js','utf8'), context);
+vm.runInContext(fs.readFileSync('kiko.js','utf8'), context);
 vm.runInContext(fs.readFileSync('paladin.js','utf8'), context);
 vm.runInContext(fs.readFileSync('necromancer.js','utf8'), context);
 vm.runInContext(fs.readFileSync('alchemist.js','utf8'), context);
 vm.runInContext(fs.readFileSync('runemaster.js','utf8'), context);
+vm.runInContext(fs.readFileSync('ilyra.js','utf8'), context);
+vm.runInContext(fs.readFileSync('seraphine.js','utf8'), context);
+vm.runInContext(fs.readFileSync('shooter.js','utf8'), context);
 vm.runInContext(fs.readFileSync('game.js','utf8'), context);
 const run = code => vm.runInContext(code, context);
 for (const width of [280,320,390,430]) {
@@ -100,19 +105,27 @@ const effects = [
   [3,10,0], [1,12,0], [1,10,2],
   [5,10,0], [1,13,0], [1,10,3]
 ];
-assert.equal(run('roundUpgradePool().length'),16);
+assert(run('roundUpgradePool().length')>16,'Standard-Schützenfähigkeiten ergänzen den Upgrade-Pool');
 effects.forEach((expected,index)=>{
   run('state.weapon={damage:1,shotsPerSecond:10,pierce:0}; roundUpgradePool()['+index+'].apply()');
   assert.deepEqual(JSON.parse(run('JSON.stringify([state.weapon.damage,state.weapon.shotsPerSecond,state.weapon.pierce])')),expected);
 });
 for(let i=0;i<50;i++){
   const picks=JSON.parse(run('JSON.stringify(chooseUpgrades().map(x=>x.rarity+x.name))'));
-  assert.equal(new Set(picks).size,3);
+  assert.equal(picks.length,4);
+  assert.equal(new Set(picks).size,4);
 }
-console.log('PASS: exact upgrade effects and unique weighted offers');
+run('state.paladin=newPaladin("left");state.necromancer=newNecromancer("right")');
+for(let i=0;i<100;i++){
+  const offer=JSON.parse(run('JSON.stringify(chooseUpgrades().map(c=>({name:c.name,text:c.text,standardSlot:!!c.standardSlot})))'));
+  assert.equal(offer.length,4);assert.equal(offer[3].standardSlot,true);
+  assert(!/^(Aldric|Vaelric|Selvara|Kaelvar) · /.test(offer[3].text));
+}
+run('state.paladin=null;state.necromancer=null');
+console.log('PASS: exact upgrade effects, four unique offers and standard-only fourth slot');
 
-for (const [roll,tier] of [[0,'grey'],[.6315,'grey'],[.6316,'green'],[.8947,'green'],[.8948,'purple'],[.999999,'purple']]) {
-  assert.equal(run('chooseUpgrades(()=>'+roll+').every(x=>x.rarity==="'+tier+'")'),true);
+for (const [roll,tier] of [[0,'grey'],[.599999,'grey'],[.60,'green'],[.849999,'green'],[.85,'purple'],[.949999,'purple'],[.950001,'orange'],[.999999,'orange']]) {
+  assert.equal(run('chooseUpgrades(()=>'+roll+')[0].rarity==="'+tier+'"'),true);
 }
 run('resetGame(); roundUpgradePool().find(x=>x.name==="+1 Mehrfachschuss").apply()');
 assert.equal(run('state.weapon.bullets'),2);
@@ -121,7 +134,7 @@ run('roundUpgradePool().find(x=>x.name==="Engerer Mehrfachschuss").apply(); roun
 assert.equal(run('state.weapon.spread'),12);
 run('roundUpgradePool().find(x=>x.name==="Paralleler Mehrfachschuss").apply(); roundUpgradePool().find(x=>x.name==="+1 Mehrfachschuss").apply()');
 assert.equal(run('state.weapon.parallel'),true);
-assert.equal(run('roundUpgradePool().length'),16);
+assert(run('roundUpgradePool().length')>16);
 for (const x of [0,195,390]) {
   run('state.player.x='+x+'; state.bullets=[]; fireWeapon()');
   const shots=JSON.parse(run('JSON.stringify(state.bullets)'));
@@ -132,7 +145,7 @@ for (const x of [0,195,390]) {
 }
 run('resetGame()');
 assert.equal(run('!!state.weapon.parallel'),false);
-assert.equal(run('roundUpgradePool().length'),16);
+assert(run('roundUpgradePool().length')>16);
 console.log('PASS: rarity boundaries, multishot progression, parallel row and edge bounds, reset');
 for (const width of [280,390,430]) {
   run('state.width='+width);
@@ -192,6 +205,22 @@ run('startGame()');
 assert.equal(run('state.mode'),'playing');
 console.log('PASS: four menu pages, active navigation, return home and start round');
 
+assert.equal(run('isHalloweenSeason(new Date(2026,8,30,23,59))'),false);
+assert.equal(run('isHalloweenSeason(new Date(2026,9,1,0,0))'),true);
+assert.equal(run('isHalloweenSeason(new Date(2026,10,2,23,59))'),true);
+assert.equal(run('isHalloweenSeason(new Date(2026,10,3,0,0))'),false);
+assert(run('setHalloweenThemeMode("on",new Date(2026,5,1))'));
+assert.equal(run('halloweenThemeActive(new Date(2026,5,1))'),true);
+assert.equal(run('headSprite.src'),'halloween-snake-head.png');
+assert.equal(run('bodySprite.src'),'halloween-snake-body.png');
+assert(run('setHalloweenThemeMode("off",new Date(2026,9,31))'));
+assert.equal(run('halloweenThemeActive(new Date(2026,9,31))'),false);
+assert.equal(run('headSprite.src'),'snake-head.png');
+assert.equal(run('bodySprite.src'),'snake-body.png');
+assert(run('setHalloweenThemeMode("auto",new Date(2026,9,31))'));
+assert.equal(run('halloweenThemeActive(new Date(2026,9,31))'),true);
+console.log('PASS: Halloween theme uses local date, mode overrides and seasonal snake sprites');
+
 context.window.innerWidth=390;context.window.innerHeight=844;context.window.visualViewport={width:390,height:760,scale:1};context.window.screen={width:390,height:844};
 assert.match(run('viewportMeasurementText()'),/Spielfeld: 390 × 700 CSS-Pixel/);
 assert.match(run('viewportMeasurementText()'),/Sichtbarer Viewport: 390 × 760 CSS-Pixel/);
@@ -212,7 +241,7 @@ run('state.bullets=[]; updatePaladin(.01)');
 assert.equal(run('state.bullets[0].owner'),'paladin');
 assert.equal(run('state.bullets[0].vy'),-433.5);
 assert.equal(run('state.bullets[0].size'),1.4);
-assert(Math.abs(run('state.paladin.fireTimer')-(1/(2.7*.65)-.01))<1e-10);
+assert(Math.abs(run('state.paladin.fireTimer')-(1/(2.7*.75)-.01))<1e-10);
 assert.equal(run('projectileHits({owner:"paladin",previousX:50,previousY:200,x:50,y:0,size:1.4},{x:50,y:100})'),true);
 run('state.snake=[{id:501,x:100,y:100,hp:100},{id:502,x:133,y:100,hp:100},{id:503,x:166,y:100,hp:100}]; state.paladin.hits=0');
 for(let i=0;i<4;i++) {
@@ -236,8 +265,9 @@ run('state.paladin=newPaladin("left");paladinUpgradePool().find(c=>c.id==="reven
 assert.equal(run('(()=>{const b=new Map();paladinHit(b,state.snake[0],{critical:true},()=>1);return b.get(501);})()'),1);
 assert.equal(run('paladinUpgradePool().some(c=>c.id==="revenge")'),false);
 assert.equal(run('paladinUpgradePool().some(c=>c.id==="wrath-cooldown")'),false);
-// Both orange unlocks remain unique choices.
-assert.equal(run('chooseUpgrades(()=>.9999).filter(c=>c.rarity==="orange").length'),2);
+// Both Aldric orange unlocks remain eligible; the new shooter endgame cards may
+// occupy the other orange selections, including the reserved fourth slot.
+assert(run('chooseUpgrades(()=>.9999).filter(c=>c.rarity==="orange").length>=2'));
 run('paladinUpgradePool().find(c=>c.id==="wrath-unlock").apply()');
 assert.equal(run('state.paladin.ultimate'),true);
 assert.equal(run('paladinUpgradePool().some(c=>c.id==="wrath-unlock")'),false);
@@ -505,12 +535,18 @@ assert.equal(run('state.snake[0].hp'),15);
 assert.equal(run('state.snake[99].hp'),9000);
 run('endGame()');
 assert.equal(run('progress.data.completedLevels'),1,'Loss never unlocks');
+run('state.runStartSegments=100;state.snake=Array(59).fill({});state.level=2;state.score=1275;state.mode="gameover"');
+assert.equal(run('reachedRunSegment()'),42);
+assert.equal(run('runShareText()'),'Ich bin im Level 2 bis zum Segment 42 gekommen und habe 1.275 Punkte bekommen.');
+run('state.snake=[];state.mode="victory"');
+assert.equal(run('reachedRunSegment()'),100,'Victory shares the final segment');
 run('startGame();state.snake=[];update(0);showMenu();changeLevel(1);startGame()');
 assert.equal(run('state.snake[0].hp'),32);
 assert.equal(run('state.snake[99].hp'),14500);
 run('state.snake=[];update(0)');
 assert.equal(run('progress.data.completedLevels'),3);
 console.log('PASS: level arrows, locked start, full completion, replay, loss, final level and exact HP endpoints');
+console.log('PASS: loss and victory share text includes level, reached segment and score');
 run('state.mode="playing";state.lastUpgrade="Todessiegel (orange)";var realUpdate=update;update=()=>{throw new Error("Testfehler")};loop(100)');
 assert.equal(run('state.mode'),'error');
 assert.match(run('state.lastError'),/Todessiegel/);
