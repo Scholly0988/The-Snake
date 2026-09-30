@@ -75,22 +75,34 @@ const SnakeProgress = (() => {
     return result;
   }
   function open(storage) {
-    let data = fresh(), previous = null, blocked = false;
+    let data = fresh(), previous = null, blocked = false, volatile = false;
     let message = "Fortschritt wird in diesem Browser gespeichert.";
     try {
       previous = storage.getItem(KEY);
-      if (previous !== null) data = validate(JSON.parse(previous));
     } catch {
-      blocked = true;
-      message = "Spielstand konnte nicht geladen werden. Vorhandene Daten werden nicht überschrieben.";
+      volatile = true;
+      message = "Samsung-/Privatmodus: Fortschritt bleibt nur für diese geöffnete Sitzung erhalten.";
+    }
+    if(!volatile&&previous!==null)try {
+      data = validate(JSON.parse(previous));
+    } catch {
+      volatile = true;
+      message = "Gespeicherter Spielstand ist nicht lesbar. Diese Sitzung läuft temporär, ohne ihn zu überschreiben.";
     }
     function save() {
       if (blocked) return false;
+      if(volatile){
+        try {data=validate(data);}
+        catch {message="Temporärer Spielstand ist ungültig.";return false;}
+        message="Fortschritt bleibt nur für diese geöffnete Sitzung erhalten.";
+        return true;
+      }
       try {
         if (storage.getItem(KEY) !== previous) {
-          blocked = true;
-          message = "Ein anderer Tab hat gespeichert. Bitte diese Runde exportieren und neu laden.";
-          return false;
+          data=validate(data);
+          volatile = true;
+          message = "Ein anderer Tab hat gespeichert. Diese Sitzung läuft temporär, ohne dessen Stand zu überschreiben.";
+          return true;
         }
         const next = JSON.stringify(validate(data));
         storage.setItem(KEY, next);
@@ -98,8 +110,14 @@ const SnakeProgress = (() => {
         message = "Im Browser gespeichert.";
         return true;
       } catch {
-        message = "Speichern nicht möglich. Fortschritt bitte exportieren.";
-        return false;
+        // Some Samsung Internet privacy modes expose localStorage but reject
+        // writes. Keep the validated in-memory profile usable instead of
+        // rolling every hero/secondary slot selection back immediately.
+        try {data=validate(data);}
+        catch {message="Speichern nicht möglich. Fortschritt bitte exportieren.";return false;}
+        volatile=true;
+        message="Browser-Speicher blockiert: Fortschritt bleibt nur für diese geöffnete Sitzung erhalten.";
+        return true;
       }
     }
     function credit(amount) {
@@ -191,7 +209,7 @@ const SnakeProgress = (() => {
         const next = validate(JSON.parse(text));
         // Called only after the player's explicit overwrite confirmation.
         storage.setItem(KEY, JSON.stringify(next));
-        data = next; previous = JSON.stringify(next); blocked = false;
+        data = next; previous = JSON.stringify(next); blocked = false; volatile = false;
         message = "Sicherung importiert und im Browser gespeichert.";
       }
     };
