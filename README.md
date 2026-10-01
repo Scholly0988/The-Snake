@@ -1,5 +1,16 @@
 # The Snake
 
+## Version 24.1 – Samsung-Internet-Slotfix
+
+- Helden und Sekundärhelden lassen sich jetzt auch einsetzen, wenn Samsung
+  Internet, ein Privatmodus oder eine strenge Datenschutzeinstellung den
+  lokalen Browserspeicher blockiert.
+- In diesem Fall bleibt die Auswahl für die geöffnete Sitzung aktiv, statt
+  sofort zurückgerollt zu werden. Das Menü weist darauf hin, dass der Stand
+  nach dem Schließen nicht dauerhaft gespeichert werden kann.
+- Ein unlesbarer älterer Spielstand oder eine Änderung durch einen zweiten Tab
+  wird nicht überschrieben; die aktuelle Sitzung bleibt trotzdem spielbar.
+
 ## Version 24.0 Test – Kiko
 
 - Kiko – der Bananenwerfer ist als erster vollständig spielbarer Sekundärheld
