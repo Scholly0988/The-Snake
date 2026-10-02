@@ -1,5 +1,18 @@
 # The Snake
 
+## Version 25.0 – Mirel
+
+- Mirel – die Fluchweberin ist als kostenloser Sekundärheld integriert.
+- Fluchsiegel, Fluchwelle und Zeichen des Untergangs verstärken sämtliche
+  Schadensquellen, ohne mehrere Mirel-Flüche auf demselben Ziel zu stapeln.
+- Alle 13 dreistufigen Run-Fähigkeiten, vier seltenen Build-Fähigkeiten und
+  21 dauerhaften 50-Münzen-Aufwertungen sind verfügbar.
+- Fluchübertragungen, Untergangssprünge, Todesmal, Dunkle Verbindung,
+  Meisterfluch, Krit-Bonus und der gemeinsame 60-%-Slow-Deckel sind aktiv.
+- Neue Dateien: `mirel.js`, `mirel-front.png`, `MIREL.md` und
+  `test-mirel.cjs`.
+- Die vollständige Austauschliste steht in `PATCH-25.0-MIREL.txt`.
+
 ## Version 24.1 – Samsung-Internet-Slotfix
 
 - Helden und Sekundärhelden lassen sich jetzt auch einsetzen, wenn Samsung

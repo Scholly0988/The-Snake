@@ -190,7 +190,28 @@ const HERO_SKILLS = [
   ["kiko","chaos","attack","Dschungelchaos",[],"Alle 30 Sekunden für 6 Sekunden; Chaos-Wurfintervall 1,5 Sekunden.","27 Sekunden Cooldown und 1,35 Sekunden Chaos-Wurfintervall."],
   ["kiko","golden","upgrade","Goldene Banane",["orange"],"Nach Auswahl 20 % Chance auf doppelten Schaden und doppelte Slow-Dauer.","25 % statt 20 % Chance."],
   ["kiko","chain","upgrade","Bananenkette",["purple"],"Nach Auswahl 35 % Chance auf +50 % Schaden für das nächste Bodenfeld.","45 % statt 35 % Chance."],
-  ["kiko","instinct","upgrade","Affeninstinkt",["purple"],"Ohne aktive Banane folgt der nächste Wurf nach 1 Sekunde.","Bereits nach 0,7 Sekunden."]
+  ["kiko","instinct","upgrade","Affeninstinkt",["purple"],"Ohne aktive Banane folgt der nächste Wurf nach 1 Sekunde.","Bereits nach 0,7 Sekunden."],
+  ["mirel","runeSpark","attack","Runenfunke",[],"Mirels Fluchprojektil verursacht 0,15 Schaden und kann Segmente zerstören.","0,20 statt 0,15 Schaden."],
+  ["mirel","seal","attack","Fluchsiegel",[],"Alle 6 Sekunden: 4 Sekunden lang +12 % eingehender Schaden.","+14 % statt +12 % eingehender Schaden."],
+  ["mirel","wave","attack","Fluchwelle",[],"Alle 18 Sekunden werden 3 Ziele für 5 Sekunden um 15 % geschwächt.","17 statt 18 Sekunden Cooldown."],
+  ["mirel","doomImpulse","attack","Zeichen des Untergangs",[],"Sofort und danach alle 30 Sekunden: +30 % Schaden; jeder 5. Treffer erzeugt 0,5 Impulsschaden.","0,65 statt 0,5 Impulsschaden."],
+  ["mirel","deep","upgrade","Tiefer Fluch",["grey","green","purple"],"Normale Flüche erhöhen eingehenden Schaden auf 15 / 18 / 22 %.","16 / 19 / 23 %."],
+  ["mirel","lasting","upgrade","Langanhaltender Fluch",["grey","green","purple"],"Normale Flüche halten 5 / 6 / 8 Sekunden.","6 / 7 / 9 Sekunden."],
+  ["mirel","quick","upgrade","Schnelle Verfluchung",["grey","green","purple"],"Fluchintervall 5,5 / 5 / 4 Sekunden.","5,25 / 4,75 / 3,75 Sekunden."],
+  ["mirel","double","upgrade","Doppeltes Siegel",["grey","green","purple"],"Maximal 2 / 3 / 4 normale Flüche gleichzeitig.","3 / 4 / 5 Flüche."],
+  ["mirel","critical","upgrade","Dunkle Schwäche",["grey","green","purple"],"Krits gegen verfluchte Ziele erhalten +10 / +20 / +35 % Endschaden.","+15 / +25 / +40 %."],
+  ["mirel","fragile","upgrade","Zerbrechliches Siegel",["grey","green","purple"],"30 / 55 / 100 % Übertragungs-Chance beim Tod.","40 / 65 / 100 %."],
+  ["mirel","weakening","upgrade","Schwächender Fluch",["grey","green","purple"],"Verfluchte Schlangen werden um 3 / 6 / 10 % verlangsamt.","5 / 8 / 12 %."],
+  ["mirel","waveSize","upgrade","Größere Fluchwelle",["grey","green","purple"],"Fluchwelle markiert 4 / 5 / 6 Segmente.","5 / 6 / 7 Segmente."],
+  ["mirel","wavePower","upgrade","Mächtige Fluchwelle",["grey","green","purple"],"Fluchwelle erhöht Schaden um 18 / 22 / 28 %.","20 / 24 / 30 %."],
+  ["mirel","waveQuick","upgrade","Schnellere Fluchwelle",["grey","green","purple"],"Cooldown 16 / 14 / 11 Sekunden.","15 / 13 / 10 Sekunden."],
+  ["mirel","doomLong","upgrade","Langes Untergangszeichen",["grey","green","purple"],"Untergangszeichen hält 7 / 8 / 10 Sekunden.","8 / 9 / 11 Sekunden."],
+  ["mirel","doomPower","upgrade","Tödliches Zeichen",["grey","green","purple"],"Untergangszeichen erhöht Schaden um 35 / 40 / 50 %.","40 / 45 / 55 %."],
+  ["mirel","doomJumps","upgrade","Springender Untergang",["grey","green","purple"],"Untergangszeichen springt 3 / 4 / 6-mal.","4 / 5 / 7-mal."],
+  ["mirel","curseChain","upgrade","Fluchkette",["purple"],"Flüche springen beim Tod garantiert auf ein sichtbares Ziel derselben Schlange.","Ohne Ziel derselben Schlange ist eine andere sichtbare Schlange erlaubt."],
+  ["mirel","deathMark","upgrade","Todesmal",["orange"],"Verfluchte Ziele unter 20 % HP erhalten weitere +15 % Schaden.","Schwelle steigt auf 25 % HP."],
+  ["mirel","darkConnection","upgrade","Dunkle Verbindung",["orange"],"Drei verfluchte Segmente geben ihrer Schlange +10 % eingehenden Schaden.","Bereits zwei verfluchte Segmente genügen."],
+  ["mirel","masterCurse","upgrade","Meisterfluch",["purple"],"Jeder 5. Fluch erzeugt zusätzlich +25 % Schaden für 6 Sekunden.","Bereits jeder 4. Fluch."]
 ].map(([hero,key,group,name,rarities,description,upgrade])=>({id:hero+"."+key,hero,key,group,name,rarities,description,upgrade}));
 function hasSkill(hero,key) { return (state.skillUpgrades || []).includes(hero+"."+key); }
 function skillValue(hero,key,base,upgraded) { return hasSkill(hero,key)?upgraded:base; }
@@ -211,11 +232,11 @@ function closeHeroSkills() {
 }
 function renderHeroSkills() {
   if(!selectedSkillHero)return;
-  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra",seraphine:"Seraphine",kiko:"Kiko"};
+  const names={shooter:"Schütze",paladin:"Aldric",necromancer:"Vaelric",alchemist:"Selvara",runemaster:"Kaelvar",ilyra:"Ilyra",seraphine:"Seraphine",kiko:"Kiko",mirel:"Mirel"};
   document.querySelector("#skillsTitle").textContent=names[selectedSkillHero]+" · Skills";
   document.querySelector("#skillsCoins").textContent=progress.data.coins+" Münzen · Jede Aufwertung einmalig 50 Münzen";
   const list=document.querySelector("#skillsList");list.replaceChildren();
-  const unlocked=selectedSkillHero==="shooter"||selectedSkillHero==="kiko"?progress.data.secondaryUnlocked.includes("kiko")||selectedSkillHero==="shooter":progress.data[selectedSkillHero+"Unlocked"];
+  const unlocked=selectedSkillHero==="shooter"||["kiko","mirel"].includes(selectedSkillHero)?selectedSkillHero==="shooter"||progress.data.secondaryUnlocked.includes(selectedSkillHero):progress.data[selectedSkillHero+"Unlocked"];
   for(const [group,title] of [["attack","Angriffe"],["upgrade","Upgrade-Skills"]]){
     const heading=document.createElement("h3");heading.textContent=title;list.append(heading);
     for(const skill of HERO_SKILLS.filter(s=>s.hero===selectedSkillHero&&s.group===group)){
@@ -242,7 +263,7 @@ function renderHeroSkills() {
   }
 }
 function bindSkillsMenu(){
-  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra","seraphine","kiko"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
+  for(const hero of ["shooter","paladin","necromancer","alchemist","runemaster","ilyra","seraphine","kiko","mirel"])document.querySelector("#skills-"+hero).addEventListener("click",()=>openHeroSkills(hero));
   document.querySelector("#closeSkills").addEventListener("click",closeHeroSkills);
 }
 

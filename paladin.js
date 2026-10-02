@@ -14,7 +14,11 @@ function paladinDirectDamage(bullet={}) {
 // A segment becomes damageable when its center enters the visible canvas.
 function isSegmentVisible(s) { return s.x >= 0 && s.x <= state.width && s.y >= 0 && s.y <= state.height; }
 function visibleTargets() { return state.snake.filter(s => s.hp > 0 && isSegmentVisible(s)); }
-function addDamage(batch, segment, damage) { if (!isSegmentVisible(segment)) return; batch.set(segment.id, (batch.get(segment.id) || 0) + damage); }
+function addDamage(batch, segment, damage, options={}) {
+  if (!isSegmentVisible(segment)) return;
+  batch.set(segment.id, (batch.get(segment.id) || 0) + damage);
+  if(options.mirelCount!==false&&typeof mirelTrackHit==="function")mirelTrackHit(batch,segment);
+}
 function segmentInArea(segment, center, radius) {
   return segment.hp > 0 && isSegmentVisible(segment) && Math.hypot(segment.x-center.x, segment.y-center.y) <= radius + SEGMENT_HIT_RADIUS;
 }

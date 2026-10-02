@@ -81,7 +81,7 @@ function ilyraEffect(kind,center,radius=18,color="#9beaff") {
 }
 function ilyraBaseDamage(base) { return base*ilyraGeneralDamageFactor(); }
 function ilyraAddCriticalDamage(batch,segment,base,random=Math.random) {
-  const hit=ilyraCriticalDamage(ilyraBaseDamage(base),random);addDamage(batch,segment,hit.damage);return hit;
+  const hit=ilyraCriticalDamage(ilyraBaseDamage(base),random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);addDamage(batch,segment,hit.damage);return hit;
 }
 function addFrost(batch,segment,count=1,options={},random=Math.random) {
   const i=state.ilyra;
@@ -98,7 +98,7 @@ function triggerIcebreak(batch,segment,options={},random=Math.random) {
   segment.frostTime=segment.frostStacks?i.frostDuration:0;
   let damage=i.icebreakDamage*skillValue("ilyra","icebreak",1,1.2)*(1+i.icebreakBonus+(i.winterActive>0?.25+i.winterIcebreakBonus:0));
   damage=ilyraBaseDamage(damage);
-  const hit=ilyraCriticalDamage(damage,random);addDamage(batch,segment,hit.damage);
+  const hit=ilyraCriticalDamage(damage,random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);addDamage(batch,segment,hit.damage);
   segment.icebreakPendingDeath=true;segment.icebreakTransferred=!!options.transferred;
   const instance=snakeInstanceForSegment(segment);if(instance)instance.ilyraBreakSlow=1.5;
   ilyraEffect("icebreak",segment,24,"#e4fbff");

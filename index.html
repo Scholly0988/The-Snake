@@ -8,7 +8,7 @@
   <script>
     (()=>{try{const mode=localStorage.getItem("the-snake.theme.halloween")||"auto",now=new Date(),automatic=now.getMonth()===9||(now.getMonth()===10&&now.getDate()<=2);if(mode==="on"||(mode==="auto"&&automatic))document.documentElement.classList.add("halloween-theme");}catch{}})();
   </script>
-  <link rel="stylesheet" href="style.css?v=kiko-24-0">
+  <link rel="stylesheet" href="style.css?v=mirel-25-0">
 </head>
 <body>
   <main class="game-shell">
@@ -108,7 +108,12 @@
           <button id="unlockKiko">Kiko freigeschaltet · 0 Münzen</button>
           <div class="hero-equip secondary-equip"><button id="equipKikoleft">Links einsetzen</button><button id="equipKikocenter">Mitte einsetzen</button><button id="equipKikoright">Rechts einsetzen</button></div>
           <button id="unequipKiko">Aus dem Team nehmen</button>
-          <p class="menu-note">Kiko ist kostenlos freigeschaltet und belegt ausschließlich einen Sekundärslot.</p>
+          <article class="paladin-card mirel-card"><img src="mirel-front.png?v=25-0" alt="Mirel mit violettem Fluchbuch und leuchtenden Runen"><h3>Mirel</h3><p>Die Fluchweberin</p><p>Sekundärheld · Debuff und Schadensverstärkung<br>Markiert Schwachstellen für das gesamte Team.</p></article>
+          <button id="skills-mirel">Mirel · Skills</button>
+          <button id="unlockMirel">Mirel freigeschaltet · 0 Münzen</button>
+          <div class="hero-equip secondary-equip"><button id="equipMirelleft">Links einsetzen</button><button id="equipMirelcenter">Mitte einsetzen</button><button id="equipMirelright">Rechts einsetzen</button></div>
+          <button id="unequipMirel">Aus dem Team nehmen</button>
+          <p class="menu-note">Kiko und Mirel sind kostenlos freigeschaltet und belegen ausschließlich Sekundärslots.</p>
           <p id="heroStatus" role="status" class="menu-note">Freischaltung und Platz werden im Browser gespeichert.</p>
           <h3>Seltenheiten</h3>
           <div class="rarity-preview"><span class="rarity-grey">60 %</span><span class="rarity-green">25 %</span><span class="rarity-purple">10 %</span><span class="rarity-orange">5 %</span></div>
@@ -155,7 +160,7 @@
           <button id="navHeroes" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10a7 7 0 0 1 14 0v10l-5-3V11h-4v6z M5 10l5 2m4 0 5-2M12 3v5"/></svg><span>Helden</span></button>
           <button id="navOptions" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 4 4 1 1 6-4 2-1 5h-6l-2-4-5-1V9l4-2z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></svg><span>Optionen</span></button>
         </nav>
-        <p class="menu-version">Version 23.4 Test · Sekundärslots</p>
+        <p class="menu-version">Version 25.0 Test · Mirel</p>
       </div>
 
       <div id="upgradeScreen" class="overlay hidden">
@@ -193,11 +198,12 @@
 
     <p id="saveStatus" class="hint" role="status">Touch: wischen · PC: Pfeiltasten oder A/D</p>
   </main>
-  <script src="skills.js?v=kiko-24-0"></script>
+  <script src="skills.js?v=mirel-25-0"></script>
   <script src="levels.js?v=seraphine-23-0"></script>
-  <script src="progress.js?v=samsung-24-1"></script>
-  <script src="secondary.js?v=kiko-24-0"></script>
-  <script src="kiko.js?v=kiko-24-0"></script>
+  <script src="progress.js?v=mirel-25-0"></script>
+  <script src="secondary.js?v=mirel-25-0"></script>
+  <script src="kiko.js?v=mirel-25-0"></script>
+  <script src="mirel.js?v=mirel-25-0"></script>
   <script src="paladin.js?v=seraphine-23-0"></script>
   <script src="necromancer.js?v=seraphine-23-0"></script>
   <script src="alchemist.js?v=seraphine-23-0"></script>
@@ -205,6 +211,6 @@
   <script src="ilyra.js?v=seraphine-23-0"></script>
   <script src="seraphine.js?v=seraphine-23-0"></script>
   <script src="shooter.js?v=seraphine-23-0"></script>
-  <script src="game.js?v=kiko-24-0"></script>
+  <script src="game.js?v=mirel-25-0"></script>
 </body>
 </html>

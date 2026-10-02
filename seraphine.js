@@ -99,7 +99,7 @@ function seraphineEffect(kind,center,radius=18,color="#ff8138") {
   if(effects.length>limit)effects.splice(0,effects.length-limit);
 }
 function addSeraphineDamage(batch,segment,base,random=Math.random) {
-  const hit=seraphineCriticalDamage(seraphineBaseDamage(base),random);addDamage(batch,segment,hit.damage);return hit;
+  const hit=seraphineCriticalDamage(seraphineBaseDamage(base),random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);addDamage(batch,segment,hit.damage);return hit;
 }
 function extraCriticalBurn(hit,random=Math.random) {
   return hit?.critical?seraphineProcCount(state.seraphine.criticalBurnChance,random):0;
@@ -271,10 +271,10 @@ function updateSeraphine(dt,random=Math.random) {
     for(const segment of visibleTargets())if(burnStacks(segment)>0){
       const inferno=s.infernoActive>0?skillValue("seraphine","inferno",.50,.65)+s.infernoBurnBonus:0;
       const normal=seraphineCriticalDamage(seraphineBaseDamage(s.burnDps*.5*burnStacks(segment)*(1+s.burnBonus+inferno)),random);
-      addDamage(dotBatch,segment,normal.damage);
+      normal.damage*=mirelCriticalMultiplier(segment,normal.critical);addDamage(dotBatch,segment,normal.damage);
       if(s.hellEmber){
         const hell=seraphineCriticalDamage(seraphineBaseDamage(skillValue("seraphine","hellEmber",.05,.065)*burnStacks(segment)),random);
-        addDamage(dotBatch,segment,hell.damage);
+        hell.damage*=mirelCriticalMultiplier(segment,hell.critical);addDamage(dotBatch,segment,hell.damage);
       }
     }
   }

@@ -26,7 +26,7 @@ function kikoPredictedPoint(instance,seconds=1.5){
   const visible=instance.segments.filter(s=>s.hp>0&&isSegmentVisible(s));
   if(!visible.length)return null;
   const reference=visible.sort((a,b)=>a.pathOffset-b.pathOffset)[0];
-  const speed=Math.min(22+state.elapsed*.25,45)*snakeSpeedMultiplier(instance)*(1-Math.min(.60,kikoSnakeSlow(instance)+alchemistSlow()+ilyraSnakeSlow(instance)));
+  const speed=Math.min(22+state.elapsed*.25,45)*snakeSpeedMultiplier(instance)*(1-Math.min(.60,kikoSnakeSlow(instance)+alchemistSlow()+ilyraSnakeSlow(instance)+mirelSnakeSlow(instance)));
   const point=instancePathPoint(instance,instance.headDistance-reference.pathOffset+speed*seconds);
   return {x:Math.max(18,Math.min(state.width-18,point.x)),y:Math.max(26,Math.min(state.player.y-45,point.y))};
 }

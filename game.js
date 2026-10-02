@@ -374,8 +374,8 @@ function update(dt) {
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const baseSpeed = Math.min(22 + state.elapsed * .25, 45);
   const instances=managedSnakeInstances();
-  if(instances.length){for(const instance of instances){const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;}state.headDistance=instances[0]?.headDistance||0;}
-  else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null)+kikoSnakeSlow(null))) * dt;
+  if(instances.length){for(const instance of instances){const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance)+mirelSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;}state.headDistance=instances[0]?.headDistance||0;}
+  else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null)+kikoSnakeSlow(null)+mirelSnakeSlow(null))) * dt;
 
   syncSnakePositions();
 
@@ -473,12 +473,13 @@ function projectileHits(bullet, target) {
   return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
 }
 function segmentDamageMultiplier(segment) {
-  const curse=segment.soulMark ? 1 + (state.necromancer?.curse || 0) : 1;
+  const curse=1+(segment.soulMark?(state.necromancer?.curse||0):0)+mirelIncomingBonus(segment);
   const mastery=state.runemaster?.mastery?1+Math.min(skillValue("runemaster","mastery",.30,.40),visibleTargets().filter(s=>runeCharges(s)>0).length*skillValue("runemaster","mastery",.02,.025)):1;
   return curse*mastery;
 }
 function applyDamageBatch(batch) {
   // All targets are determined before any segment retreats or upgrade pauses.
+  mirelPrepareDamageBatch(batch);
   for (const segment of state.snake) {
     if (isSegmentVisible(segment) && batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id)*segmentDamageMultiplier(segment))*1e10)/1e10;
   }
@@ -507,27 +508,27 @@ function handleHits(random = Math.random) {
       const isIlyra = bullet.owner === "ilyra" && state.ilyra;
       const isSeraphine = bullet.owner === "seraphine" && state.seraphine;
       if(isAlchemist){
-        const hit=alchemistHitRoll(random);bullet.dead=true;bullet.hitIds.add(segment.id);
+        const hit=alchemistHitRoll(random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);bullet.dead=true;bullet.hitIds.add(segment.id);
         alchemistHit(segment,hit,bullet,random);
         if(state.mode!=="playing")return;
         continue outer;
       }
       if(isRunemaster){
-        const hit=runemasterHitRoll(segment,bullet,random);bullet.dead=true;bullet.hitIds.add(segment.id);
+        const hit=runemasterHitRoll(segment,bullet,random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);bullet.dead=true;bullet.hitIds.add(segment.id);
         runemasterHit(segment,hit,bullet,random);
         burst(segment.x,segment.y,hit.critical?"#ff7954":"#63caff",hit.critical?12:7);
         if(state.mode!=="playing")return;
         continue outer;
       }
       if(isIlyra){
-        const hit=ilyraHitRoll(segment,bullet,random);bullet.hitsLeft--;if(bullet.hitsLeft<=0)bullet.dead=true;
+        const hit=ilyraHitRoll(segment,bullet,random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);bullet.hitsLeft--;if(bullet.hitsLeft<=0)bullet.dead=true;
         ilyraHit(segment,hit,bullet,random);burst(segment.x,segment.y,hit.critical?"#fff2b4":"#a9ecff",hit.critical?13:8);
         if(state.mode!=="playing")return;
         if(bullet.dead)continue outer;
         continue;
       }
       if(isSeraphine){
-        const hit=bullet.fireWave?{critical:false,damage:0}:seraphineHitRoll(segment,bullet,random);bullet.hitsLeft--;if(bullet.hitsLeft<=0)bullet.dead=true;
+        const hit=bullet.fireWave?{critical:false,damage:0}:seraphineHitRoll(segment,bullet,random);hit.damage*=mirelCriticalMultiplier(segment,hit.critical);bullet.hitsLeft--;if(bullet.hitsLeft<=0)bullet.dead=true;
         seraphineHit(segment,hit,bullet,random);burst(segment.x,segment.y,hit.critical?"#fff0a6":"#ff7b32",hit.critical?13:8);
         if(state.mode!=="playing")return;
         if(bullet.dead)continue outer;
@@ -535,8 +536,9 @@ function handleHits(random = Math.random) {
       }
       const isShooter=bullet.owner==="shooter"||!bullet.owner;
       const hit = isNecro ? necromancerHitRoll(random) : isShooter&&state.shooter ? shooterHitRoll(segment,bullet,random) : rollHit(random,isPaladin ? paladinDirectDamage(bullet) : state.weapon.damage*skillValue("shooter","attack",1,1.2));
+      hit.damage*=mirelCriticalMultiplier(segment,hit.critical);
       if (isNecro) prepareNecroHit(segment,hit,random);
-      const batch = new Map([[segment.id,hit.damage]]);
+      const batch = new Map([[segment.id,hit.damage]]);mirelTrackHit(batch,segment);
       if (isPaladin) paladinHit(batch,segment,hit,random);
       if (isShooter&&state.shooter)shooterAfterHit(batch,segment,hit,bullet,random);
       if(isShooter)bullet.hitsDone=(bullet.hitsDone||0)+1;
@@ -570,6 +572,7 @@ function destroySegment(index, offerUpgrade = true) {
   if (state.alchemist) resolveAlchemistDeath(destroyed,neighbors);
   if (state.ilyra) queueIlyraDeath(destroyed,instance);
   if (state.seraphine) queueSeraphineDeath(destroyed,instance,neighbors);
+  resolveMirelDeath(destroyed,instance,neighbors);
   state.score += destroyed.upgrade ? 100 : 25;
   const coins = (destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   state.runCoins += coins;
@@ -809,6 +812,7 @@ function renderProfile() {
   renderIlyraProfile();
   renderSeraphineProfile();
   renderKikoProfile();
+  renderMirelProfile();
   document.querySelector("#menuCoins").textContent = p.coins.toLocaleString("de-DE");
   document.querySelector("#profileStats").textContent =
     p.coins + " Münzen · Rekord " + p.best + " · " + p.defeated + " Teile besiegt · " + p.runs + " Runden";
@@ -1263,6 +1267,7 @@ bindRunemasterMenu();
 bindIlyraMenu();
 bindSeraphineMenu();
 bindKikoMenu();
+bindMirelMenu();
 bindSkillsMenu();
 bindHalloweenTheme();
 resizeCanvas();

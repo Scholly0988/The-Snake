@@ -210,7 +210,7 @@ function updateNecromancer(dt) {
         // First contact is the initial attack; subsequent contacts are jumps.
         s.jumps=s.hitIds.size-1;
         const damage=soulDamage(s)*(s.jumps>0?skillValue("necromancer","binding",1,1.2):1);
-        const batch=new Map([[target.id,necroDamage(target,damage)]]);
+        const batch=new Map([[target.id,necroDamage(target,damage)]]);mirelTrackHit(batch,target);
         if(n.binding===5 && s.jumps===5) necroArea(batch,target,80,soulDamage(s,true)*2*skillValue("necromancer","binding",1,1.2));
         if (s.jumps>=n.binding || !chooseSoulTarget(s)) finishSoulAttack(s);
         state.soulEffects.push({x:target.x,y:target.y,radius:15,life:.4});
