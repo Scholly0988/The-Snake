@@ -1,5 +1,6 @@
 "use strict";
 
+const GAME_VERSION="25.0.1 Test · Mirel";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const wrap = document.querySelector("#gameWrap");
@@ -803,6 +804,8 @@ function refreshHud() {
 
 function renderProfile() {
   const p = progress.data;
+  const versionLabel=document.querySelector(".menu-version");
+  if(versionLabel)versionLabel.textContent="Version "+GAME_VERSION;
   renderHeroSkills();
   renderLevelPicker();
   renderPaladinProfile();
@@ -1223,7 +1226,7 @@ function reportGameError(error) {
   state.errorResumeMode=state.mode;
   state.mode="error";
   state.pointerDown=false;state.pointerId=null;
-  const details="Version 24.0 Test · Level "+state.level+" · Hauptupgrade: "+(state.lastUpgrade||"keines")+" · Sekundärupgrade: "+(state.lastSecondaryUpgrade||"keines")+
+  const details="Version "+GAME_VERSION+" · Level "+state.level+" · Hauptupgrade: "+(state.lastUpgrade||"keines")+" · Sekundärupgrade: "+(state.lastSecondaryUpgrade||"keines")+
     "\n"+String(error?.message||error)+"\n"+String(error?.stack||"").slice(0,2500);
   state.lastError=details;
   document.querySelector("#gameErrorDetails").textContent=details;

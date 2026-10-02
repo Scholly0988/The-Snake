@@ -1,5 +1,13 @@
 # The Snake
 
+## Version 25.0.1 – Versionsanzeige
+
+- Die Versionsanzeige im unteren Hauptmenü wird zusätzlich durch `game.js`
+  gesetzt und kann deshalb nicht mehr versehentlich auf einem alten Textstand
+  bleiben.
+- Auch Fehlerberichte verwenden nun dieselbe zentrale Versionsnummer.
+- Neuer Cache-Parameter für `game.js`, damit mobile Browser die Korrektur laden.
+
 ## Version 25.0 – Mirel
 
 - Mirel – die Fluchweberin ist als kostenloser Sekundärheld integriert.
