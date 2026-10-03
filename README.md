@@ -1,5 +1,24 @@
 # The Snake
 
+## Version 26.1 Test – Halloween-Upgrades
+
+- Das Event-Menü besitzt jetzt ein eigenes dauerhaftes Upgradefenster mit zehn
+  Aufwertungsreihen und einem getrennten Halloween-Münzkonto.
+- Schaden, Feuerrate, Krit-Chance, Krit-Schaden und Durchschlag ersetzen im
+  Halloween-Event die deaktivierten dauerhaften Hauptmenüwerte.
+- Kürbisschaden und Kürbisjäger erleichtern das Zerstören der Feldkürbisse.
+  Event-Widerstand wirkt ausschließlich gegen die Haupt-Kürbisschlange.
+- Skilljäger verlangsamt die schnellen Bonus-Schlangen und reduziert gezielt
+  die HP ihrer drei Skill-Segmente.
+- Erfolgreiche Event-Level vergeben `50 × Level` Halloween-Münzen sowie beim
+  ersten Abschluss zusätzlich `100 × Level`. Das Münzupgrade erhöht beide
+  Werte um bis zu 50 Prozent.
+- Alle Preise steigen nach der festgelegten Upgradegruppe. Käufe, Währung und
+  Erstabschlüsse bleiben getrennt vom normalen Spielstand gespeichert.
+- Der Halloween-Dialog verwendet jetzt die neue, freigestellte und für Mobilgeräte
+  optimierte Hauptheld-Chatgrafik `main-hero-chat.webp`.
+- Die Austauschliste steht in `PATCH-26.1-HALLOWEEN-UPGRADES.txt`.
+
 ## Version 26.0 Test – Halloween-Event, Teil 1
 
 - Ein saisonaler Event-Kürbis erscheint nur während des Halloween-Zeitraums

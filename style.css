@@ -375,7 +375,7 @@ html.halloween-theme body { background:#090519; }
 }
 .halloween-event-screen::before { content:""; position:absolute; inset:0; background:linear-gradient(#0c05134d,#1208171a 42%,#1407138c); pointer-events:none; }
 .halloween-event-back { position:absolute; z-index:10; top:max(10px,env(safe-area-inset-top)); left:10px; width:auto; margin:0; padding:9px 13px; border:2px solid #f3a64b; border-radius:999px; color:#ffe1a1; background:#241037e8; box-shadow:0 4px 12px #0009; font:800 12px Georgia,serif; }
-.halloween-event-intro,.halloween-event-overview { position:relative; z-index:2; width:100%; height:100%; }
+.halloween-event-intro,.halloween-event-overview,.halloween-event-upgrades { position:relative; z-index:2; width:100%; height:100%; }
 .halloween-dialogue-character { position:absolute; bottom:25%; width:68%; height:66%; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 8px 8px #0009); pointer-events:none; }
 .halloween-dialogue-character.morgana { left:-8%; }
 .halloween-dialogue-character.hero { right:-7%; width:49%; height:57%; }
@@ -388,16 +388,32 @@ html.halloween-theme body { background:#090519; }
 .halloween-event-heading p { margin:0; color:#ffc16d; font:900 10px Georgia,serif; letter-spacing:.2em; }
 .halloween-event-heading h2 { margin:5px 0; color:#ffe0a2; font:900 clamp(29px,9vw,42px) Georgia,serif; }
 .halloween-event-heading small { color:#ead6f2; }
+.halloween-event-wallet { position:absolute; z-index:4; top:max(137px,calc(env(safe-area-inset-top) + 127px)); right:13px; padding:7px 10px; border:1px solid #f1a44a; border-radius:999px; color:#ffe1a0; background:#241037e8; box-shadow:0 4px 12px #0008; font:800 12px Georgia,serif; }
 .halloween-overview-morgana { position:absolute; left:-7%; bottom:27%; width:52%; height:48%; object-fit:contain; object-position:left bottom; filter:drop-shadow(0 7px 7px #0009); }
 .halloween-event-stage-card { position:absolute; z-index:3; left:18%; right:6%; bottom:max(55px,calc(env(safe-area-inset-bottom) + 45px)); padding:14px; text-align:center; border:2px solid #f1a44a; border-radius:17px; background:linear-gradient(145deg,#2b1342ed,#10091df2); box-shadow:inset 0 0 0 2px #653458,0 8px 20px #000b; }
 .halloween-event-stage-card > span { color:#d5b8e7; font:900 9px Georgia,serif; letter-spacing:.15em; }
 .halloween-event-stage-card > strong { display:block; margin:5px; color:#ffc765; font:900 25px Georgia,serif; }
 .halloween-event-stage-card > small { display:block; min-height:16px; color:#f4e2cf; }
+.halloween-event-stage-card > small + small { margin-top:4px; color:#ffc66c; font-weight:800; }
 .halloween-event-level-nav { display:grid; grid-template-columns:44px 1fr 44px; align-items:center; gap:6px; margin:10px 0; }
 .halloween-event-level-nav button { margin:0; padding:8px 3px; color:#ffd176; background:#3a1850; border-color:#b45b53; }
 .halloween-event-level-nav b { color:#fff1ca; }
 .halloween-event-start { margin:0; color:#351124; background:linear-gradient(#ffbd54,#df6428); border:2px solid #ffd47c; }
+.halloween-upgrade-open { margin:7px 0 0; padding:8px; color:#ffe5ae; background:linear-gradient(#53216e,#29113d); border:1px solid #c77d65; }
 .halloween-replay-intro { position:absolute; z-index:4; right:9px; bottom:max(7px,env(safe-area-inset-bottom)); width:auto; margin:0; padding:7px 10px; color:#ead6f3; border:1px solid #885c98; background:#1b0d2ee0; font-size:10px; }
+.halloween-event-upgrades { overflow:hidden; padding:0 10px max(10px,env(safe-area-inset-bottom)); }
+.halloween-upgrade-heading { position:absolute; z-index:2; top:max(48px,calc(env(safe-area-inset-top) + 38px)); left:12px; right:12px; padding:9px 12px; text-align:center; border:2px solid #f1a44a; border-radius:15px; background:#241037ec; box-shadow:0 7px 18px #000a; }
+.halloween-upgrade-heading p { margin:0; color:#d9b9e7; font:900 9px Georgia,serif; letter-spacing:.14em; }
+.halloween-upgrade-heading h2 { margin:3px 0 5px; color:#ffd27e; font:900 24px Georgia,serif; }
+.halloween-upgrade-heading div { color:#fff1cd; font:800 12px Georgia,serif; }
+.halloween-upgrade-list { position:absolute; z-index:2; top:max(145px,calc(env(safe-area-inset-top) + 135px)); left:10px; right:10px; bottom:max(55px,calc(env(safe-area-inset-bottom) + 45px)); display:grid; gap:7px; padding:2px 2px 12px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+.halloween-upgrade-card { display:grid; grid-template-columns:1fr auto; gap:3px 8px; width:100%; margin:0; padding:10px 11px; text-align:left; color:#fff0cf; border:1px solid #b9695e; border-radius:12px; background:linear-gradient(145deg,#35184deb,#170c27f2); box-shadow:inset 0 0 0 1px #693c65,0 3px 8px #0008; }
+.halloween-upgrade-card span { color:#ffc869; font:900 13px Georgia,serif; }
+.halloween-upgrade-card small { grid-column:1; color:#e8d9ee; font:600 10px/1.3 system-ui,sans-serif; }
+.halloween-upgrade-card b { grid-column:2; grid-row:1/3; align-self:center; max-width:104px; text-align:right; color:#ffe6a9; font:800 10px/1.25 Georgia,serif; }
+.halloween-upgrade-card:disabled { opacity:.5; filter:saturate(.55); }
+.halloween-upgrade-card:disabled span { color:#cdb9ce; }
+.halloween-upgrade-close { position:absolute; z-index:3; left:12px; bottom:max(9px,env(safe-area-inset-bottom)); width:auto; margin:0; padding:8px 12px; color:#ffe2aa; border:1px solid #f1a44a; background:#241037ed; }
 .game-shell.halloween-event-run { background:#15091e; }
 .game-shell.halloween-event-run .game-wrap { border-color:#f19a43; box-shadow:0 0 0 2px #5c2845,0 0 0 4px #a9513f,0 8px 22px #000c; }
 @media (max-width:360px) {
@@ -412,6 +428,10 @@ html.halloween-theme body { background:#090519; }
   .halloween-dialogue-box { min-height:145px; }
   .halloween-event-stage-card { bottom:38px; padding:9px; }
   .halloween-overview-morgana { bottom:25%; height:42%; }
+  .halloween-event-wallet { top:116px; }
+  .halloween-upgrade-heading { top:42px; padding:6px 10px; }
+  .halloween-upgrade-heading h2 { font-size:20px; }
+  .halloween-upgrade-list { top:124px; }
 }
 
 /* Arena 10: stone scenery, gold borders, clear blue combat surface. */

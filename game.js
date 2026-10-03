@@ -1,6 +1,6 @@
 "use strict";
 
-const GAME_VERSION="26.0 Test · Halloween-Event";
+const GAME_VERSION="26.1 Test · Halloween-Upgrades";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const wrap = document.querySelector("#gameWrap");
@@ -112,7 +112,7 @@ const state = {
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null,
   secondaryTeam: null, pendingUpgrades: 0, upgradeOfferId: 0,
-  eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,
+  eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,eventModifiers:null,
   runStartSegments: 100,
   runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
@@ -173,14 +173,12 @@ function completeLevel() {
   releaseDrag();state.mode="victory";state.pendingUpgrades=0;
   state.score+=500;progress.data.best=Math.max(progress.data.best,state.score);
   if(state.eventRun){
-    state.eventProgress.completed=Math.max(state.eventProgress.completed,state.eventLevel);
-    state.eventProgress.selected=Math.min(HalloweenEvent.PLAYABLE_LEVEL,state.eventLevel+1);
-    HalloweenEvent.save(state.eventProgress);
+    const reward=HalloweenEvent.completeLevel(state.eventProgress,state.eventLevel);
     progress.save();
     upgradeScreen.classList.add("hidden");
     document.querySelector("#resultEyebrow").textContent="KÜRBISSCHLANGE BESIEGT";
     document.querySelector("#resultTitle").textContent="Event-Level "+state.eventLevel+" abgeschlossen!";
-    document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · "+(state.eventLevel<HalloweenEvent.PLAYABLE_LEVEL?"Event-Level "+(state.eventLevel+1)+" freigeschaltet":"Der bisher vorbereitete Event-Abschnitt ist geschafft");
+    document.querySelector("#runSummary").textContent=(reward?.total||0)+" Halloween-Münzen verdient"+(reward?.firstBonus?" · Erstabschluss +"+reward.firstBonus:"")+" · "+(state.eventLevel<HalloweenEvent.PLAYABLE_LEVEL?"Event-Level "+(state.eventLevel+1)+" freigeschaltet":"Der bisher vorbereitete Event-Abschnitt ist geschafft");
     finalScore.textContent=state.score;gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();return;
   }
   const multiplier=difficultyMultiplier(state.runDifficulty);
@@ -242,8 +240,10 @@ function resetGame(eventRun=false,eventLevel=1) {
   state.headDistance = 0;
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
+  const eventModifiers=eventRun?HalloweenEvent.modifiers(state.eventProgress||(state.eventProgress=HalloweenEvent.load())):null;
+  state.eventModifiers=eventModifiers;
   state.weapon = eventRun
-    ? {damage:1,shotsPerSecond:2.7,bullets:1,spread:0,pierce:0,critChance:0,critDamage:150}
+    ? {damage:1*eventModifiers.damageMultiplier+eventModifiers.pierceDamage,shotsPerSecond:2.7*eventModifiers.rateMultiplier,bullets:1,spread:0,pierce:eventModifiers.pierce,critChance:eventModifiers.critChance,critDamage:150+eventModifiers.critDamage}
     : { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   state.secondaryTeam=createSecondaryTeam(progress.data.secondarySlots);
   state.eventPumpkins=[];state.eventPumpkinTimer=8;state.eventBonusTimer=12;
@@ -328,7 +328,7 @@ function spawnEventPumpkin(random=Math.random) {
   if(!state.eventRun||state.eventPumpkins.length>=2)return null;
   const reference=lastVisibleEventMainSegment();if(!reference)return null;
   const margin=45,x=margin+random()*Math.max(1,state.width-margin*2),y=90+random()*Math.max(1,state.player.y-200);
-  const hp=HalloweenEvent.pumpkinHp(reference.hp);
+  const hp=HalloweenEvent.pumpkinHp(reference.hp,state.eventProgress);
   const pumpkin={id:state.nextId++,x,y,hp,maxHp:hp,radius:22};state.eventPumpkins.push(pumpkin);return pumpkin;
 }
 
@@ -338,8 +338,8 @@ function spawnEventBonusSnake(random=Math.random) {
   const direction=random()<.5?1:-1,y=95+random()*Math.max(40,state.player.y-235);
   const instance={id:"EVENT-BONUS-"+state.nextId++,eventBonus:true,direction,y,headDistance:0,segments:[],definition:{speedMultiplier:1},path:{eventBonus:true}};
   for(let index=0;index<5;index++){
-    const hp=HalloweenEvent.bonusSegmentHp(reference.hp,index,state.eventLevel);
-    instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(index+1)*SEGMENT_SPACING,upgrade:index>=1&&index<=3,hp,maxHp:hp,x:direction>0?-50-index*SEGMENT_SPACING:state.width+50+index*SEGMENT_SPACING,y,eventBonus:true});
+    const upgrade=index>=1&&index<=3,hp=HalloweenEvent.bonusSegmentHp(reference.hp,index,state.eventLevel,state.eventProgress,upgrade);
+    instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(index+1)*SEGMENT_SPACING,upgrade,hp,maxHp:hp,x:direction>0?-50-index*SEGMENT_SPACING:state.width+50+index*SEGMENT_SPACING,y,eventBonus:true});
   }
   state.snakes.push(instance);rebuildSnakeView();syncSnakePositions();return instance;
 }
@@ -458,8 +458,10 @@ function update(dt) {
   const baseSpeed = Math.min(22 + state.elapsed * .25, 45);
   const instances=managedSnakeInstances();
   if(instances.length){for(const instance of instances){
-    if(instance.eventBonus){instance.headDistance+=270*dt;continue;}
-    const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance)+mirelSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;
+    if(instance.eventBonus){instance.headDistance+=270*state.eventModifiers.bonusSpeedMultiplier*dt;continue;}
+    const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance)+mirelSnakeSlow(instance));
+    const eventSpeed=state.eventRun&&instance.eventMain?state.eventModifiers.eventSpeedMultiplier:1;
+    instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*eventSpeed*dt;
   }state.headDistance=(eventMainInstance()||instances[0])?.headDistance||0;}
   else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null)+kikoSnakeSlow(null)+mirelSnakeSlow(null))) * dt;
 
@@ -568,7 +570,8 @@ function projectileHits(bullet, target) {
 function segmentDamageMultiplier(segment) {
   const curse=1+(segment.soulMark?(state.necromancer?.curse||0):0)+mirelIncomingBonus(segment);
   const mastery=state.runemaster?.mastery?1+Math.min(skillValue("runemaster","mastery",.30,.40),visibleTargets().filter(s=>runeCharges(s)>0).length*skillValue("runemaster","mastery",.02,.025)):1;
-  return curse*mastery;
+  const event=state.eventRun&&segment.eventMain?state.eventModifiers.eventDamageMultiplier:1;
+  return curse*mastery*event;
 }
 function applyDamageBatch(batch) {
   // All targets are determined before any segment retreats or upgrade pauses.
@@ -592,6 +595,7 @@ function handleHits(random = Math.random) {
       for(const pumpkin of pumpkins){
         bullet.hitIds.add("pumpkin-"+pumpkin.id);
         const hit=state.shooter?shooterHitRoll(pumpkin,bullet,random):rollHit(random,state.weapon.damage);
+        hit.damage*=state.eventModifiers.pumpkinDamageMultiplier;
         pumpkin.hp=Math.max(0,pumpkin.hp-hit.damage);bullet.hitsLeft--;bullet.hitsDone=(bullet.hitsDone||0)+1;
         burst(pumpkin.x,pumpkin.y,hit.critical?"#fff0a5":"#ff8d32",hit.critical?12:6);
         if(pumpkin.hp<=0){state.eventPumpkins=state.eventPumpkins.filter(item=>item!==pumpkin);state.score+=50;}
@@ -678,9 +682,8 @@ function destroySegment(index, offerUpgrade = true) {
   if (state.seraphine) queueSeraphineDeath(destroyed,instance,neighbors);
   resolveMirelDeath(destroyed,instance,neighbors);
   state.score += destroyed.upgrade ? 100 : 25;
-  const coins = (destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
-  state.runCoins += coins;
-  progress.reward(coins, state.score);
+  const coins = state.eventRun?0:(destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
+  if(coins){state.runCoins += coins;progress.reward(coins,state.score);}
   document.querySelector("#saveStatus").textContent = progress.message + " · Touch: Wischen · PC: ← → oder A/D";
   burst(destroyed.x, destroyed.y, destroyed.upgrade ? "#ffe083" : "#75ffac", 16);
 
@@ -950,7 +953,7 @@ function showMenu() {
 }
 
 let halloweenDialogueIndex=0;
-function selectedMainHeroPortrait(){return "player-front.png";}
+function selectedMainHeroPortrait(){return "main-hero-chat.webp";}
 function renderHalloweenDialogue(){
   const scene=HalloweenEvent.dialogue[halloweenDialogueIndex];if(!scene){showHalloweenOverview();return;}
   const intro=document.querySelector("#halloweenEventIntro"),morgana=document.querySelector("#morganaPortrait"),hero=document.querySelector("#halloweenHeroPortrait");
@@ -963,7 +966,7 @@ function renderHalloweenDialogue(){
   document.querySelector("#nextHalloweenDialogue").textContent=halloweenDialogueIndex===HalloweenEvent.dialogue.length-1?"Zum Event ›":"Weiter ›";
 }
 function showHalloweenIntro(){
-  halloweenDialogueIndex=0;document.querySelector("#halloweenEventOverview").classList.add("hidden");document.querySelector("#halloweenEventIntro").classList.remove("hidden");renderHalloweenDialogue();
+  halloweenDialogueIndex=0;document.querySelector("#halloweenEventOverview").classList.add("hidden");document.querySelector("#halloweenEventUpgrades").classList.add("hidden");document.querySelector("#halloweenEventIntro").classList.remove("hidden");renderHalloweenDialogue();
 }
 function renderHalloweenOverview(){
   const event=state.eventProgress||(state.eventProgress=HalloweenEvent.load());
@@ -972,6 +975,9 @@ function renderHalloweenOverview(){
   document.querySelector("#halloweenEventLevelName").textContent="Level "+level+(locked?" · Gesperrt":level<=event.completed?" · Abgeschlossen":"");
   document.querySelector("#halloweenEventLevelInfo").textContent="Kürbisfeld · 50 Startsegmente · "+bounds.first.toLocaleString("de-DE")+"–"+bounds.last.toLocaleString("de-DE")+" HP";
   document.querySelector("#halloweenEventProgress").textContent=level+" / "+HalloweenEvent.MAX_LEVEL;
+  document.querySelector("#halloweenCoinBalance").textContent=event.coins.toLocaleString("de-DE");
+  const reward=HalloweenEvent.rewardForLevel(event,level);
+  document.querySelector("#halloweenEventReward").textContent="Belohnung: "+reward.base.toLocaleString("de-DE")+" Kürbismünzen"+(reward.firstBonus?" · Erstabschluss +"+reward.firstBonus.toLocaleString("de-DE"):"");
   document.querySelector("#previousHalloweenLevel").disabled=level<=1;
   document.querySelector("#nextHalloweenLevel").disabled=level>=Math.min(HalloweenEvent.PLAYABLE_LEVEL,event.completed+1);
   document.querySelector("#startHalloweenLevel").disabled=locked||level>HalloweenEvent.PLAYABLE_LEVEL;
@@ -979,7 +985,26 @@ function renderHalloweenOverview(){
 }
 function showHalloweenOverview(){
   state.eventProgress||(state.eventProgress=HalloweenEvent.load());state.eventProgress.introSeen=true;HalloweenEvent.save(state.eventProgress);
-  document.querySelector("#halloweenEventIntro").classList.add("hidden");document.querySelector("#halloweenEventOverview").classList.remove("hidden");renderHalloweenOverview();
+  document.querySelector("#halloweenEventIntro").classList.add("hidden");document.querySelector("#halloweenEventUpgrades").classList.add("hidden");document.querySelector("#halloweenEventOverview").classList.remove("hidden");renderHalloweenOverview();
+}
+function renderHalloweenUpgrades(){
+  const event=state.eventProgress||(state.eventProgress=HalloweenEvent.load()),list=document.querySelector("#halloweenUpgradeList");
+  document.querySelector("#halloweenUpgradeCoins").textContent=event.coins.toLocaleString("de-DE");
+  list.replaceChildren();
+  for(const upgrade of HalloweenEvent.upgrades){
+    const level=event.upgrades[upgrade.id],cost=HalloweenEvent.upgradeCost(event,upgrade.id),button=document.createElement("button");
+    button.className="halloween-upgrade-card";button.dataset.upgradeId=upgrade.id;
+    const heading=document.createElement("span"),description=document.createElement("small"),price=document.createElement("b");
+    heading.textContent=upgrade.name+" · Stufe "+level+"/"+upgrade.max;
+    description.textContent=upgrade.effect;
+    price.textContent=cost===null?"MAXIMUM":cost.toLocaleString("de-DE")+" Kürbismünzen";
+    button.append(heading,description,price);button.disabled=cost===null||event.coins<cost;
+    button.addEventListener("click",()=>{if(HalloweenEvent.buyUpgrade(event,upgrade.id)){renderHalloweenUpgrades();renderHalloweenOverview();}});
+    list.append(button);
+  }
+}
+function showHalloweenUpgrades(){
+  document.querySelector("#halloweenEventIntro").classList.add("hidden");document.querySelector("#halloweenEventOverview").classList.add("hidden");document.querySelector("#halloweenEventUpgrades").classList.remove("hidden");renderHalloweenUpgrades();
 }
 function openHalloweenEvent(){
   if(!halloweenThemeActive())return false;
@@ -1008,6 +1033,8 @@ document.querySelector("#replayHalloweenIntro").addEventListener("click",showHal
 document.querySelector("#previousHalloweenLevel").addEventListener("click",()=>changeHalloweenLevel(-1));
 document.querySelector("#nextHalloweenLevel").addEventListener("click",()=>changeHalloweenLevel(1));
 document.querySelector("#startHalloweenLevel").addEventListener("click",startHalloweenLevel);
+document.querySelector("#openHalloweenUpgrades").addEventListener("click",showHalloweenUpgrades);
+document.querySelector("#closeHalloweenUpgrades").addEventListener("click",showHalloweenOverview);
 
 const ADMIN_SESSION_KEY="the-snake.admin-options";
 const ADMIN_TAP_MAX_GAP=2500;
