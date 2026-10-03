@@ -1,6 +1,6 @@
 "use strict";
 
-const GAME_VERSION="25.2 Test · Admin-Menü";
+const GAME_VERSION="26.0 Test · Halloween-Event";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const wrap = document.querySelector("#gameWrap");
@@ -18,6 +18,10 @@ const headSprite = new Image();
 const bodySprite = new Image();
 const halloweenArenaSprite = new Image();
 halloweenArenaSprite.src = "halloween-arena-background.webp";
+const halloweenEventHeadSprite=new Image();halloweenEventHeadSprite.src="halloween-event-snake-head.webp";
+const halloweenEventBodySprite=new Image();halloweenEventBodySprite.src="halloween-event-snake-body.webp";
+const halloweenEventBackgrounds=new Map();
+for(const source of ["halloween-event-levels-1-8.webp","halloween-event-levels-9-23.webp","halloween-event-level-24.webp"]){const image=new Image();image.src=source;halloweenEventBackgrounds.set(source,image);}
 function setSeasonalSnakeSprites(active=document.documentElement?.classList?.contains("halloween-theme")) {
   headSprite.src = active ? "halloween-snake-head.png" : "snake-head.png";
   bodySprite.src = active ? "halloween-snake-body.png" : "snake-body.png";
@@ -72,6 +76,7 @@ function applyHalloweenTheme(date=new Date()) {
   if(status)status.textContent=active?(mode==="auto"?"Halloween ist aufgrund des Gerätedatums automatisch aktiv.":"Halloween ist dauerhaft eingeschaltet."):(mode==="off"?"Halloween ist ausgeschaltet.":"Halloween wird am 1. Oktober automatisch aktiviert.");
   const themeColor=document.querySelector('meta[name="theme-color"]');if(themeColor)themeColor.content=active?"#140923":"#07131b";
   setSeasonalSnakeSprites(active);
+  document.querySelector("#openHalloweenEvent")?.classList[active?"remove":"add"]("hidden");
   return active;
 }
 function setHalloweenThemeMode(mode,date=new Date()) {
@@ -107,6 +112,7 @@ const state = {
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null,
   secondaryTeam: null, pendingUpgrades: 0, upgradeOfferId: 0,
+  eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,
   runStartSegments: 100,
   runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
@@ -163,9 +169,20 @@ function changeLevel(delta) {
   renderLevelPicker();
 }
 function completeLevel() {
-  if(state.mode!=="playing"||state.snake.length)return;
+  if(state.mode!=="playing"||(state.eventRun?eventMainSegments().length:state.snake.length))return;
   releaseDrag();state.mode="victory";state.pendingUpgrades=0;
   state.score+=500;progress.data.best=Math.max(progress.data.best,state.score);
+  if(state.eventRun){
+    state.eventProgress.completed=Math.max(state.eventProgress.completed,state.eventLevel);
+    state.eventProgress.selected=Math.min(HalloweenEvent.PLAYABLE_LEVEL,state.eventLevel+1);
+    HalloweenEvent.save(state.eventProgress);
+    progress.save();
+    upgradeScreen.classList.add("hidden");
+    document.querySelector("#resultEyebrow").textContent="KÜRBISSCHLANGE BESIEGT";
+    document.querySelector("#resultTitle").textContent="Event-Level "+state.eventLevel+" abgeschlossen!";
+    document.querySelector("#runSummary").textContent=Math.floor(state.runCoins)+" Münzen verdient · "+(state.eventLevel<HalloweenEvent.PLAYABLE_LEVEL?"Event-Level "+(state.eventLevel+1)+" freigeschaltet":"Der bisher vorbereitete Event-Abschnitt ist geschafft");
+    finalScore.textContent=state.score;gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();return;
+  }
   const multiplier=difficultyMultiplier(state.runDifficulty);
   const key=(state.level-1)*3+[.10,.15,.20].indexOf(state.runDifficulty);
   const completionCoins=state.level*50*multiplier;
@@ -195,11 +212,12 @@ function resizeCanvas() {
   state.player.targetX = state.player.x;
 }
 
-function resetGame() {
+function resetGame(eventRun=false,eventLevel=1) {
   releaseDrag();
-  state.skillUpgrades=[...progress.data.skillUpgrades];
-  state.level=state.selectedLevel;
-  state.runDifficulty=progress.data.difficulty;
+  state.eventRun=eventRun;state.eventLevel=eventLevel;
+  state.skillUpgrades=eventRun?[]:[...progress.data.skillUpgrades];
+  state.level=eventRun?eventLevel:state.selectedLevel;
+  state.runDifficulty=eventRun?.10:progress.data.difficulty;
   state.paladin = newPaladin(progress.data.paladinSlot);
   state.necromancer = newNecromancer(progress.data.necromancerSlot);
   state.alchemist = newAlchemist(progress.data.alchemistSlot);
@@ -224,10 +242,14 @@ function resetGame() {
   state.headDistance = 0;
   state.player.x = state.width / 2;
   state.player.targetX = state.player.x;
-  state.weapon = { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
+  state.weapon = eventRun
+    ? {damage:1,shotsPerSecond:2.7,bullets:1,spread:0,pierce:0,critChance:0,critDamage:150}
+    : { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   state.secondaryTeam=createSecondaryTeam(progress.data.secondarySlots);
-  createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
+  state.eventPumpkins=[];state.eventPumpkinTimer=8;state.eventBonusTimer=12;
+  if(eventRun)createHalloweenEventSnake(eventLevel);else createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
   state.runStartSegments=state.snake.length;
+  document.querySelector(".game-shell")?.classList[eventRun?"add":"remove"]("halloween-event-run");
   document.querySelector("#shareRunStatus").textContent="";
   refreshHud();
 }
@@ -273,6 +295,62 @@ function createLevelSnakes(levelNumber,totalCount=SEGMENTS_PER_SNAKE) {
   rebuildSnakeView();syncSnakePositions();
 }
 
+function createHalloweenEventSnake(levelNumber) {
+  const definition=levelDefinition(Math.max(1,Math.min(LEVEL_DEFINITIONS.length,levelNumber)));
+  const snakeDefinition=definition.snakes[0];
+  const minimum=level1ReferenceLength(state.width,state.height,state.player.y);
+  const instance={id:"EVENT-MAIN",eventMain:true,definition:snakeDefinition,segments:[],headDistance:0,rageActive:false,
+    path:buildLevelPath(snakeDefinition.path,state.width,state.height,minimum)};
+  for(let index=0;index<HalloweenEvent.BASE_SEGMENTS;index++){
+    const hp=Math.round(HalloweenEvent.segmentHp(levelNumber,index)*difficultyMultiplier(state.runDifficulty??.10));
+    const upgrade=index===1||(index>1&&(index-1)%UPGRADE_INTERVAL===0);
+    instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(index+1)*SEGMENT_SPACING,upgrade,hp,maxHp:hp,x:state.width/2,y:-40-index*SEGMENT_SPACING,eventMain:true,eventIndex:index});
+  }
+  state.snakes=[instance];rebuildSnakeView();syncSnakePositions();
+}
+
+function eventMainInstance(){return state.snakes?.find(instance=>instance.eventMain)||null;}
+function eventMainSegments(){return eventMainInstance()?.segments.filter(segment=>segment.hp>0)||[];}
+function lastVisibleEventMainSegment(){
+  const visible=eventMainSegments().filter(isSegmentVisible);
+  return visible[visible.length-1]||null;
+}
+function growEventSnake() {
+  const instance=eventMainInstance();if(!instance)return null;
+  const index=instance.segments.reduce((max,segment)=>Math.max(max,segment.eventIndex??-1),-1)+1;
+  const hp=Math.round(HalloweenEvent.segmentHp(state.eventLevel,index)*difficultyMultiplier(state.runDifficulty??.10));
+  const last=instance.segments[instance.segments.length-1];
+  const segment={id:state.nextId++,snakeId:instance.id,pathOffset:(last?.pathOffset||0)+SEGMENT_SPACING,upgrade:false,hp,maxHp:hp,x:last?.x??state.width/2,y:last?.y??-40,eventMain:true,eventIndex:index};
+  instance.segments.push(segment);rebuildSnakeView();syncSnakePositions();return segment;
+}
+
+function spawnEventPumpkin(random=Math.random) {
+  if(!state.eventRun||state.eventPumpkins.length>=2)return null;
+  const reference=lastVisibleEventMainSegment();if(!reference)return null;
+  const margin=45,x=margin+random()*Math.max(1,state.width-margin*2),y=90+random()*Math.max(1,state.player.y-200);
+  const hp=HalloweenEvent.pumpkinHp(reference.hp);
+  const pumpkin={id:state.nextId++,x,y,hp,maxHp:hp,radius:22};state.eventPumpkins.push(pumpkin);return pumpkin;
+}
+
+function spawnEventBonusSnake(random=Math.random) {
+  if(!state.eventRun||state.eventLevel>3||state.snakes.some(instance=>instance.eventBonus))return null;
+  const reference=lastVisibleEventMainSegment();if(!reference)return null;
+  const direction=random()<.5?1:-1,y=95+random()*Math.max(40,state.player.y-235);
+  const instance={id:"EVENT-BONUS-"+state.nextId++,eventBonus:true,direction,y,headDistance:0,segments:[],definition:{speedMultiplier:1},path:{eventBonus:true}};
+  for(let index=0;index<5;index++){
+    const hp=HalloweenEvent.bonusSegmentHp(reference.hp,index,state.eventLevel);
+    instance.segments.push({id:state.nextId++,snakeId:instance.id,pathOffset:(index+1)*SEGMENT_SPACING,upgrade:index>=1&&index<=3,hp,maxHp:hp,x:direction>0?-50-index*SEGMENT_SPACING:state.width+50+index*SEGMENT_SPACING,y,eventBonus:true});
+  }
+  state.snakes.push(instance);rebuildSnakeView();syncSnakePositions();return instance;
+}
+
+function removeExpiredEventBonusSnakes() {
+  if(!state.eventRun)return;
+  const before=state.snakes.length;
+  state.snakes=state.snakes.filter(instance=>!instance.eventBonus||instance.segments.some(segment=>segment.x>-80&&segment.x<state.width+80));
+  if(state.snakes.length!==before)rebuildSnakeView();
+}
+
 function managedSnakeInstances() {
   if(!state.snakes?.length)return [];
   const segments=state.snakes.flatMap(s=>s.segments);
@@ -293,7 +371,7 @@ function startGame() {
   progress.data.runs = Math.min(1000000000, progress.data.runs + 1);
   progress.save();
   renderProfile();
-  resetGame();
+  resetGame(false);
   state.mode = "playing";
   state.lastTime = performance.now();
   startScreen.classList.add("hidden");
@@ -324,6 +402,9 @@ function pathPoint(distance) {
 }
 
 function instancePathPoint(instance,distance) {
+  if(instance?.eventBonus){
+    return {x:instance.direction>0?-45+distance:state.width+45-distance,y:instance.y,angle:instance.direction>0?0:Math.PI};
+  }
   return instance?.path&&!instance.path.level1?pointOnSampledPath(instance.path,distance):pathPoint(distance);
 }
 function snakeHead(instance=null) {
@@ -371,15 +452,25 @@ function snakeSpeedMultiplier(instance,elapsed=state.elapsed) {
 
 function update(dt) {
   if (state.mode !== "playing") return;
-  if(!state.snake.length){completeLevel();return;}
+  if(state.eventRun?!eventMainSegments().length:!state.snake.length){completeLevel();return;}
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const baseSpeed = Math.min(22 + state.elapsed * .25, 45);
   const instances=managedSnakeInstances();
-  if(instances.length){for(const instance of instances){const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance)+mirelSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;}state.headDistance=instances[0]?.headDistance||0;}
+  if(instances.length){for(const instance of instances){
+    if(instance.eventBonus){instance.headDistance+=270*dt;continue;}
+    const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance)+mirelSnakeSlow(instance));instance.headDistance+=baseSpeed*(1-slow)*snakeSpeedMultiplier(instance)*dt;
+  }state.headDistance=(eventMainInstance()||instances[0])?.headDistance||0;}
   else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null)+kikoSnakeSlow(null)+mirelSnakeSlow(null))) * dt;
 
   syncSnakePositions();
+  if(state.eventRun){
+    state.eventPumpkinTimer-=dt;if(state.eventPumpkinTimer<=0){spawnEventPumpkin();state.eventPumpkinTimer=10+Math.random()*6;}
+    if(state.eventLevel<=3){state.eventBonusTimer-=dt;if(state.eventBonusTimer<=0){spawnEventBonusSnake();state.eventBonusTimer=18+Math.random()*8;}}
+    const head=snakeHead(eventMainInstance());
+    if(head)for(let i=state.eventPumpkins.length-1;i>=0;i--)if(Math.hypot(head.x-state.eventPumpkins[i].x,head.y-state.eventPumpkins[i].y)<38){const pumpkin=state.eventPumpkins.splice(i,1)[0];growEventSnake();burst(pumpkin.x,pumpkin.y,"#ff9b38",13);}
+    removeExpiredEventBonusSnakes();
+  }
 
   const keyboardDirection=(state.keyboardRight?1:0)-(state.keyboardLeft?1:0);
   if(keyboardDirection)state.player.targetX=clampPlayerX(state.player.targetX+keyboardDirection*state.player.speed*dt);
@@ -450,9 +541,9 @@ function update(dt) {
   }
   state.particles = state.particles.filter(p => p.life > 0);
 
-  if (state.snake.length === 0) {
+  if (state.eventRun?!eventMainSegments().length:state.snake.length===0) {
     completeLevel();
-  } else if (livingSnakeInstances().some(instance=>snakeHead(instance)?.y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22)) {
+  } else if (livingSnakeInstances().filter(instance=>!instance.eventBonus).some(instance=>snakeHead(instance)?.y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22)) {
     endGame();
   }
 }
@@ -496,6 +587,17 @@ function handleHits(random = Math.random) {
   outer: for (const bullet of state.bullets) {
     if (bullet.dead || bullet.hammerPhase==="return") continue;
     bullet.hitIds ||= new Set();
+    if(state.eventRun&&(bullet.owner==="shooter"||!bullet.owner)){
+      const pumpkins=state.eventPumpkins.filter(pumpkin=>!bullet.hitIds.has("pumpkin-"+pumpkin.id)&&projectileHits(bullet,pumpkin)).sort((a,b)=>b.y-a.y);
+      for(const pumpkin of pumpkins){
+        bullet.hitIds.add("pumpkin-"+pumpkin.id);
+        const hit=state.shooter?shooterHitRoll(pumpkin,bullet,random):rollHit(random,state.weapon.damage);
+        pumpkin.hp=Math.max(0,pumpkin.hp-hit.damage);bullet.hitsLeft--;bullet.hitsDone=(bullet.hitsDone||0)+1;
+        burst(pumpkin.x,pumpkin.y,hit.critical?"#fff0a5":"#ff8d32",hit.critical?12:6);
+        if(pumpkin.hp<=0){state.eventPumpkins=state.eventPumpkins.filter(item=>item!==pumpkin);state.score+=50;}
+        if(bullet.hitsLeft<=0){bullet.dead=true;continue outer;}
+      }
+    }
     // Projectiles enter from below: resolve the nearest crossed target first.
     const targets = state.snake.map(segment=>({segment,head:snakeHeadForSegment(segment)}))
       .filter(({segment,head})=>isSegmentVisible(segment) && (bullet.owner!=="necromancer" || (bullet.targetId!=null?segment.id===bullet.targetId:isFrontSegment(segment))) && (bullet.owner!=="alchemist" || segment.id===bullet.targetId) && (bullet.owner!=="runemaster" || segment.id===bullet.targetId) && !bullet.hitIds.has(segment.id) && (projectileHits(bullet,segment) || (head && projectileHits(bullet,head))))
@@ -762,6 +864,7 @@ function endGame() {
 }
 
 function reachedRunSegment() {
+  if(state.eventRun){const remaining=eventMainSegments().length;return state.mode==="victory"?state.runStartSegments:Math.min(state.runStartSegments,Math.max(1,state.runStartSegments-remaining+1));}
   const total=Math.max(1,state.runStartSegments||SEGMENTS_PER_SNAKE);
   if(state.mode==="victory")return total;
   return Math.min(total,Math.max(1,total-state.snake.length+1));
@@ -836,6 +939,7 @@ function renderProfile() {
 
 function showMenu() {
   releaseDrag();
+  state.eventRun=false;document.querySelector(".game-shell")?.classList.remove("halloween-event-run");
   state.mode = "start";
   gameOverScreen.classList.add("hidden");
   upgradeScreen.classList.add("hidden");
@@ -844,6 +948,66 @@ function showMenu() {
   selectMenuPage("Home");
   renderProfile();
 }
+
+let halloweenDialogueIndex=0;
+function selectedMainHeroPortrait(){return "player-front.png";}
+function renderHalloweenDialogue(){
+  const scene=HalloweenEvent.dialogue[halloweenDialogueIndex];if(!scene){showHalloweenOverview();return;}
+  const intro=document.querySelector("#halloweenEventIntro"),morgana=document.querySelector("#morganaPortrait"),hero=document.querySelector("#halloweenHeroPortrait");
+  intro.classList.toggle("hero-speaking",scene.side==="right");
+  morgana.src=scene.side==="right"&&scene.keepMorgana?"morgana-happy.webp":scene.image;
+  morgana.classList.remove("hidden");
+  hero.classList.toggle("hidden",scene.side!=="right");if(scene.side==="right")hero.src=selectedMainHeroPortrait();
+  document.querySelector("#halloweenDialogueSpeaker").textContent=scene.speaker;
+  document.querySelector("#halloweenDialogueText").textContent=scene.text;
+  document.querySelector("#nextHalloweenDialogue").textContent=halloweenDialogueIndex===HalloweenEvent.dialogue.length-1?"Zum Event ›":"Weiter ›";
+}
+function showHalloweenIntro(){
+  halloweenDialogueIndex=0;document.querySelector("#halloweenEventOverview").classList.add("hidden");document.querySelector("#halloweenEventIntro").classList.remove("hidden");renderHalloweenDialogue();
+}
+function renderHalloweenOverview(){
+  const event=state.eventProgress||(state.eventProgress=HalloweenEvent.load());
+  event.selected=Math.max(1,Math.min(event.selected,event.completed+1,HalloweenEvent.PLAYABLE_LEVEL));
+  const level=event.selected,bounds=HalloweenEvent.hpBounds(level),locked=level>event.completed+1;
+  document.querySelector("#halloweenEventLevelName").textContent="Level "+level+(locked?" · Gesperrt":level<=event.completed?" · Abgeschlossen":"");
+  document.querySelector("#halloweenEventLevelInfo").textContent="Kürbisfeld · 50 Startsegmente · "+bounds.first.toLocaleString("de-DE")+"–"+bounds.last.toLocaleString("de-DE")+" HP";
+  document.querySelector("#halloweenEventProgress").textContent=level+" / "+HalloweenEvent.MAX_LEVEL;
+  document.querySelector("#previousHalloweenLevel").disabled=level<=1;
+  document.querySelector("#nextHalloweenLevel").disabled=level>=Math.min(HalloweenEvent.PLAYABLE_LEVEL,event.completed+1);
+  document.querySelector("#startHalloweenLevel").disabled=locked||level>HalloweenEvent.PLAYABLE_LEVEL;
+  HalloweenEvent.save(event);
+}
+function showHalloweenOverview(){
+  state.eventProgress||(state.eventProgress=HalloweenEvent.load());state.eventProgress.introSeen=true;HalloweenEvent.save(state.eventProgress);
+  document.querySelector("#halloweenEventIntro").classList.add("hidden");document.querySelector("#halloweenEventOverview").classList.remove("hidden");renderHalloweenOverview();
+}
+function openHalloweenEvent(){
+  if(!halloweenThemeActive())return false;
+  state.mode="event-menu";state.eventProgress=HalloweenEvent.load();startScreen.classList.add("hidden");document.querySelector("#halloweenEventScreen").classList.remove("hidden");
+  if(state.eventProgress.introSeen)showHalloweenOverview();else showHalloweenIntro();return true;
+}
+function closeHalloweenEvent(){
+  document.querySelector("#halloweenEventScreen").classList.add("hidden");startScreen.classList.remove("hidden");state.mode="start";selectMenuPage("Home");renderProfile();
+}
+function changeHalloweenLevel(delta){
+  const event=state.eventProgress||(state.eventProgress=HalloweenEvent.load());event.selected=Math.max(1,Math.min(HalloweenEvent.PLAYABLE_LEVEL,event.completed+1,event.selected+delta));renderHalloweenOverview();
+}
+function startHalloweenLevel(){
+  const event=state.eventProgress||(state.eventProgress=HalloweenEvent.load());if(event.selected>event.completed+1||event.selected>HalloweenEvent.PLAYABLE_LEVEL)return false;
+  progress.data.runs=Math.min(1000000000,progress.data.runs+1);progress.save();resetGame(true,event.selected);state.mode="playing";state.lastTime=performance.now();document.querySelector("#halloweenEventScreen").classList.add("hidden");startScreen.classList.add("hidden");gameOverScreen.classList.add("hidden");return true;
+}
+function restartCurrentRun(){
+  if(!state.eventRun)return startGame();
+  const level=state.eventLevel;progress.data.runs=Math.min(1000000000,progress.data.runs+1);progress.save();resetGame(true,level);state.mode="playing";state.lastTime=performance.now();gameOverScreen.classList.add("hidden");return true;
+}
+
+document.querySelector("#openHalloweenEvent").addEventListener("click",openHalloweenEvent);
+document.querySelector("#closeHalloweenEvent").addEventListener("click",closeHalloweenEvent);
+document.querySelector("#nextHalloweenDialogue").addEventListener("click",()=>{if(++halloweenDialogueIndex>=HalloweenEvent.dialogue.length)showHalloweenOverview();else renderHalloweenDialogue();});
+document.querySelector("#replayHalloweenIntro").addEventListener("click",showHalloweenIntro);
+document.querySelector("#previousHalloweenLevel").addEventListener("click",()=>changeHalloweenLevel(-1));
+document.querySelector("#nextHalloweenLevel").addEventListener("click",()=>changeHalloweenLevel(1));
+document.querySelector("#startHalloweenLevel").addEventListener("click",startHalloweenLevel);
 
 const ADMIN_SESSION_KEY="the-snake.admin-options";
 const ADMIN_TAP_MAX_GAP=2500;
@@ -1031,6 +1195,7 @@ function burst(x, y, color, count) {
 function draw() {
   ctx.clearRect(0, 0, state.width, state.height);
   drawBackground();
+  drawEventPumpkins();
   for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], false);
   for(const instance of livingSnakeInstances()){
     const head=snakeHead(instance);if(head){drawSegment(head,true);if(instance.rageActive){ctx.save();ctx.strokeStyle="#ff5a45";ctx.fillStyle="#ffb06b";ctx.shadowColor="#ff3b28";ctx.shadowBlur=16;ctx.lineWidth=3;ctx.beginPath();ctx.arc(head.x,head.y,23,0,Math.PI*2);ctx.stroke();ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.fillText("RAGE",head.x,head.y-27);ctx.restore();}}
@@ -1052,6 +1217,13 @@ function draw() {
 }
 
 function drawBackground() {
+  if(state.eventRun){
+    const source=HalloweenEvent.backgroundForLevel(state.eventLevel),image=halloweenEventBackgrounds.get(source);
+    if(image?.complete&&image.naturalWidth)ctx.drawImage(image,0,0,state.width,state.height);
+    else {ctx.fillStyle="#24102f";ctx.fillRect(0,0,state.width,state.height);}
+    ctx.fillStyle="rgba(16,5,24,.14)";ctx.fillRect(0,0,state.width,state.height);
+    return;
+  }
   const halloween=document.documentElement?.classList?.contains("halloween-theme");
   if(halloween&&halloweenArenaSprite.complete&&halloweenArenaSprite.naturalWidth){
     ctx.drawImage(halloweenArenaSprite,0,0,state.width,state.height);
@@ -1079,6 +1251,18 @@ function drawBackground() {
   ctx.setLineDash([]);
 }
 
+function drawEventPumpkins(){
+  if(!state.eventRun)return;
+  for(const pumpkin of state.eventPumpkins){
+    const sprite=halloweenEventBodySprite,size=44;
+    ctx.save();ctx.translate(pumpkin.x,pumpkin.y);ctx.shadowColor="#ff7d22";ctx.shadowBlur=10;
+    if(sprite.complete&&sprite.naturalWidth)ctx.drawImage(sprite,-size/2,-size/2,size,size);
+    else {ctx.fillStyle="#f47b24";ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();}
+    ctx.shadowBlur=0;ctx.fillStyle="#1b0b13";ctx.fillRect(-19,24,38,4);ctx.fillStyle="#ffbf45";ctx.fillRect(-19,24,38*Math.max(0,pumpkin.hp/pumpkin.maxHp),4);
+    ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#1a0812";ctx.fillStyle="#fff0b2";const label=String(Math.ceil(pumpkin.hp));ctx.strokeText(label,0,-25);ctx.fillText(label,0,-25);ctx.restore();
+  }
+}
+
 function drawHpLabel(segment) {
   if (segment.y < 0 || segment.y > state.height + 30) return;
   const label = String(Math.max(0, Math.ceil(segment.hp)));
@@ -1099,7 +1283,7 @@ function drawSegment(segment, isHead) {
   ctx.save();
   ctx.translate(segment.x, segment.y);
   ctx.scale(SNAKE_SCALE, SNAKE_SCALE);
-  const sprite = isHead ? headSprite : bodySprite;
+  const sprite = state.eventRun?(isHead?halloweenEventHeadSprite:halloweenEventBodySprite):(isHead ? headSprite : bodySprite);
   if (sprite.complete && sprite.naturalWidth) {
     ctx.save();
     ctx.rotate(segment.angle || 0);
@@ -1254,7 +1438,7 @@ window.addEventListener("keyup",event=>{
 window.addEventListener("blur",()=>{releaseDrag();state.keyboardLeft=false;state.keyboardRight=false;});
 
 document.querySelector("#startButton").addEventListener("click", startGame);
-document.querySelector("#restartButton").addEventListener("click", startGame);
+document.querySelector("#restartButton").addEventListener("click", restartCurrentRun);
 document.querySelector("#shareRunButton").addEventListener("click", shareRunResult);
 window.addEventListener("resize", resizeCanvas);
 if (typeof ResizeObserver !== "undefined") new ResizeObserver(resizeCanvas).observe(wrap);

@@ -359,6 +359,61 @@ html.halloween-theme body { background:#090519; }
   .halloween-theme .play-button .play-icon::after { font-size:24px; }
 }
 
+/* Halloween event: separate story and level hub. */
+.halloween-event-entry {
+  position:absolute; z-index:5; right:max(6px,env(safe-area-inset-right)); top:50%;
+  width:82px; min-height:96px; margin:0; padding:3px; transform:translateY(-50%);
+  border:0; background:transparent; color:#ffd67b; text-shadow:0 2px 4px #000;
+  font:900 10px Georgia,serif; filter:drop-shadow(0 0 12px #ff782baa); touch-action:manipulation;
+}
+.halloween-event-entry:active { transform:translateY(-50%) scale(.95); }
+.halloween-event-entry img { display:block; width:100%; height:auto; }
+.halloween-event-entry span { display:block; margin-top:-7px; letter-spacing:.12em; }
+.halloween-event-screen {
+  position:fixed; z-index:50; inset:0; width:min(100%,480px); height:100svh; margin:auto;
+  overflow:hidden; color:#fff1d4; background:#190a27 url('halloween-event-menu.webp') center/cover no-repeat;
+}
+.halloween-event-screen::before { content:""; position:absolute; inset:0; background:linear-gradient(#0c05134d,#1208171a 42%,#1407138c); pointer-events:none; }
+.halloween-event-back { position:absolute; z-index:10; top:max(10px,env(safe-area-inset-top)); left:10px; width:auto; margin:0; padding:9px 13px; border:2px solid #f3a64b; border-radius:999px; color:#ffe1a1; background:#241037e8; box-shadow:0 4px 12px #0009; font:800 12px Georgia,serif; }
+.halloween-event-intro,.halloween-event-overview { position:relative; z-index:2; width:100%; height:100%; }
+.halloween-dialogue-character { position:absolute; bottom:25%; width:68%; height:66%; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 8px 8px #0009); pointer-events:none; }
+.halloween-dialogue-character.morgana { left:-8%; }
+.halloween-dialogue-character.hero { right:-7%; width:49%; height:57%; }
+.halloween-event-intro.hero-speaking .morgana { width:53%; left:-12%; }
+.halloween-dialogue-box { position:absolute; z-index:4; left:10px; right:10px; bottom:max(16px,env(safe-area-inset-bottom)); min-height:174px; padding:16px 16px 52px; border:3px solid #f0a84d; border-radius:18px; color:#fff3d7; background:linear-gradient(145deg,#27113bea,#100918f2); box-shadow:inset 0 0 0 2px #784052,0 9px 24px #000c; }
+.halloween-dialogue-box strong { color:#ffbc61; font:900 17px Georgia,serif; }
+.halloween-dialogue-box p { margin:8px 0 0; font:600 14px/1.45 Georgia,serif; }
+.halloween-dialogue-box button { position:absolute; right:12px; bottom:10px; width:auto; margin:0; padding:8px 14px; border:1px solid #ffca6e; color:#301021; background:linear-gradient(#ffbd57,#dd6829); }
+.halloween-event-heading { position:absolute; top:max(52px,calc(env(safe-area-inset-top) + 42px)); left:18px; right:18px; text-align:center; text-shadow:0 3px 7px #000; }
+.halloween-event-heading p { margin:0; color:#ffc16d; font:900 10px Georgia,serif; letter-spacing:.2em; }
+.halloween-event-heading h2 { margin:5px 0; color:#ffe0a2; font:900 clamp(29px,9vw,42px) Georgia,serif; }
+.halloween-event-heading small { color:#ead6f2; }
+.halloween-overview-morgana { position:absolute; left:-7%; bottom:27%; width:52%; height:48%; object-fit:contain; object-position:left bottom; filter:drop-shadow(0 7px 7px #0009); }
+.halloween-event-stage-card { position:absolute; z-index:3; left:18%; right:6%; bottom:max(55px,calc(env(safe-area-inset-bottom) + 45px)); padding:14px; text-align:center; border:2px solid #f1a44a; border-radius:17px; background:linear-gradient(145deg,#2b1342ed,#10091df2); box-shadow:inset 0 0 0 2px #653458,0 8px 20px #000b; }
+.halloween-event-stage-card > span { color:#d5b8e7; font:900 9px Georgia,serif; letter-spacing:.15em; }
+.halloween-event-stage-card > strong { display:block; margin:5px; color:#ffc765; font:900 25px Georgia,serif; }
+.halloween-event-stage-card > small { display:block; min-height:16px; color:#f4e2cf; }
+.halloween-event-level-nav { display:grid; grid-template-columns:44px 1fr 44px; align-items:center; gap:6px; margin:10px 0; }
+.halloween-event-level-nav button { margin:0; padding:8px 3px; color:#ffd176; background:#3a1850; border-color:#b45b53; }
+.halloween-event-level-nav b { color:#fff1ca; }
+.halloween-event-start { margin:0; color:#351124; background:linear-gradient(#ffbd54,#df6428); border:2px solid #ffd47c; }
+.halloween-replay-intro { position:absolute; z-index:4; right:9px; bottom:max(7px,env(safe-area-inset-bottom)); width:auto; margin:0; padding:7px 10px; color:#ead6f3; border:1px solid #885c98; background:#1b0d2ee0; font-size:10px; }
+.game-shell.halloween-event-run { background:#15091e; }
+.game-shell.halloween-event-run .game-wrap { border-color:#f19a43; box-shadow:0 0 0 2px #5c2845,0 0 0 4px #a9513f,0 8px 22px #000c; }
+@media (max-width:360px) {
+  .halloween-event-entry { width:69px; right:2px; }
+  .halloween-dialogue-character { width:74%; left:-13%; }
+  .halloween-dialogue-box { min-height:184px; padding:13px 13px 48px; }
+  .halloween-dialogue-box p { font-size:13px; }
+  .halloween-event-stage-card { left:14%; right:4%; }
+}
+@media (max-height:650px) {
+  .halloween-dialogue-character { bottom:29%; height:58%; }
+  .halloween-dialogue-box { min-height:145px; }
+  .halloween-event-stage-card { bottom:38px; padding:9px; }
+  .halloween-overview-morgana { bottom:25%; height:42%; }
+}
+
 /* Arena 10: stone scenery, gold borders, clear blue combat surface. */
 body { padding: 0; background: #111c21; }
 .game-shell {

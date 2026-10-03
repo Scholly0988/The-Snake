@@ -1,0 +1,55 @@
+THE SNAKE – PATCH 26.0 TEST: HALLOWEEN-EVENT, TEIL 1
+===================================================
+
+WICHTIG
+-------
+Diese ZIP enthält ausschließlich Dateien, die für diesen Patch neu sind oder
+gegen die gleichnamigen Dateien im bestehenden Git-Projekt ausgetauscht werden.
+Die Ordnerstruktur bleibt unverändert: alle Dateien gehören ins Hauptverzeichnis
+des Spiels.
+
+ERSETZEN
+--------
+- README.md
+- game.js
+- index.html
+- style.css
+- test-game.cjs
+
+NEU EINFÜGEN
+-------------
+- halloween-event.js
+- halloween-event-button.webp
+- halloween-event-menu.webp
+- halloween-event-levels-1-8.webp
+- halloween-event-levels-9-23.webp
+- halloween-event-level-24.webp
+- halloween-event-snake-head.webp
+- halloween-event-snake-body.webp
+- morgana-neutral.webp
+- morgana-sad.webp
+- morgana-shocked.webp
+- morgana-happy.webp
+- test-halloween-event.cjs
+- PATCH-26.0-HALLOWEEN-EVENT.txt
+
+UMGESETZTER STAND
+-----------------
+- Event-Kürbis rechts mittig im Hauptmenü, sichtbar im Halloween-Zeitraum.
+- Event-Menü mit Zurück-Button, eigenem Hintergrund und separatem Fortschritt.
+- Vollständiges Intro mit elf vorgegebenen Dialogszenen und Morgana-Portraits.
+- Event-Level 1 bis 7 spielbar; Vorschau-Struktur bis Level 24 vorbereitet.
+- 50 Startsegmente, Level 1 exakt 44 bis 7.800 HP.
+- Kürbisse besitzen 50 % der HP des letzten sichtbaren Hauptsegments.
+- Nur der mittlere Hauptheld kann Kürbisse beschädigen.
+- Lebende Kürbisse lassen die Hauptschlange beim Kontakt um ein Segment wachsen.
+- Schnelle Bonus-Schlangen in Level 1 bis 3 mit fünf Segmenten, davon drei
+  Skill-Segmente.
+- Eigene Kürbisschlangen-Grafiken und drei Event-Kampfhintergründe.
+- Versionsanzeige auf 26.0 Test aktualisiert.
+
+TESTS
+-----
+- node test-halloween-event.cjs
+- node test-game.cjs
+- alle vorhandenen test-*.cjs

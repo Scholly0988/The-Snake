@@ -1,5 +1,25 @@
 # The Snake
 
+## Version 26.0 Test – Halloween-Event, Teil 1
+
+- Ein saisonaler Event-Kürbis erscheint nur während des Halloween-Zeitraums
+  rechts mittig im Hauptmenü und öffnet eine eigene Event-Oberfläche.
+- Morganas Intro umfasst elf Szenen mit neutraler, trauriger und glücklicher
+  Darstellung sowie dem aktuell ausgewählten Haupthelden als Dialogpartner.
+- Die Event-Übersicht besitzt einen eigenen Kürbisfeld-Hintergrund, getrennten
+  Fortschritt und eine Startauswahl für die bereits definierten Level 1 bis 7.
+- Alle Event-Level starten mit einer 50-teiligen Kürbisschlange. Level 1 skaliert
+  exakt von 44 bis 7.800 HP; Level 2 bis 7 folgen derselben relativen HP-Kurve
+  wie die normalen Level.
+- Aufgesammelte Kürbisse verlängern die Hauptschlange. Ausschließlich Geschosse
+  des mittleren Haupthelden können die Kürbisse vorher zerstören.
+- Level 1 bis 3 enthalten schnelle fünfteilige Bonus-Schlangen mit drei
+  Skill-Segmenten. Level 1 bis 8, 9 bis 23 und das finale Level 24 besitzen die
+  vorgesehenen getrennten Hintergründe.
+- Neue Eventgrafiken wurden als kleine WebP-Dateien eingebunden. Die
+  Event-Logik und der Fortschritt liegen getrennt in `halloween-event.js`.
+- Die Austauschliste steht in `PATCH-26.0-HALLOWEEN-EVENT.txt`.
+
 ## Version 25.2 – Verstecktes Admin-Menü
 
 - Saisonale Event-Einstellungen und die Spielfeldmessung sind für normale
