@@ -196,7 +196,7 @@ button:active { transform: scale(.98); }
 .menu-profile { font-size: 21px; color: #f6d489; }
 .menu-profile span { font-size: 10px; letter-spacing: .06em; font-weight: 800; }
 .menu-profile small { display: block; font-size: 9px; color: #bed6e8; margin-top: 3px; font-weight: 400; }
-.coin-counter { color: #ffe28f; font-size: 16px; min-width: 70px; justify-content: center; overflow-wrap: anywhere; }
+.coin-counter { color: #ffe28f; font-size: 16px; min-width: 70px; justify-content: center; overflow-wrap: anywhere; user-select:none; touch-action:manipulation; }
 .menu-page { flex: 1; min-height: 0; min-width: 0; }
 .home-page { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; overflow-y: auto; }
 .home-page.hidden, .menu-sheet.hidden { display: none; }
@@ -221,6 +221,9 @@ button:active { transform: scale(.98); }
 .menu-nav #navHome svg { background: radial-gradient(#8baa54,#304c2a); }
 .menu-version { margin: 0; text-align: center; font-size: 9px; color: #ead8b2; flex-shrink: 0; }
 .season-banner { display:none; }
+.admin-options { margin:0 0 22px; padding:12px; border:1px solid #8a6aa8; border-radius:12px; background:#0b1424cc; }
+.admin-options > h3 { margin-top:0; color:#dcbaff; }
+.admin-options .season-options, .admin-options .measurement-card { margin-bottom:12px; }
 .season-options { margin:0 0 22px; padding:12px; border:1px solid #b89555; border-radius:12px; background:#071a28cc; }
 .season-options h3 { margin-top:0; color:#ffe1a1; }
 .season-options label { display:block; margin-bottom:7px; color:#d4e1e8; font-size:12px; font-weight:800; }

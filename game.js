@@ -1,6 +1,6 @@
 "use strict";
 
-const GAME_VERSION="25.0.1 Test · Mirel";
+const GAME_VERSION="25.2 Test · Admin-Menü";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const wrap = document.querySelector("#gameWrap");
@@ -43,6 +43,7 @@ hammerSprite.src = "holy-hammer.png";
 const PLAYER_EDGE_MARGIN = 16;
 const PLAYER_MUZZLE_Y = -20; // Sprite placement, independent of projectile origin.
 const PLATFORM_SHOT_Y = 28; // Centre of the platform below the character.
+const PLAYER_BOTTOM_OFFSET = 105; // Space for the fixed secondary row below the main platform.
 function clampPlayerX(x) {
   const margin = Math.min(PLAYER_EDGE_MARGIN, state.width / 2);
   return Math.max(margin, Math.min(state.width - margin, x));
@@ -101,7 +102,7 @@ const state = {
   trail: [],
   headDistance: 0,
   minimumLevelPathLength: 0,
-  player: { x: 210, targetX: 210, y: 660, width: 34, height: 36, speed: 750 },
+  player: { x: 210, targetX: 210, y: 615, width: 34, height: 36, speed: 750 },
   weapon: { damage: 1, shotsPerSecond: 2.7, bullets: 1, spread: 0, pierce: 0, critChance: 0, critDamage: 150 },
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null,
@@ -189,7 +190,7 @@ function resizeCanvas() {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   state.width = rect.width;
   state.height = rect.height;
-  state.player.y = rect.height - 50;
+  state.player.y = rect.height - PLAYER_BOTTOM_OFFSET;
   state.player.x = clampPlayerX(state.player.x);
   state.player.targetX = state.player.x;
 }
@@ -844,6 +845,43 @@ function showMenu() {
   renderProfile();
 }
 
+const ADMIN_SESSION_KEY="the-snake.admin-options";
+const ADMIN_TAP_MAX_GAP=2500;
+let adminCoinTapCount=0;
+let adminLastCoinTap=-Infinity;
+
+function adminSessionUnlocked() {
+  try { return window.sessionStorage?.getItem(ADMIN_SESSION_KEY)==="unlocked"; }
+  catch { return false; }
+}
+
+function setAdminOptionsVisible(visible) {
+  const panel=document.querySelector("#adminOptions");
+  if(!panel)return false;
+  panel.classList[visible?"remove":"add"]("hidden");
+  panel.setAttribute?.("aria-hidden",String(!visible));
+  return visible;
+}
+
+function registerAdminCoinTap(timestamp=Date.now()) {
+  if(state.mode!=="start")return false;
+  if(timestamp-adminLastCoinTap>ADMIN_TAP_MAX_GAP)adminCoinTapCount=0;
+  adminLastCoinTap=timestamp;
+  adminCoinTapCount++;
+  if(adminCoinTapCount<5)return false;
+  adminCoinTapCount=0;
+  try { window.sessionStorage?.setItem(ADMIN_SESSION_KEY,"unlocked"); } catch {}
+  setAdminOptionsVisible(true);
+  selectMenuPage("Options");
+  return true;
+}
+
+function bindAdminUnlock() {
+  const target=document.querySelector("#adminUnlockTarget");
+  setAdminOptionsVisible(adminSessionUnlocked());
+  target?.addEventListener("click",()=>registerAdminCoinTap());
+}
+
 function selectMenuPage(page) {
   for (const name of ["Home", "Upgrades", "Heroes", "Options"]) {
     const active = name === page;
@@ -1272,6 +1310,7 @@ bindSeraphineMenu();
 bindKikoMenu();
 bindMirelMenu();
 bindSkillsMenu();
+bindAdminUnlock();
 bindHalloweenTheme();
 resizeCanvas();
 createSnake(SEGMENTS_PER_SNAKE);

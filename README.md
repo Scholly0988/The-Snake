@@ -1,5 +1,24 @@
 # The Snake
 
+## Version 25.2 – Verstecktes Admin-Menü
+
+- Saisonale Event-Einstellungen und die Spielfeldmessung sind für normale
+  Spieler vollständig ausgeblendet.
+- Fünf aufeinanderfolgende Tipps auf den Münzwert im Hauptmenü schalten die
+  Admin-Optionen frei und öffnen die Optionsseite.
+- Die Freischaltung gilt nur für die aktuelle Browser-Sitzung. Nach dem
+  vollständigen Schließen des Tabs sind die Werkzeuge wieder verborgen.
+- Spielstand sichern und übertragen bleibt für alle Spieler sichtbar.
+
+## Version 25.1 – Feste Sekundärreihe
+
+- Die Sekundärslots stehen jetzt fest links, mittig und rechts am unteren
+  Spielfeldrand und bewegen sich nicht mehr mit der Hauptplattform.
+- Die Hauptplattform wurde nach oben versetzt, damit der mittlere Sekundärheld
+  vollständig sichtbar bleibt.
+- Schussursprung, Niederlagenlinie und Levelpfade verwenden die neue Position
+  der Hauptplattform.
+
 ## Version 25.0.1 – Versionsanzeige
 
 - Die Versionsanzeige im unteren Hauptmenü wird zusätzlich durch `game.js`
