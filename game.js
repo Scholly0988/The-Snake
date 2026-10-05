@@ -1,6 +1,6 @@
 "use strict";
 
-const GAME_VERSION="26.1 Test · Halloween-Upgrades";
+const GAME_VERSION="26.2 Test · Admin-Levelauswahl";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const wrap = document.querySelector("#gameWrap");
@@ -171,6 +171,13 @@ function changeLevel(delta) {
 function completeLevel() {
   if(state.mode!=="playing"||(state.eventRun?eventMainSegments().length:state.snake.length))return;
   releaseDrag();state.mode="victory";state.pendingUpgrades=0;
+  if(state.adminTest){
+    state.score+=500;upgradeScreen.classList.add("hidden");
+    document.querySelector("#resultEyebrow").textContent="TEST ABGESCHLOSSEN";
+    document.querySelector("#resultTitle").textContent=(state.eventRun?"Event-Level ":"Level ")+state.level+" getestet";
+    document.querySelector("#runSummary").textContent="Admin-Testlauf · keine Münzen oder Levelfortschritte";
+    finalScore.textContent=state.score;gameOverScreen.classList.remove("hidden");return;
+  }
   state.score+=500;progress.data.best=Math.max(progress.data.best,state.score);
   if(state.eventRun){
     const reward=HalloweenEvent.completeLevel(state.eventProgress,state.eventLevel);
@@ -210,8 +217,9 @@ function resizeCanvas() {
   state.player.targetX = state.player.x;
 }
 
-function resetGame(eventRun=false,eventLevel=1) {
+function resetGame(eventRun=false,eventLevel=1,adminTest=false) {
   releaseDrag();
+  state.adminTest=adminTest;
   state.eventRun=eventRun;state.eventLevel=eventLevel;
   state.skillUpgrades=eventRun?[]:[...progress.data.skillUpgrades];
   state.level=eventRun?eventLevel:state.selectedLevel;
@@ -682,7 +690,7 @@ function destroySegment(index, offerUpgrade = true) {
   if (state.seraphine) queueSeraphineDeath(destroyed,instance,neighbors);
   resolveMirelDeath(destroyed,instance,neighbors);
   state.score += destroyed.upgrade ? 100 : 25;
-  const coins = state.eventRun?0:(destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
+  const coins = state.eventRun||state.adminTest?0:(destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   if(coins){state.runCoins += coins;progress.reward(coins,state.score);}
   document.querySelector("#saveStatus").textContent = progress.message + " · Touch: Wischen · PC: ← → oder A/D";
   burst(destroyed.x, destroyed.y, destroyed.upgrade ? "#ffe083" : "#75ffac", 16);
@@ -858,10 +866,9 @@ function endGame() {
   state.mode = "gameover";
   document.querySelector("#resultEyebrow").textContent="DIE SCHLANGE WAR SCHNELLER";
   document.querySelector("#resultTitle").textContent="Game Over";
-  progress.data.best = Math.max(progress.data.best, state.score);
-  progress.save();
+  if(!state.adminTest){progress.data.best = Math.max(progress.data.best, state.score);progress.save();}
   renderProfile();
-  document.querySelector("#runSummary").textContent = Math.floor(state.runCoins) + " Münzen verdient · bleiben erhalten";
+  document.querySelector("#runSummary").textContent = state.adminTest?"Admin-Testlauf · keine Münzen oder Levelfortschritte":Math.floor(state.runCoins) + " Münzen verdient · bleiben erhalten";
   finalScore.textContent = state.score;
   gameOverScreen.classList.remove("hidden");
 }
@@ -942,6 +949,8 @@ function renderProfile() {
 
 function showMenu() {
   releaseDrag();
+  if(state.adminTest)state.selectedLevel=progress.data.selectedLevel;
+  state.adminTest=false;
   state.eventRun=false;document.querySelector(".game-shell")?.classList.remove("halloween-event-run");
   state.mode = "start";
   gameOverScreen.classList.add("hidden");
@@ -1022,6 +1031,7 @@ function startHalloweenLevel(){
   progress.data.runs=Math.min(1000000000,progress.data.runs+1);progress.save();resetGame(true,event.selected);state.mode="playing";state.lastTime=performance.now();document.querySelector("#halloweenEventScreen").classList.add("hidden");startScreen.classList.add("hidden");gameOverScreen.classList.add("hidden");return true;
 }
 function restartCurrentRun(){
+  if(state.adminTest)return startAdminTestLevel(state.eventRun?"event":"normal",state.level);
   if(!state.eventRun)return startGame();
   const level=state.eventLevel;progress.data.runs=Math.min(1000000000,progress.data.runs+1);progress.save();resetGame(true,level);state.mode="playing";state.lastTime=performance.now();gameOverScreen.classList.add("hidden");return true;
 }
@@ -1040,6 +1050,30 @@ const ADMIN_SESSION_KEY="the-snake.admin-options";
 const ADMIN_TAP_MAX_GAP=2500;
 let adminCoinTapCount=0;
 let adminLastCoinTap=-Infinity;
+let adminOptionsUnlocked=false;
+
+function renderAdminLevelLists(){
+  for(const [selector,count,event] of [["#adminNormalLevel",LEVELS.length,false],["#adminEventLevel",HalloweenEvent.MAX_LEVEL,true]]){
+    const select=document.querySelector(selector);select.replaceChildren();
+    for(let level=1;level<=count;level++){
+      const option=document.createElement("option");option.value=String(level);
+      option.disabled=event&&level>HalloweenEvent.PLAYABLE_LEVEL;
+      option.textContent=(event?"Event-Level ":"Level ")+level+(option.disabled?" · noch nicht umgesetzt":"");
+      select.append(option);
+    }
+    select.value="1";
+  }
+}
+function startAdminTestLevel(type,level){
+  const event=type==="event";
+  if(!adminOptionsUnlocked||!["normal","event"].includes(type)||!Number.isInteger(level)||level<1||level>(event?HalloweenEvent.PLAYABLE_LEVEL:LEVELS.length))return false;
+  if(event)state.eventProgress||(state.eventProgress=HalloweenEvent.load());else state.selectedLevel=level;
+  resetGame(event,level,true);state.mode="playing";state.lastTime=performance.now();
+  startScreen.classList.add("hidden");gameOverScreen.classList.add("hidden");document.querySelector("#halloweenEventScreen").classList.add("hidden");return true;
+}
+document.querySelector("#startAdminNormalLevel").addEventListener("click",()=>startAdminTestLevel("normal",Number(document.querySelector("#adminNormalLevel").value)));
+document.querySelector("#startAdminEventLevel").addEventListener("click",()=>startAdminTestLevel("event",Number(document.querySelector("#adminEventLevel").value)));
+renderAdminLevelLists();
 
 function adminSessionUnlocked() {
   try { return window.sessionStorage?.getItem(ADMIN_SESSION_KEY)==="unlocked"; }
@@ -1047,6 +1081,7 @@ function adminSessionUnlocked() {
 }
 
 function setAdminOptionsVisible(visible) {
+  adminOptionsUnlocked=visible;
   const panel=document.querySelector("#adminOptions");
   if(!panel)return false;
   panel.classList[visible?"remove":"add"]("hidden");
