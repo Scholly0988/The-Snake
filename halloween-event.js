@@ -3,7 +3,7 @@
 const HalloweenEvent = (() => {
   const STORAGE_KEY="the-snake.halloween-event.v1";
   const MAX_LEVEL=24;
-  const PLAYABLE_LEVEL=7;
+  const PLAYABLE_LEVEL=8;
   const BASE_SEGMENTS=50;
   const LEVEL_ONE_FIRST_HP=44;
   const LEVEL_ONE_LAST_HP=7800;
@@ -78,7 +78,7 @@ const HalloweenEvent = (() => {
   }
   function pumpkinHp(referenceHp,value) { return Math.max(1,Math.round(referenceHp*.5*modifiers(value).pumpkinHpMultiplier)); }
   function bonusSegmentHp(referenceHp,index,level,value,isSkill=false) {
-    const base=pumpkinHp(referenceHp)*Math.pow(segmentRatio(level),index);
+    const base=referenceHp*.15*Math.pow(segmentRatio(level),index);
     return Math.max(1,Math.round(base*(isSkill?modifiers(value).skillHpMultiplier:1)));
   }
   function backgroundForLevel(level) {

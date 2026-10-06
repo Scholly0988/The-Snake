@@ -3,7 +3,7 @@ class Element{constructor(){this.textContent='';this.disabled=false;this.style={
 const ctx=new Proxy({createRadialGradient:()=>({addColorStop(){}}),createLinearGradient:()=>({addColorStop(){}})},{get:(o,k)=>k in o?o[k]:()=>{}}),elements=new Map();
 const get=key=>{if(!elements.has(key))elements.set(key,new Element());return elements.get(key)};
 const store=new Map(),context=vm.createContext({document:{querySelector:get,createElement:()=>new Element()},window:{localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},devicePixelRatio:1,addEventListener(){}},Image:class{},performance:{now:()=>0},requestAnimationFrame(){},Math});
-for(const file of ['skills.js','levels.js','progress.js','secondary.js','kiko.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','ilyra.js','seraphine.js','shooter.js','game.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
+for(const file of ['skills.js','levels.js','halloween-event.js','progress.js','secondary.js','kiko.js','mirel.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','ilyra.js','seraphine.js','shooter.js','halloween-boss.js','game.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
 const run=source=>vm.runInContext(source,context);
 
 // 1: Level 1 remains the original, single-snake path.

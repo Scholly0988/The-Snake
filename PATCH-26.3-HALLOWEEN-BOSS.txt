@@ -1,0 +1,91 @@
+THE SNAKE – PATCH 26.3 TEST – HALLOWEEN LEVEL 8
+Voraussetzung: bisheriger Projektstand 26.2 mit Halloween-Assets.
+
+ERSETZEN (gleicher Pfad im Projektstamm):
+- game.js
+- halloween-event.js
+- index.html
+- README.md
+- test-alchemist.cjs (Testdatei)
+- test-game.cjs (Testdatei)
+- test-ilyra.cjs (Testdatei)
+- test-kiko.cjs (Testdatei)
+- test-levels-2-10.cjs (Testdatei)
+- test-mirel.cjs (Testdatei)
+- test-runemaster.cjs (Testdatei)
+- test-secondary.cjs (Testdatei)
+- test-seraphine.cjs (Testdatei)
+- test-shooter.cjs (Testdatei)
+- test-skills.cjs (Testdatei)
+
+NEU EINFÜGEN (Projektstamm):
+- halloween-boss.js
+- test-halloween-boss.cjs
+- PATCH-26.3-HALLOWEEN-BOSS.txt (diese Dokumentation)
+
+Die ZIP enthält nur Dateien dieses Patches. Bestehende Assets bleiben erhalten.
+Version im Hauptmenü: 26.3 Test · Halloween-Boss Level 8.
+
+BALANCING (HALLOWEEN_BOSS_CONFIG in halloween-boss.js):
+fallDuration 2,2 s; pauseDuration 1 s; burrowDuration 0,65 s;
+emergeDuration 1 s; segmentInterval 0,85 s; wavePause 2 s;
+attackSpeed 92 px/s; laneTransition 1,15 s; swayAmplitude 18 px;
+attackSway 5 px; hpIncreaseFactor 0,25; attackRadius 24 px (Entfernungsrand).
+Muster: HALLOWEEN_BOSS_PATTERNS, fünf Segmente je Welle.
+Bahnen: 14/32/50/68/86 Prozent der Spielfeldbreite.
+HP = Eventsegment-HP Level 8 Position 0 + 0,25 × (Referenz-HP Position n − Start-HP).
+Die HP behalten Viertelwerte, damit die Steigung exakt 25 Prozent beträgt.
+
+AUTOMATISIERTE TESTS:
+Neuer test-halloween-boss.cjs prüft Intro-Zustände, deaktivierten Kampf,
+HP-Differenzen, Muster, Spezialzähler, Bahnübergang, Upgrade-Pause,
+Sichtbarkeit, Entfernen, letztes Spezialsegment, Kartenpools, Neustart,
+Menü/Game Over und normale/Event-Startzustände.
+Bestehende VM-Test-Harnesses laden die neuen Script-Abhängigkeiten.
+Admin-Grenztest angepasst: Level 8 verfügbar, Level 9 weiterhin gesperrt.
+Ausführen: for test in test-*.cjs; do node "$test" || exit 1; done
+Alle Testdateien bestanden. Canvas-Aufrufe zusätzlich mit Test-Stubs geprüft.
+Visuelle Tests im echten Browser noch manuell ausführen; im Workspace ist
+kein Chromium für Playwright installiert. Keine echten Geräte-/FPS-Messungen.
+
+MANUELLE TESTLISTE:
+Vorbereitung: Münzwert fünfmal antippen, Optionen, Event-Testlevel 8 starten.
+Für die Sekundärauswahl mindestens einen Sekundärhelden ausrüsten.
+1. Event-Level 8 startet ohne normale Hauptschlange.
+2. Bosskopf beginnt oberhalb des Spielfeldes.
+3. Kopf fährt weich zur zentralen Position.
+4. Kopf hält ungefähr eine Sekunde an.
+5. Kopf gräbt sich senkrecht ein und verschwindet vollständig.
+6. Braune Staubpartikel sind beim Eingraben sichtbar.
+7. Boss erscheint an derselben Stelle, Körperunterseite bleibt im Boden.
+8. Boss bleibt zentral und bewegt sich nur leicht links/rechts.
+9. Im gesamten Intro keine Schüsse, Fähigkeiten, Treffer oder Upgrades.
+10. Nach vollständigem Auftauchen beginnen Attacken.
+11. Attacken starten optisch in der Bosskörpermitte.
+12. Weicher Übergang zu allen fünf Bahnen, danach Bewegung nach unten.
+13. Mehrere Wellen beobachten: Muster A/B/C/D/E wechseln rotierend.
+14. Zufallsmuster wiederholt eine Bahn nicht direkt; übrige Muster prüfen.
+15. Attacken 5, 10, 15 usw. sind gelb mit Plus markiert, wellenübergreifend.
+16. Spezialsegment zerstören: bestehendes Upgradefenster erscheint.
+17. Vier Karten: drei Hauptheldenpool-Karten und Standardkarte in Slot 4.
+18. Auswahl bestätigen: anschließend drei Karten aus ausgerüsteten Sekundärpools.
+19. HP in Entwicklerkonsole mit getHalloweenBossSegmentHP(n) vergleichen:
+    Differenz zum Vorgänger = 25 % der Eventsegment-Referenzdifferenz.
+20. Unsichtbares Attackensegment erhält weder Projektil- noch Flächenschaden.
+21. Unteren Rand überschreiten lassen: Gegner aus state.snake und state.snakes weg.
+22. Neu starten: Intro beginnt erneut; spawned=0, Muster/Spawnzeit zurückgesetzt.
+23. Menü verlassen/anderen Level starten: halloweenBoss=null, keine Bossattacken.
+24. Halloween-Level 1–7 prüfen: HP, Kürbisse, Wachstum, Bonusschlangen, Upgrades.
+25. Normale Level prüfen: Pfade, Helden, Schadenseffekte und Levelabschluss.
+26. Upgradefenster offen lassen: Bossbewegung, Attacken und Spawnzeit pausieren.
+27. Letztes sichtbares Spezialsegment zerstören: Auswahl auch ohne andere Attacken.
+28. Mit Ilyra/Seraphine/Kiko/Mirel testen: sichtbare Attacken treffen, Status wirkt.
+29. Samsung Internet/Tablet/PC prüfen: Layout, Bewegung und längerfristige FPS.
+30. Leere Welle löst keinen Sieg und keine Event-Belohnung aus.
+
+BEWUSST OFFEN:
+Boss-HP, angreifbare Bossphasen, Siegbedingung, weitere Bossphasen und
+Abschlussbelohnung. Bosskörper ist aktuell nicht angreifbare Inszenierung.
+Fallende Attacken werden am unteren Rand entfernt; es wird kein neues
+Verlust-/Heldenkontakt-System eingeführt. Optionale Bodenerschütterung und
+separate Augenglüh-Animation sind nicht enthalten; Staub und sanftes Wippen schon.

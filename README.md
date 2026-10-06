@@ -1,5 +1,27 @@
 # The Snake
 
+## Version 26.4 Test – Bossphasen und Heil-Kürbisse
+
+- Boss-Max-HP: bestehende HP des 50. Startsegments aus Event-Level 7 × 1,25.
+- Bosskopf nach dem Intro durch die vorhandenen Projektil-/Flächen-/DOT-Systeme angreifbar.
+- Eigener HP-Balken; drei vorwärts gerichtete Phasen bei unter 70 % und unter 35 %.
+- Wachsende Kürbisse bleiben im vorhandenen Feldkürbis-System: nur mittlere Schüsse treffen.
+- Drei sichtbare Größenstufen, älteste reife Frucht zuerst; sichtbare Hin-/Rückbewegung.
+- Jede gefressene Frucht heilt 5 % Max-HP, maximal bis volle HP; Heilung setzt Phasen nicht zurück.
+- Neue Spawns pausieren beim Fressen, vorhandene Attacken laufen weiter.
+- Tod stoppt den Kampf und schließt Level 8 über die vorhandene Event-Belohnung ab.
+- Austauschliste, Konstanten und 39 manuelle Tests: `PATCH-26.4-BOSSPHASEN.txt`.
+
+## Version 26.3 Test – Halloween-Boss Level 8
+
+- Boss-Intro mit Einflug, Pause, Eingraben, Staub und Auftauchen.
+- Zentraler Boss mit sanfter Bewegung; fünf Bahnen und fünf wechselnde Angriffsmuster.
+- Jede fünfte Attacke ist ein normales Upgrade-Spezialsegment.
+- Bestehende Event-HP-Kurve mit 25 % ihrer Steigerung bei unverändertem Startwert.
+- Angriffskörper verwenden die vorhandene Schadens-, Status- und Upgrade-Logik.
+- Noch keine Boss-Siegbedingung: Level 8 ist eine Angriffsphase ohne Abschlussbelohnung.
+- Austauschliste, Balancingwerte und manuelle Tests: `PATCH-26.3-HALLOWEEN-BOSS.txt`.
+
 ## Version 26.1 Test – Halloween-Upgrades
 
 - Das Event-Menü besitzt jetzt ein eigenes dauerhaftes Upgradefenster mit zehn

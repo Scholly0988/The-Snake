@@ -10,13 +10,13 @@ const canvasContext=new Proxy({createRadialGradient:()=>({addColorStop(){}}),cre
 const elements=new Map(),get=s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s)};
 const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
 const context=vm.createContext({document:{querySelector:get,createElement:()=>new Element()},window:{localStorage:storage,devicePixelRatio:1,addEventListener(){}},Image:class{},performance:{now:()=>0},requestAnimationFrame(){}});
-for(const f of ['skills.js','levels.js','progress.js','secondary.js','kiko.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','ilyra.js','seraphine.js','shooter.js','game.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
+for(const f of ['skills.js','levels.js','halloween-event.js','progress.js','secondary.js','kiko.js','mirel.js','paladin.js','necromancer.js','alchemist.js','runemaster.js','ilyra.js','seraphine.js','shooter.js','halloween-boss.js','game.js'])vm.runInContext(fs.readFileSync(f,'utf8'),context);
 const run=s=>vm.runInContext(s,context),near=(a,b)=>assert(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 function setup(ids=[]){run(`progress.data.damageLevel=0;progress.data.rateLevel=0;progress.data.critChanceLevel=0;progress.data.critDamageLevel=0;progress.data.skillUpgrades=${JSON.stringify(ids)};resetGame();state.mode="playing";state.paladin=newPaladin("left");state.necromancer=newNecromancer("right");state.snake=[{id:1,x:100,y:100,hp:1000,maxHp:1000},{id:2,x:200,y:100,hp:1000,maxHp:1000}];state.headDistance=-1000;`)}
 function pcard(id){run(`paladinUpgradePool().find(c=>c.id===${JSON.stringify(id)}).apply()`)}
 function ncard(id){run(`necromancerUpgradePool().find(c=>c.id===${JSON.stringify('necro-'+id)}).apply()`)}
 function gcard(text){run(`roundUpgradePool().find(c=>c.name===${JSON.stringify(text)}).apply()`)}
-// Purchases, old save migration, strict schema, concurrent tab and write rollback.
+// Purchases, old save migration, strict schema and Samsung/private-mode fallback.
 const api=run('SnakeProgress');let store=new Map(),fail=false;
 const io={getItem:k=>store.get(k)??null,setItem:(k,v)=>{if(fail)throw Error('quota');store.set(k,v)}};
 let p=api.open(io);assert.deepEqual(Array.from(p.data.skillUpgrades),[]);
@@ -24,8 +24,8 @@ p.data.coins=200;p.save();assert.equal(p.buySkill('paladin.attack'),false);asser
 assert(p.buySkill('shooter.attack'));assert.equal(p.data.coins,150);assert.equal(p.buySkill('shooter.attack'),false);
 p=api.open(io);assert(p.data.skillUpgrades.includes('shooter.attack'));
 const backup=p.export();p.import(backup);assert(p.data.skillUpgrades.includes('shooter.attack'));
-fail=true;assert.equal(p.buySkill('shooter.rate'),false);assert.equal(p.data.coins,150);assert(!p.data.skillUpgrades.includes('shooter.rate'));fail=false;
-const other=api.open(io);assert(other.buySkill('shooter.rate'));assert.equal(p.buySkill('shooter.pierce'),false);assert.equal(p.data.coins,150);
+fail=true;assert.equal(p.buySkill('shooter.rate'),true);assert.equal(p.data.coins,100);assert(p.data.skillUpgrades.includes('shooter.rate'));assert.match(p.message,/Sitzung/);fail=false;
+const stale=api.open(io),other=api.open(io);assert(other.buySkill('shooter.rate'));assert.equal(stale.buySkill('shooter.pierce'),true);assert.equal(stale.data.coins,100);assert.match(stale.message,/temporär/);
 const legacy=JSON.parse(backup);delete legacy.skillUpgrades;assert.equal(api.validate(legacy).skillUpgrades.length,0);
 for(const bad of [['unknown'],['shooter.attack','shooter.attack'],{},[null]])assert.throws(()=>api.validate({...legacy,skillUpgrades:bad}));
 // Actual menu render and purchase wiring for every hero.

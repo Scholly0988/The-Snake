@@ -1,6 +1,6 @@
 "use strict";
 
-const GAME_VERSION="26.2 Test · Admin-Levelauswahl";
+const GAME_VERSION="26.4 Test · Halloween-Bossphasen";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const wrap = document.querySelector("#gameWrap");
@@ -112,7 +112,7 @@ const state = {
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null,
   secondaryTeam: null, pendingUpgrades: 0, upgradeOfferId: 0,
-  eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,eventModifiers:null,
+  halloweenBoss:null,eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,eventModifiers:null,
   runStartSegments: 100,
   runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
@@ -169,7 +169,7 @@ function changeLevel(delta) {
   renderLevelPicker();
 }
 function completeLevel() {
-  if(state.mode!=="playing"||(state.eventRun?eventMainSegments().length:state.snake.length))return;
+  if((isHalloweenBossLevel8()&&state.halloweenBoss?.phase!=="defeated")||state.mode!=="playing"||(state.eventRun?eventMainSegments().length:state.snake.length))return;
   releaseDrag();state.mode="victory";state.pendingUpgrades=0;
   if(state.adminTest){
     state.score+=500;upgradeScreen.classList.add("hidden");
@@ -219,6 +219,7 @@ function resizeCanvas() {
 
 function resetGame(eventRun=false,eventLevel=1,adminTest=false) {
   releaseDrag();
+  cleanupHalloweenBossLevel8();
   state.adminTest=adminTest;
   state.eventRun=eventRun;state.eventLevel=eventLevel;
   state.skillUpgrades=eventRun?[]:[...progress.data.skillUpgrades];
@@ -255,7 +256,7 @@ function resetGame(eventRun=false,eventLevel=1,adminTest=false) {
     : { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   state.secondaryTeam=createSecondaryTeam(progress.data.secondarySlots);
   state.eventPumpkins=[];state.eventPumpkinTimer=8;state.eventBonusTimer=12;
-  if(eventRun)createHalloweenEventSnake(eventLevel);else createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
+  if(eventRun&&eventLevel===8)initHalloweenBossLevel8();else if(eventRun)createHalloweenEventSnake(eventLevel);else createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
   state.runStartSegments=state.snake.length;
   document.querySelector(".game-shell")?.classList[eventRun?"add":"remove"]("halloween-event-run");
   document.querySelector("#shareRunStatus").textContent="";
@@ -336,8 +337,12 @@ function spawnEventPumpkin(random=Math.random) {
   if(!state.eventRun||state.eventPumpkins.length>=2)return null;
   const reference=lastVisibleEventMainSegment();if(!reference)return null;
   const margin=45,x=margin+random()*Math.max(1,state.width-margin*2),y=90+random()*Math.max(1,state.player.y-200);
-  const hp=HalloweenEvent.pumpkinHp(reference.hp,state.eventProgress);
-  const pumpkin={id:state.nextId++,x,y,hp,maxHp:hp,radius:22};state.eventPumpkins.push(pumpkin);return pumpkin;
+  return createEventPumpkin(x,y,reference.hp);
+}
+
+function createEventPumpkin(x,y,referenceHp,extra={}){
+  const hp=HalloweenEvent.pumpkinHp(referenceHp,state.eventProgress);
+  const pumpkin={id:state.nextId++,x,y,hp,maxHp:hp,radius:22,...extra};state.eventPumpkins.push(pumpkin);return pumpkin;
 }
 
 function spawnEventBonusSnake(random=Math.random) {
@@ -417,7 +422,7 @@ function instancePathPoint(instance,distance) {
 }
 function snakeHead(instance=null) {
   const selected=instance||livingSnakeInstances()[0];
-  if (!selected?.segments.length) return null;
+  if (!selected?.segments.length||(selected.bossAttack||selected.bossBody)) return null;
   return instancePathPoint(selected,(selected.headDistance??state.headDistance)-selected.segments[0].pathOffset+SEGMENT_SPACING);
 }
 function snakeHeadForSegment(segment){
@@ -445,7 +450,7 @@ function nearestSnakeTarget(originX,originY,preferredId=null){return nearestSnak
 function syncSnakePositions() {
   const instances=managedSnakeInstances();
   if(!instances.length){for(const segment of state.snake)Object.assign(segment,pathPoint(state.headDistance-segment.pathOffset));return;}
-  for(const instance of instances)for(const segment of instance.segments){
+  for(const instance of instances.filter(instance=>!instance.bossAttack&&!instance.bossBody))for(const segment of instance.segments){
     Object.assign(segment,instancePathPoint(instance,instance.headDistance-segment.pathOffset));
   }
 }
@@ -460,12 +465,20 @@ function snakeSpeedMultiplier(instance,elapsed=state.elapsed) {
 
 function update(dt) {
   if (state.mode !== "playing") return;
-  if(state.eventRun?!eventMainSegments().length:!state.snake.length){completeLevel();return;}
+  if(!isHalloweenBossLevel8()&&(state.eventRun?!eventMainSegments().length:!state.snake.length)){completeLevel();return;}
+  if(isHalloweenBossLevel8()){
+    if(!state.halloweenBoss)return;
+    if(state.halloweenBoss.phase==="dying"){updateHalloweenBossDeath(dt);return;}
+    if(state.halloweenBoss.phase==="defeated")return;
+    if(state.halloweenBoss.phase!=="idle_sway"){updateGameParticles(dt);updateHalloweenBossIntro(dt);return;}
+    updateHalloweenBossAttackSegments(dt);
+  }
   state.elapsed += dt;
   // Die Schlange beginnt langsamer und beschleunigt nur behutsam.
   const baseSpeed = Math.min(22 + state.elapsed * .25, 45);
   const instances=managedSnakeInstances();
   if(instances.length){for(const instance of instances){
+    if(instance.bossAttack||instance.bossBody)continue;
     if(instance.eventBonus){instance.headDistance+=270*state.eventModifiers.bonusSpeedMultiplier*dt;continue;}
     const slow=Math.min(.60,alchemistSlow()+ilyraSnakeSlow(instance)+kikoSnakeSlow(instance)+mirelSnakeSlow(instance));
     const eventSpeed=state.eventRun&&instance.eventMain?state.eventModifiers.eventSpeedMultiplier:1;
@@ -474,7 +487,7 @@ function update(dt) {
   else state.headDistance += baseSpeed*(1-Math.min(.60,alchemistSlow()+ilyraSnakeSlow(null)+kikoSnakeSlow(null)+mirelSnakeSlow(null))) * dt;
 
   syncSnakePositions();
-  if(state.eventRun){
+  if(state.eventRun&&!isHalloweenBossLevel8()){
     state.eventPumpkinTimer-=dt;if(state.eventPumpkinTimer<=0){spawnEventPumpkin();state.eventPumpkinTimer=10+Math.random()*6;}
     if(state.eventLevel<=3){state.eventBonusTimer-=dt;if(state.eventBonusTimer<=0){spawnEventBonusSnake();state.eventBonusTimer=18+Math.random()*8;}}
     const head=snakeHead(eventMainInstance());
@@ -544,18 +557,18 @@ function update(dt) {
   state.bullets = state.bullets.filter(b => b.y > -25 && !b.dead);
   if (state.mode !== "playing") return;
 
-  for (const p of state.particles) {
-    p.life -= dt;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-  }
-  state.particles = state.particles.filter(p => p.life > 0);
+  updateGameParticles(dt);
 
-  if (state.eventRun?!eventMainSegments().length:state.snake.length===0) {
+  if (!isHalloweenBossLevel8()&&(state.eventRun?!eventMainSegments().length:state.snake.length===0)) {
     completeLevel();
-  } else if (livingSnakeInstances().filter(instance=>!instance.eventBonus).some(instance=>snakeHead(instance)?.y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22)) {
+  } else if (livingSnakeInstances().filter(instance=>!instance.eventBonus&&!instance.bossAttack&&!instance.bossBody).some(instance=>snakeHead(instance)?.y + SEGMENT_RADIUS * SNAKE_SCALE >= state.player.y - 22)) {
     endGame();
   }
+}
+
+function updateGameParticles(dt){
+  for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}
+  state.particles=state.particles.filter(p=>p.life>0);
 }
 
 function fireWeapon() {
@@ -572,7 +585,7 @@ function projectileHits(bullet, target) {
   const ax = bullet.previousX ?? bullet.x, ay = bullet.previousY ?? bullet.y;
   const dx = bullet.x-ax, dy = bullet.y-ay;
   const t = dx*dx+dy*dy ? Math.max(0,Math.min(1,((target.x-ax)*dx+(target.y-ay)*dy)/(dx*dx+dy*dy))) : 0;
-  const radius = SEGMENT_HIT_RADIUS + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : ["shooter","ilyra","seraphine"].includes(bullet.owner)?3*Math.max(0,(bullet.size||1)-1):0);
+  const radius = (target.bossBody?65:target.bossPumpkin?target.radius:SEGMENT_HIT_RADIUS) + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : ["shooter","ilyra","seraphine"].includes(bullet.owner)?3*Math.max(0,(bullet.size||1)-1):0);
   return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
 }
 function segmentDamageMultiplier(segment) {
@@ -583,30 +596,37 @@ function segmentDamageMultiplier(segment) {
 }
 function applyDamageBatch(batch) {
   // All targets are determined before any segment retreats or upgrade pauses.
+  if(isHalloweenBossLevel8()&&state.halloweenBoss?.phase!=="idle_sway")return;
   mirelPrepareDamageBatch(batch);
   for (const segment of state.snake) {
-    if (isSegmentVisible(segment) && batch.has(segment.id)) segment.hp = Math.round((segment.hp-batch.get(segment.id)*segmentDamageMultiplier(segment))*1e10)/1e10;
+    if (isSegmentVisible(segment) && batch.has(segment.id)){
+      const damage=batch.get(segment.id)*segmentDamageMultiplier(segment);
+      segment.hp = Math.round((segment.hp-damage)*1e10)/1e10;
+      if(damage>0)halloweenBossDamageReaction(segment);
+    }
   }
+  if(isHalloweenBossLevel8()&&state.halloweenBoss?.target?.hp<=0){beginHalloweenBossDeath();return;}
+  if(isHalloweenBossLevel8())updateHalloweenBossPhase();
   for (let i=state.snake.length-1;i>=0;i--) if (state.snake[i].hp<=0) destroySegment(i,false);
   for(const segment of state.snake)delete segment.seraphineExplosionDeath;
   resolveIlyraDeaths();
   resolveSeraphineDeaths();
   resolveNecroDeaths();
-  if (state.snake.length && state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
+  if ((state.snake.length||isHalloweenBossLevel8()) && state.pendingUpgrades>0 && state.mode === "playing") openUpgrade();
 }
 function handleHits(random = Math.random) {
   outer: for (const bullet of state.bullets) {
     if (bullet.dead || bullet.hammerPhase==="return") continue;
     bullet.hitIds ||= new Set();
     if(state.eventRun&&(bullet.owner==="shooter"||!bullet.owner)){
-      const pumpkins=state.eventPumpkins.filter(pumpkin=>!bullet.hitIds.has("pumpkin-"+pumpkin.id)&&projectileHits(bullet,pumpkin)).sort((a,b)=>b.y-a.y);
+      const pumpkins=state.eventPumpkins.filter(pumpkin=>isSegmentVisible(pumpkin)&&!bullet.hitIds.has("pumpkin-"+pumpkin.id)&&projectileHits(bullet,pumpkin)).sort((a,b)=>b.y-a.y);
       for(const pumpkin of pumpkins){
         bullet.hitIds.add("pumpkin-"+pumpkin.id);
         const hit=state.shooter?shooterHitRoll(pumpkin,bullet,random):rollHit(random,state.weapon.damage);
         hit.damage*=state.eventModifiers.pumpkinDamageMultiplier;
         pumpkin.hp=Math.max(0,pumpkin.hp-hit.damage);bullet.hitsLeft--;bullet.hitsDone=(bullet.hitsDone||0)+1;
         burst(pumpkin.x,pumpkin.y,hit.critical?"#fff0a5":"#ff8d32",hit.critical?12:6);
-        if(pumpkin.hp<=0){state.eventPumpkins=state.eventPumpkins.filter(item=>item!==pumpkin);state.score+=50;}
+        if(pumpkin.hp<=0){if(pumpkin.bossPumpkin)destroyHalloweenBossPumpkin(pumpkin);else{state.eventPumpkins=state.eventPumpkins.filter(item=>item!==pumpkin);state.score+=50;}}
         if(bullet.hitsLeft<=0){bullet.dead=true;continue outer;}
       }
     }
@@ -671,6 +691,7 @@ function handleHits(random = Math.random) {
 }
 
 function destroySegment(index, offerUpgrade = true) {
+  if(state.snake[index]?.bossBody){if(state.snake[index].hp<=0)beginHalloweenBossDeath();return;}
   const target=state.snake[index],instance=snakeInstanceForSegment(target);
   let destroyed,neighbors,localIndex=index;
   if(instance){
@@ -703,7 +724,7 @@ function destroySegment(index, offerUpgrade = true) {
   refreshHud();
   if (destroyed.upgrade) {
     state.pendingUpgrades++;
-    if (offerUpgrade && state.snake.length) openUpgrade();
+    if (offerUpgrade && (state.snake.length||isHalloweenBossLevel8())) openUpgrade();
   }
 }
 
@@ -863,6 +884,7 @@ function shuffle(items) {
 function endGame() {
   if (state.mode === "gameover") return;
   releaseDrag();
+  cleanupHalloweenBossLevel8();
   state.mode = "gameover";
   document.querySelector("#resultEyebrow").textContent="DIE SCHLANGE WAR SCHNELLER";
   document.querySelector("#resultTitle").textContent="Game Over";
@@ -949,6 +971,7 @@ function renderProfile() {
 
 function showMenu() {
   releaseDrag();
+  cleanupHalloweenBossLevel8();
   if(state.adminTest)state.selectedLevel=progress.data.selectedLevel;
   state.adminTest=false;
   state.eventRun=false;document.querySelector(".game-shell")?.classList.remove("halloween-event-run");
@@ -982,7 +1005,7 @@ function renderHalloweenOverview(){
   event.selected=Math.max(1,Math.min(event.selected,event.completed+1,HalloweenEvent.PLAYABLE_LEVEL));
   const level=event.selected,bounds=HalloweenEvent.hpBounds(level),locked=level>event.completed+1;
   document.querySelector("#halloweenEventLevelName").textContent="Level "+level+(locked?" · Gesperrt":level<=event.completed?" · Abgeschlossen":"");
-  document.querySelector("#halloweenEventLevelInfo").textContent="Kürbisfeld · 50 Startsegmente · "+bounds.first.toLocaleString("de-DE")+"–"+bounds.last.toLocaleString("de-DE")+" HP";
+  document.querySelector("#halloweenEventLevelInfo").textContent=level===8?"Kürbis-Boss · 3 Phasen · Wachsende Heil-Kürbisse":"Kürbisfeld · 50 Startsegmente · "+bounds.first.toLocaleString("de-DE")+"–"+bounds.last.toLocaleString("de-DE")+" HP";
   document.querySelector("#halloweenEventProgress").textContent=level+" / "+HalloweenEvent.MAX_LEVEL;
   document.querySelector("#halloweenCoinBalance").textContent=event.coins.toLocaleString("de-DE");
   const reward=HalloweenEvent.rewardForLevel(event,level);
@@ -1258,12 +1281,13 @@ function draw() {
   ctx.clearRect(0, 0, state.width, state.height);
   drawBackground();
   drawEventPumpkins();
-  for (let i = state.snake.length - 1; i >= 0; i--) drawSegment(state.snake[i], false);
+  drawHalloweenBossLevel8();
+  for (let i = state.snake.length - 1; i >= 0; i--) if(!state.snake[i].bossBody)drawSegment(state.snake[i], false);
   for(const instance of livingSnakeInstances()){
     const head=snakeHead(instance);if(head){drawSegment(head,true);if(instance.rageActive){ctx.save();ctx.strokeStyle="#ff5a45";ctx.fillStyle="#ffb06b";ctx.shadowColor="#ff3b28";ctx.shadowBlur=16;ctx.lineWidth=3;ctx.beginPath();ctx.arc(head.x,head.y,23,0,Math.PI*2);ctx.stroke();ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.fillText("RAGE",head.x,head.y-27);ctx.restore();}}
   }
   // Nach allen Sprites zeichnen, damit Nachbarteile die Zahlen nicht verdecken.
-  for (const segment of state.snake) drawHpLabel(segment);
+  for (const segment of state.snake) if(!segment.bossBody)drawHpLabel(segment);
   drawBullets();
   drawSecondaryTeam();
   drawPlayer();
@@ -1276,6 +1300,7 @@ function draw() {
   drawIlyra();
   drawSeraphine();
   drawParticles();
+  if(isHalloweenBossLevel8())drawHalloweenBossHp();
 }
 
 function drawBackground() {
@@ -1316,10 +1341,10 @@ function drawBackground() {
 function drawEventPumpkins(){
   if(!state.eventRun)return;
   for(const pumpkin of state.eventPumpkins){
-    const sprite=halloweenEventBodySprite,size=44;
-    ctx.save();ctx.translate(pumpkin.x,pumpkin.y);ctx.shadowColor="#ff7d22";ctx.shadowBlur=10;
+    const sprite=halloweenEventBodySprite,size=pumpkin.bossPumpkin?[28,38,48][pumpkin.stage-1]:44;
+    ctx.save();ctx.translate(pumpkin.x,pumpkin.y);ctx.shadowColor="#ff7d22";ctx.shadowBlur=pumpkin.bossPumpkin?pumpkin.stage*4:10;
     if(sprite.complete&&sprite.naturalWidth)ctx.drawImage(sprite,-size/2,-size/2,size,size);
-    else {ctx.fillStyle="#f47b24";ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();}
+    else {ctx.fillStyle="#f47b24";ctx.beginPath();ctx.arc(0,0,size/2,0,Math.PI*2);ctx.fill();}
     ctx.shadowBlur=0;ctx.fillStyle="#1b0b13";ctx.fillRect(-19,24,38,4);ctx.fillStyle="#ffbf45";ctx.fillRect(-19,24,38*Math.max(0,pumpkin.hp/pumpkin.maxHp),4);
     ctx.font="bold 10px system-ui";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#1a0812";ctx.fillStyle="#fff0b2";const label=String(Math.ceil(pumpkin.hp));ctx.strokeText(label,0,-25);ctx.fillText(label,0,-25);ctx.restore();
   }

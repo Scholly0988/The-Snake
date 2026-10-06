@@ -111,6 +111,7 @@ function mirelIncomingBonus(segment){
 }
 
 function mirelCriticalMultiplier(segment,critical){
+  if(critical&&segment?.bossBody&&typeof halloweenBossDamageReaction==="function")halloweenBossDamageReaction(segment,true);
   const d=mirelMember()?.data;
   return critical&&d&&mirelIsCursed(segment)?1+d.criticalBonus:1;
 }

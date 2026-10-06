@@ -1,0 +1,115 @@
+THE SNAKE – PATCH 26.4 TEST – BOSSPHASEN UND HEIL-KÜRBISSE
+Voraussetzung: vollständiger Projektstand 26.3 / Halloween-Level-8-Bossgrundsystem.
+
+ERSETZEN im Projektstamm:
+- game.js
+- halloween-boss.js
+- mirel.js
+- index.html
+- README.md
+- test-halloween-boss.cjs (Testdatei)
+
+NEU EINFÜGEN im Projektstamm:
+- test-halloween-boss-phases.cjs (Testdatei)
+- PATCH-26.4-BOSSPHASEN.txt (diese Dokumentation)
+
+Keine neuen Grafikdateien. Nur die Dateien dieses Patches liegen in der ZIP.
+Version im Menü: 26.4 Test · Halloween-Bossphasen.
+
+WIEDERVERWENDETE SYSTEME:
+HalloweenEvent.segmentHp/pumpkinHp/modifiers, vorhandene Kürbiscollection,
+Canvas-WebP-Sprites und Partikel, Managed-Snake-Collection mit einem separat
+gekennzeichneten Boss-Trefferobjekt, applyDamageBatch/projectileHits,
+Helden-/DOT-/Krit-/Debuff-Verarbeitung, Spezialsegment-Upgrades mit
+Haupt- und Sekundärauswahl, completeLevel und Event-Belohnungen.
+Der Boss hat eine eigene bossBody-Instanz; Attacken haben bossAttack-Instanzen.
+Der Bosskörper wird niemals durch den normalen Segmentzerstörungsweg entfernt.
+Wachsende Kürbisse liegen außerhalb der gegnerischen Segmentliste und erzeugen
+bei Zerstörung weder Extra-Bossschaden noch neue Boss-Bonusbelohnungen.
+
+NEUE BALANCINGWERTE in HALLOWEEN_BOSS_CONFIG (halloween-boss.js):
+hpMultiplier=1.25; healFraction=.05; phase2Threshold=.70; phase3Threshold=.35;
+growthStageDuration=3 s; pumpkinSpawnMin/Max=8/12 s;
+phase3PumpkinSpawnMin/Max=6/9 s; pumpkinCaps=[2,3,3];
+eatTravelDuration=.6 s; eatReturnDuration=.65 s; eatPause=1 s;
+deathDuration=1.4 s;
+phaseIntervals=[.85,.70,.55] s; phaseWavePauses=[2,1.7,1.4] s;
+doubleSpawnChances=[0,.20,.35]; tripleSpawnChances=[0,0,.15];
+phaseSway=[18,22,25] px.
+Doppel-/Dreifach-Chancen werden pro Welle gewürfelt, sind gegenseitig exklusiv
+und wirken nur auf den ersten Spawn dieser Welle, auf verschiedenen Bahnen.
+Phase 2/3 gewichten Wechsel- und Zufallsmuster stärker als die einfachen Muster.
+Die alten einzelnen Basis-Rhythmus-/Sway-Werte wurden durch diese Phasenlisten ersetzt.
+Intro, Angriffsgeschwindigkeit, Bahnübergang und 25-%-HP-Faktor bleiben erhalten.
+
+AUTOMATISIERTE TESTS:
+- test-halloween-boss.cjs erweitert für den separat geschützten Boss-Trefferbereich.
+- Neuer test-halloween-boss-phases.cjs prüft HP-Referenz, exakte Grenzen, keine
+  Phasenrückstufung, Heilung und Deckel, feste Kürbis-HP, sichere Spawnpositionen,
+  Stufenwachstum, erlaubte/unzulässige Quellen, Fressreihenfolge/-bewegung,
+  Angriffspause/Weiterbewegung, Zerstörung während Fressanflug, Mehrfachspawns,
+  Boss-Schaden/Kritreaktion/Sichtbarkeit, Tod, normale/Admin-Abschlüsse und Reset.
+- Fünf Minuten simulierter Phase-3-Kampf: Gegnerzahl bleibt unter 40;
+  gleichzeitig höchstens drei Kürbisse. Kein tatsächlicher FPS-Benchmark.
+- Canvas-Checks mit geladenen und Ersatzgrafiken, ausschließlich endliche Koordinaten.
+- Sämtliche Testdateien bestanden. Ausführen im Projektstamm:
+  for test in test-*.cjs; do node "$test" || exit 1; done
+
+MANUELLE TESTS (noch auf echten Geräten ausführen):
+Für Tests 13–15 passende Haupt-/Sekundärhelden und Fähigkeiten ausrüsten.
+Admin-Menü: fünfmal Münzwert tippen, Optionen, Event-Level 8 auswählen.
+Admin-Testläufe vergeben keine Münzen und speichern keinen Fortschritt.
+1. Event-Level 8 über den versteckten Admin-Test oder nach Level 7 starten.
+2. Boss-Max-HP aus HalloweenEvent.segmentHp(7, HalloweenEvent.BASE_SEGMENTS-1) prüfen.
+3. getHalloweenBossMaxHP() ist exakt 1,25 × dieser Referenz, ohne absolute HP-Konstante.
+4. Boss-HP-Balken zeigt Titel, Phase, aktuelle und maximale HP korrekt an.
+5. Bei 100 % bis einschließlich 70 % läuft Phase 1.
+6. Erst unter 70 % wechselt der Boss einmalig zu Phase 2, mit sichtbarer Reaktion.
+7. Erst unter 35 % wechselt er zu Phase 3, mit sichtbarer Reaktion.
+8. Über eine Schwelle heilen lassen: erreichte Phase bleibt erhalten.
+9. Während des Kampfes erscheinen kleine Kürbisse.
+10. Kein Spawn auf Boss, Angriffen, anderen Kürbissen, UI oder im Heldenbereich.
+11. Drei Größen-/Leuchtstufen prüfen: 0–3 s klein, 3–6 s mittel, ab 6 s reif.
+12. Geschosse des mittleren Standardschützen beschädigen Kürbisse.
+13. Linke/rechte Haupthelden beschädigen Kürbisse nicht.
+14. Kiko/Mirel und andere Sekundärhelden beschädigen Kürbisse nicht.
+15. Fallen, DOT und Flächenexplosionen beschädigen Kürbisse nicht.
+16. Zerstörter Kürbis verschwindet, erzeugt Partikel und heilt den Boss nicht.
+17. Reifer Kürbis wird automatisch als Fressziel erkannt.
+18. Normale Sway-Bewegung wird während des Fressens durch Zielbewegung ersetzt.
+19. Kopf bewegt sich sichtbar zur Frucht; Trefferbereich folgt derselben Position.
+20. Gefressene Frucht verschwindet; anschließend kehrt der Kopf zurück.
+21. Bei ausreichend fehlenden HP steigt Boss-HP exakt um 0,05 × Max-HP.
+22. Dasselbe mit unterschiedlichen aktuellen HP prüfen: gleicher absoluter Heilwert.
+23. Bei fast vollen HP wird auf Max-HP begrenzt.
+24. Mehrere reife Früchte: älteste zuerst, weitere erst nach Rückkehr und 1-s-Pause.
+25. Nie zwei gleichzeitige Fressaktionen; Frucht kurz vor Kontakt zerstören verhindert Heilung.
+26. Bereits aktive Attacken bewegen sich während des Fressens weiter.
+27. Neue Attacken pausieren bis zur Rückkehr, danach geht die Welle weiter.
+28. Phase 2: schnellerer Rhythmus und gelegentlich Doppelspawns.
+29. Phase 3: noch schneller, häufiger Doppel- und selten Dreifachspawns.
+30. Phase 3 auf Handy/Tablet prüfen: verschiedene Bahnen und ausreichende Lesbarkeit.
+31. Alle Spawns global zählen: jedes fünfte Segment bleibt speziell, auch bei Mehrfachspawns.
+32. HP-Differenzen der Angriffssegmente bleiben 25 % der bestehenden Referenzdifferenzen.
+33. Boss und Angriffssegmente außerhalb des sichtbaren Bereiches erhalten keinen Schaden.
+34. Boss auf 0 HP bringen: neue Attacken/Früchte/Fressaktionen stoppen, Todesanimation läuft.
+35. Während/nach Tod keine Heilung mehr; Abschluss und Belohnung genau einmal.
+36. Neustart: volle HP, Phase 1, leere Kürbis-/Fresszustände und Spawnzähler 0.
+37. Event verlassen: Bosszustand, Attacken und Kürbisse entfernt, keine späteren Aktionen.
+38. Event-Level 1–7 prüfen: Kürbisse, Segmentwachstum, Bonus-Schlangen, Upgrades und Belohnungen.
+39. Normale Level prüfen: Helden, Pfade, Schaden, Upgrade-Auswahl und Levelabschluss.
+
+BEKANNTE GRENZEN / OFFENE PUNKTE:
+- Visuelles Layout, Samsung Internet und reale FPS benötigen manuelle Prüfung;
+  kein lokal installiertes Chromium für einen echten Playwright-Browserlauf.
+- Auf sehr kleinen/überfüllten Spielfeldern wird ein Kürbis-Spawn verschoben,
+  statt eine verbotene Position zu erzwingen. Fehlt eine sichtbare Attacken-HP-
+  Referenz, wartet der Spawn ebenfalls; Kürbis-HP werden nicht geraten.
+- 5 % Heilung wird nur am Max-HP-Deckel reduziert.
+- Boss-Tod endet Level 8 über das vorhandene Abschluss-/Belohnungssystem;
+  Event-Level 9–24 bleiben weiterhin nicht spielbar. Keine neue Morgana-Story.
+- Kein neuer Angriffsschaden gegen Helden oder neue Verlustregel hinzugefügt.
+- Die vorhandene endlos steigende Attackenkurve bleibt erhalten; die bereits
+  bestehende JavaScript-Sicherheitsgrenze begrenzt extrem lange Kämpfe.
+- Effekte sind klein und begrenzt, aber das endgültige Balancing bleibt anhand
+  echter Builds und mobiler Geräte zu bewerten.

@@ -1,9 +1,10 @@
 "use strict";
 
-// Secondary supporters occupy a smaller back row behind the three main slots.
+// Secondary supporters occupy their own fixed row along the lower screen edge.
 // Concrete supporters register their behaviour here when they are added later.
 const SECONDARY_SLOTS=Object.freeze(["left","center","right"]);
 const SECONDARY_SLOT_SCALE=.8;
+const SECONDARY_BOTTOM_OFFSET=38;
 const SECONDARY_REGISTRY=new Map();
 
 function validSecondaryId(id) {
@@ -31,8 +32,8 @@ function registerSecondary(definition) {
 
 function secondaryAnchor(slot) {
   if(!SECONDARY_SLOTS.includes(slot))return null;
-  const offset={left:-36,center:0,right:36}[slot];
-  return {slot,x:state.player.x+offset,y:state.player.y-18,scale:SECONDARY_SLOT_SCALE};
+  const position={left:.18,center:.5,right:.82}[slot];
+  return {slot,x:Math.round(state.width*position),y:state.height-SECONDARY_BOTTOM_OFFSET,scale:SECONDARY_SLOT_SCALE};
 }
 
 function createSecondaryTeam(equipped={}) {
