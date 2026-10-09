@@ -181,11 +181,12 @@ function completeLevel() {
   state.score+=500;progress.data.best=Math.max(progress.data.best,state.score);
   if(state.eventRun){
     const reward=HalloweenEvent.completeLevel(state.eventProgress,state.eventLevel);
+    state.runCoins+=reward?.total||0;
     progress.save();
     upgradeScreen.classList.add("hidden");
     document.querySelector("#resultEyebrow").textContent="KÜRBISSCHLANGE BESIEGT";
     document.querySelector("#resultTitle").textContent="Event-Level "+state.eventLevel+" abgeschlossen!";
-    document.querySelector("#runSummary").textContent=(reward?.total||0)+" Halloween-Münzen verdient"+(reward?.firstBonus?" · Erstabschluss +"+reward.firstBonus:"")+" · "+(state.eventLevel<HalloweenEvent.PLAYABLE_LEVEL?"Event-Level "+(state.eventLevel+1)+" freigeschaltet":"Der bisher vorbereitete Event-Abschnitt ist geschafft");
+    document.querySelector("#runSummary").textContent=state.runCoins+" Halloween-Münzen verdient"+(reward?.firstBonus?" · Erstabschluss +"+reward.firstBonus:"")+" · "+(state.eventLevel<HalloweenEvent.PLAYABLE_LEVEL?"Event-Level "+(state.eventLevel+1)+" freigeschaltet":"Der bisher vorbereitete Event-Abschnitt ist geschafft");
     finalScore.textContent=state.score;gameOverScreen.classList.remove("hidden");renderProfile();refreshHud();return;
   }
   const multiplier=difficultyMultiplier(state.runDifficulty);
@@ -711,6 +712,12 @@ function destroySegment(index, offerUpgrade = true) {
   if (state.seraphine) queueSeraphineDeath(destroyed,instance,neighbors);
   resolveMirelDeath(destroyed,instance,neighbors);
   state.score += destroyed.upgrade ? 100 : 25;
+  if(state.eventRun&&!state.adminTest){
+    const eventCoins=destroyed.upgrade?2:1;
+    state.eventProgress.coins=Math.min(1000000000,state.eventProgress.coins+eventCoins);
+    state.runCoins+=eventCoins;
+    HalloweenEvent.save(state.eventProgress);
+  }
   const coins = state.eventRun||state.adminTest?0:(destroyed.upgrade ? 5 : 1) * state.level * difficultyMultiplier(state.runDifficulty??.10);
   if(coins){state.runCoins += coins;progress.reward(coins,state.score);}
   document.querySelector("#saveStatus").textContent = progress.message + " · Touch: Wischen · PC: ← → oder A/D";
@@ -890,7 +897,7 @@ function endGame() {
   document.querySelector("#resultTitle").textContent="Game Over";
   if(!state.adminTest){progress.data.best = Math.max(progress.data.best, state.score);progress.save();}
   renderProfile();
-  document.querySelector("#runSummary").textContent = state.adminTest?"Admin-Testlauf · keine Münzen oder Levelfortschritte":Math.floor(state.runCoins) + " Münzen verdient · bleiben erhalten";
+  document.querySelector("#runSummary").textContent = state.adminTest?"Admin-Testlauf · keine Münzen oder Levelfortschritte":Math.floor(state.runCoins) + (state.eventRun?" Halloween-Münzen verdient · bleiben erhalten":" Münzen verdient · bleiben erhalten");
   finalScore.textContent = state.score;
   gameOverScreen.classList.remove("hidden");
 }
