@@ -361,7 +361,7 @@ html.halloween-theme body { background:#090519; }
 
 /* Halloween event: separate story and level hub. */
 .halloween-event-entry {
-  position:absolute; z-index:5; right:max(6px,env(safe-area-inset-right)); top:50%;
+  position:absolute; z-index:5; right:max(6px,env(safe-area-inset-right)); top:max(110px,calc(50% - 110px));
   width:82px; min-height:96px; margin:0; padding:3px; transform:translateY(-50%);
   border:0; background:transparent; color:#ffd67b; text-shadow:0 2px 4px #000;
   font:900 10px Georgia,serif; filter:drop-shadow(0 0 12px #ff782baa); touch-action:manipulation;
