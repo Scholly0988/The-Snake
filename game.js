@@ -47,7 +47,7 @@ hammerSprite.src = "holy-hammer.png";
 const PLAYER_EDGE_MARGIN = 16;
 const PLAYER_MUZZLE_Y = -20; // Sprite placement, independent of projectile origin.
 const PLATFORM_SHOT_Y = 28; // Centre of the platform below the character.
-const PLAYER_BOTTOM_OFFSET = 105; // Space for the fixed secondary row below the main platform.
+const PLAYER_BOTTOM_OFFSET = 50; // Keep the main platforms close to the lower edge.
 function clampPlayerX(x) {
   const margin = Math.min(PLAYER_EDGE_MARGIN, state.width / 2);
   return Math.max(margin, Math.min(state.width - margin, x));
@@ -1296,7 +1296,6 @@ function draw() {
   // Nach allen Sprites zeichnen, damit Nachbarteile die Zahlen nicht verdecken.
   for (const segment of state.snake) if(!segment.bossBody)drawHpLabel(segment);
   drawBullets();
-  drawSecondaryTeam();
   drawPlayer();
   drawShooterEffects();
   drawPaladin();
@@ -1306,6 +1305,8 @@ function draw() {
   drawRunemaster();
   drawIlyra();
   drawSeraphine();
+  // Secondary characters stay in front when the bottom rows overlap.
+  drawSecondaryTeam();
   drawParticles();
   if(isHalloweenBossLevel8())drawHalloweenBossHp();
 }
