@@ -4,13 +4,13 @@
 // Its body, HP, phases and animations stay distinct from spawned attack enemies.
 const HALLOWEEN_BOSS_CONFIG = Object.freeze({
   fallDuration:2.2, pauseDuration:1, burrowDuration:.65, emergeDuration:1,
-  attackSpeed:92, laneTransition:1.15,
+  attackSpeed:69, laneTransition:1.15,
   attackSway:5, attackStartHp:55, hpIncreaseFactor:.25, attackRadius:24,
   hpMultiplier:1.25, healFraction:.05, phase2Threshold:.70, phase3Threshold:.35,
   growthStageDuration:3, pumpkinSpawnMin:8, pumpkinSpawnMax:12,
   phase3PumpkinSpawnMin:6, phase3PumpkinSpawnMax:9, pumpkinCaps:Object.freeze([2,3,3]),
   eatTravelDuration:.6, eatReturnDuration:.65, eatPause:1, deathDuration:1.4,
-  phaseIntervals:Object.freeze([.85,.70,.55]), phaseWavePauses:Object.freeze([2,1.7,1.4]),
+  phaseIntervals:Object.freeze([1.275,1.05,.825]), phaseWavePauses:Object.freeze([3,2.55,2.1]),
   doubleSpawnChances:Object.freeze([0,.20,.35]), tripleSpawnChances:Object.freeze([0,0,.15]),
   phaseSway:Object.freeze([18,22,25])
 });
@@ -20,7 +20,7 @@ const HALLOWEEN_BOSS_PATTERNS = Object.freeze([
 function isHalloweenBossLevel8(){return state.eventRun&&state.eventLevel===8;}
 function initHalloweenBossLevel8(){
   state.snakes=[];state.snake=[];
-  state.halloweenBoss={phase:"intro_fall",phaseTime:0,time:0,spawnTimer:.8,
+  state.halloweenBoss={phase:"intro_fall",phaseTime:0,time:0,spawnTimer:1.2,
     spawned:0,patternIndex:-1,pattern:[],patternStep:0,lastLane:-1,
     maxHp:getHalloweenBossMaxHP(),battlePhase:1,target:null,instance:null,
     pumpkinTimer:10,eat:null,eatCooldown:0,hitFlash:0,phaseFlash:0,healFlash:0,deathTime:0,burstCount:1};
