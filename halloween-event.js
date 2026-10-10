@@ -7,6 +7,8 @@ const HalloweenEvent = (() => {
   const BASE_SEGMENTS=50;
   const LEVEL_ONE_FIRST_HP=44;
   const LEVEL_ONE_LAST_HP=7800;
+  const UPGRADE_PRICE_FACTOR=.75;
+  const UPGRADE_COST_STEP_FACTOR=.5;
   let volatileProgress=null;
 
   const upgrades=Object.freeze([
@@ -114,7 +116,7 @@ const HalloweenEvent = (() => {
 
   function upgradeCost(value,id){
     const upgrade=upgradeById.get(id),level=upgradeLevel(value,id);
-    return !upgrade||level>=upgrade.max?null:upgrade.startCost+upgrade.costStep*level;
+    return !upgrade||level>=upgrade.max?null:Math.round((upgrade.startCost+upgrade.costStep*UPGRADE_COST_STEP_FACTOR*level)*UPGRADE_PRICE_FACTOR);
   }
   function buyUpgrade(value,id,storage=window.localStorage){
     const upgrade=upgradeById.get(id),cost=upgradeCost(value,id);
