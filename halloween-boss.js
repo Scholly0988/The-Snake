@@ -171,7 +171,7 @@ function spawnHalloweenBossPumpkin(random=Math.random){
   for(let attempt=0;attempt<30;attempt++){
     const x=38+random()*Math.max(1,state.width-76),y=105+random()*Math.max(1,state.player.y-205);
     if(!isHalloweenBossPumpkinPositionFree(x,y))continue;
-    return createEventPumpkin(x,y,reference.hp,{bossPumpkin:true,age:0,stage:1,matureAt:null,radius:14});
+    return createEventPumpkin(x,y,{bossPumpkin:true,age:0,stage:1,matureAt:null,radius:14});
   }
   return null;
 }

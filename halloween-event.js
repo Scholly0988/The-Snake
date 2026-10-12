@@ -7,6 +7,8 @@ const HalloweenEvent = (() => {
   const BASE_SEGMENTS=50;
   const LEVEL_ONE_FIRST_HP=44;
   const LEVEL_ONE_LAST_HP=7800;
+  const GROUND_PUMPKIN_START_HP=36;
+  const GROUND_PUMPKIN_HP_STEP=29;
   const UPGRADE_PRICE_FACTOR=.75;
   const UPGRADE_COST_STEP_FACTOR=.5;
   let volatileProgress=null;
@@ -78,7 +80,7 @@ const HalloweenEvent = (() => {
       currencyMultiplier:1+upgradeLevel(value,"currency")*.05
     };
   }
-  function pumpkinHp(referenceHp,value) { return Math.max(1,Math.round(referenceHp*.5*modifiers(value).pumpkinHpMultiplier)); }
+  function pumpkinHp(index,value) { return Math.max(1,Math.round((GROUND_PUMPKIN_START_HP+GROUND_PUMPKIN_HP_STEP*index)*modifiers(value).pumpkinHpMultiplier)); }
   function bonusSegmentHp(referenceHp,index,level,value,isSkill=false) {
     const base=referenceHp*.15*Math.pow(segmentRatio(level),index);
     return Math.max(1,Math.round(base*(isSkill?modifiers(value).skillHpMultiplier:1)));

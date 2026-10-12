@@ -112,7 +112,7 @@ const state = {
   necromancer: null, souls: [], soulEffects: [], necroDeaths: [], paladin: null, holyEffects: [],
   alchemist: null, runemaster: null, ilyra: null, ilyraDeaths: [], seraphine: null, seraphineDeaths: [], resolvingSeraphineDeaths:false, shooter: null,
   secondaryTeam: null, pendingUpgrades: 0, upgradeOfferId: 0,
-  halloweenBoss:null,eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,eventModifiers:null,
+  halloweenBoss:null,eventRun:false,eventLevel:1,eventPumpkins:[],eventPumpkinsSpawned:0,eventPumpkinTimer:0,eventBonusTimer:0,eventProgress:null,eventModifiers:null,
   runStartSegments: 100,
   runUpgradeHistory: {shooter:[],paladin:[],necromancer:[],alchemist:[],runemaster:[],ilyra:[],seraphine:[]},
   pointerDown: false, keyboardLeft: false, keyboardRight: false
@@ -256,7 +256,7 @@ function resetGame(eventRun=false,eventLevel=1,adminTest=false) {
     ? {damage:1*eventModifiers.damageMultiplier+eventModifiers.pierceDamage,shotsPerSecond:2.7*eventModifiers.rateMultiplier,bullets:1,spread:0,pierce:eventModifiers.pierce,critChance:eventModifiers.critChance,critDamage:150+eventModifiers.critDamage}
     : { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   state.secondaryTeam=createSecondaryTeam(progress.data.secondarySlots);
-  state.eventPumpkins=[];state.eventPumpkinTimer=8;state.eventBonusTimer=12;
+  state.eventPumpkins=[];state.eventPumpkinsSpawned=0;state.eventPumpkinTimer=8;state.eventBonusTimer=12;
   if(eventRun&&eventLevel===8)initHalloweenBossLevel8();else if(eventRun)createHalloweenEventSnake(eventLevel);else createLevelSnakes(state.level,SEGMENTS_PER_SNAKE);
   state.runStartSegments=state.snake.length;
   document.querySelector(".game-shell")?.classList[eventRun?"add":"remove"]("halloween-event-run");
@@ -338,11 +338,11 @@ function spawnEventPumpkin(random=Math.random) {
   if(!state.eventRun||state.eventPumpkins.length>=2)return null;
   const reference=lastVisibleEventMainSegment();if(!reference)return null;
   const margin=45,x=margin+random()*Math.max(1,state.width-margin*2),y=90+random()*Math.max(1,state.player.y-200);
-  return createEventPumpkin(x,y,reference.hp);
+  return createEventPumpkin(x,y);
 }
 
-function createEventPumpkin(x,y,referenceHp,extra={}){
-  const hp=HalloweenEvent.pumpkinHp(referenceHp,state.eventProgress);
+function createEventPumpkin(x,y,extra={}){
+  const hp=HalloweenEvent.pumpkinHp(state.eventPumpkinsSpawned++,state.eventProgress);
   const pumpkin={id:state.nextId++,x,y,hp,maxHp:hp,radius:22,...extra};state.eventPumpkins.push(pumpkin);return pumpkin;
 }
 
