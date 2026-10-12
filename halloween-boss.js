@@ -5,7 +5,7 @@
 const HALLOWEEN_BOSS_CONFIG = Object.freeze({
   fallDuration:2.2, pauseDuration:1, burrowDuration:.65, emergeDuration:1,
   attackSpeed:69, laneTransition:1.15,
-  attackSway:5, attackStartHp:55, hpIncreaseFactor:.25, attackRadius:24,
+  attackSway:5, attackStartHp:45, attackHpStep:3, attackRadius:24,
   hpMultiplier:1.25, healFraction:.05, phase2Threshold:.70, phase3Threshold:.35,
   growthStageDuration:3, pumpkinSpawnMin:8, pumpkinSpawnMax:12,
   phase3PumpkinSpawnMin:6, phase3PumpkinSpawnMax:9, pumpkinCaps:Object.freeze([2,3,3]),
@@ -68,9 +68,8 @@ function chooseHalloweenBossAttackPattern(){
   boss.patternStep=0;
 }
 function getHalloweenBossSegmentHP(index){
-  const base=HalloweenEvent.segmentHp(8,0),normal=HalloweenEvent.segmentHp(8,index);
-  // Start attacks at 55 HP; retain 25% of each existing curve increment.
-  return Math.min(Number.MAX_SAFE_INTEGER,HALLOWEEN_BOSS_CONFIG.attackStartHp+(normal-base)*HALLOWEEN_BOSS_CONFIG.hpIncreaseFactor);
+  // A small fixed increment keeps later attack waves manageable.
+  return Math.min(Number.MAX_SAFE_INTEGER,HALLOWEEN_BOSS_CONFIG.attackStartHp+index*HALLOWEEN_BOSS_CONFIG.attackHpStep);
 }
 function spawnHalloweenBossAttackSegment(lane){
   const boss=state.halloweenBoss;if(!boss||boss.phase!=="idle_sway")return null;
