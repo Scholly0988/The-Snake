@@ -253,7 +253,7 @@ function resetGame(eventRun=false,eventLevel=1,adminTest=false) {
   const eventModifiers=eventRun?HalloweenEvent.modifiers(state.eventProgress||(state.eventProgress=HalloweenEvent.load())):null;
   state.eventModifiers=eventModifiers;
   state.weapon = eventRun
-    ? {damage:1*eventModifiers.damageMultiplier+eventModifiers.pierceDamage,shotsPerSecond:2.7*eventModifiers.rateMultiplier,bullets:1,spread:0,pierce:eventModifiers.pierce,critChance:eventModifiers.critChance,critDamage:150+eventModifiers.critDamage}
+    ? {damage:1+eventModifiers.pierceDamage,shotsPerSecond:2.7*eventModifiers.rateMultiplier,bullets:1,spread:0,pierce:eventModifiers.pierce,critChance:eventModifiers.critChance,critDamage:150+eventModifiers.critDamage}
     : { damage: 1 + progress.data.damageLevel, shotsPerSecond: 2.7 * (1 + progress.data.rateLevel * .10), bullets: 1, spread: 0, pierce: 0, critChance: progress.data.critChanceLevel, critDamage: 150 + 25 * progress.data.critDamageLevel };
   state.secondaryTeam=createSecondaryTeam(progress.data.secondarySlots);
   state.eventPumpkins=[];state.eventPumpkinsSpawned=0;state.eventPumpkinTimer=8;state.eventBonusTimer=12;
@@ -589,11 +589,14 @@ function projectileHits(bullet, target) {
   const radius = (target.bossBody?65:target.bossPumpkin?target.radius:SEGMENT_HIT_RADIUS) + (bullet.owner === "paladin" ? 2 * (bullet.size || 1.4) : ["shooter","ilyra","seraphine"].includes(bullet.owner)?3*Math.max(0,(bullet.size||1)-1):0);
   return Math.hypot(target.x-ax-t*dx,target.y-ay-t*dy) < radius;
 }
+function eventUpgradeDamageMultiplier(){
+  return state.eventRun?(state.eventModifiers?.damageMultiplier||1):1;
+}
 function segmentDamageMultiplier(segment) {
   const curse=1+(segment.soulMark?(state.necromancer?.curse||0):0)+mirelIncomingBonus(segment);
   const mastery=state.runemaster?.mastery?1+Math.min(skillValue("runemaster","mastery",.30,.40),visibleTargets().filter(s=>runeCharges(s)>0).length*skillValue("runemaster","mastery",.02,.025)):1;
   const event=state.eventRun&&segment.eventMain?state.eventModifiers.eventDamageMultiplier:1;
-  return curse*mastery*event;
+  return curse*mastery*event*eventUpgradeDamageMultiplier();
 }
 function applyDamageBatch(batch) {
   // All targets are determined before any segment retreats or upgrade pauses.
@@ -624,7 +627,7 @@ function handleHits(random = Math.random) {
       for(const pumpkin of pumpkins){
         bullet.hitIds.add("pumpkin-"+pumpkin.id);
         const hit=state.shooter?shooterHitRoll(pumpkin,bullet,random):rollHit(random,state.weapon.damage);
-        hit.damage*=state.eventModifiers.pumpkinDamageMultiplier;
+        hit.damage*=state.eventModifiers.pumpkinDamageMultiplier*eventUpgradeDamageMultiplier();
         pumpkin.hp=Math.max(0,pumpkin.hp-hit.damage);bullet.hitsLeft--;bullet.hitsDone=(bullet.hitsDone||0)+1;
         burst(pumpkin.x,pumpkin.y,hit.critical?"#fff0a5":"#ff8d32",hit.critical?12:6);
         if(pumpkin.hp<=0){if(pumpkin.bossPumpkin)destroyHalloweenBossPumpkin(pumpkin);else{state.eventPumpkins=state.eventPumpkins.filter(item=>item!==pumpkin);state.score+=50;}}
@@ -940,7 +943,7 @@ function refreshHud() {
   document.querySelector("#critChance").textContent = hudNumber(state.weapon.critChance || 0) + " %";
   document.querySelector("#critDamage").textContent = hudNumber(state.weapon.critDamage ?? 150) + " %";
   scoreEl.textContent = state.score;
-  damageEl.textContent = state.weapon.damage.toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  damageEl.textContent = (state.weapon.damage*eventUpgradeDamageMultiplier()).toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2});
   fireRateEl.textContent = `${(state.weapon.shotsPerSecond / 2.7).toFixed(1)}×`;
   document.querySelector("#shooterCombatStatus").textContent=shooterStatusText();
 }

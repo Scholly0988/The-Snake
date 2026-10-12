@@ -14,8 +14,8 @@ const HalloweenEvent = (() => {
   let volatileProgress=null;
 
   const upgrades=Object.freeze([
-    {id:"damage",name:"Schaden",max:30,startCost:50,costStep:25,effect:"+2 % Schaden pro Stufe"},
-    {id:"rate",name:"Feuerrate",max:30,startCost:50,costStep:25,effect:"+2 % Feuerrate pro Stufe"},
+    {id:"damage",name:"Schaden",max:30,startCost:50,costStep:25,effect:"+15 % auf den Gesamtschaden pro Stufe"},
+    {id:"rate",name:"Feuerrate",max:30,startCost:50,costStep:25,effect:"+15 % Feuerrate pro Stufe"},
     {id:"critChance",name:"Krit-Chance",max:20,startCost:50,costStep:25,effect:"+0,5 % Krit-Chance pro Stufe"},
     {id:"critDamage",name:"Krit-Schaden",max:20,startCost:50,costStep:25,effect:"+5 % Krit-Schaden pro Stufe"},
     {id:"pierce",name:"Durchschlag",max:15,startCost:100,costStep:50,effect:"Zwischenstufen +0,5 Schaden · Stufe 5/10/15 +1 Durchschlag"},
@@ -65,8 +65,8 @@ const HalloweenEvent = (() => {
   function modifiers(value){
     const pierceLevel=upgradeLevel(value,"pierce");
     return {
-      damageMultiplier:1+upgradeLevel(value,"damage")*.02,
-      rateMultiplier:1+upgradeLevel(value,"rate")*.02,
+      damageMultiplier:1+upgradeLevel(value,"damage")*.15,
+      rateMultiplier:1+upgradeLevel(value,"rate")*.15,
       critChance:upgradeLevel(value,"critChance")*.5,
       critDamage:upgradeLevel(value,"critDamage")*5,
       pierce:Math.floor(pierceLevel/5),
