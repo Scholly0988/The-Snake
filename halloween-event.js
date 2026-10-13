@@ -8,7 +8,7 @@ const HalloweenEvent = (() => {
   const LEVEL_ONE_FIRST_HP=44;
   const LEVEL_ONE_LAST_HP=7800;
   const GROUND_PUMPKIN_START_HP=36;
-  const GROUND_PUMPKIN_HP_STEP=29;
+  const GROUND_PUMPKIN_HP_STEP=1;
   const UPGRADE_PRICE_FACTOR=.75;
   const UPGRADE_COST_STEP_FACTOR=.5;
   let volatileProgress=null;
