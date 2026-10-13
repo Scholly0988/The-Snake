@@ -4,8 +4,8 @@
 // Its body, HP, phases and animations stay distinct from spawned attack enemies.
 const HALLOWEEN_BOSS_CONFIG = Object.freeze({
   fallDuration:2.2, pauseDuration:1, burrowDuration:.65, emergeDuration:1,
-  attackSpeed:69, laneTransition:1.15,
-  attackSway:5, attackStartHp:45, attackHpStep:3, attackRadius:24,
+  attackSpeed:51.75, laneTransition:1.15,
+  attackSway:5, attackStartHp:45, attackHpStep:1, attackRadius:24,
   hpMultiplier:1.25, healFraction:.05, phase2Threshold:.70, phase3Threshold:.35,
   growthStageDuration:3, pumpkinSpawnMin:8, pumpkinSpawnMax:12,
   phase3PumpkinSpawnMin:6, phase3PumpkinSpawnMax:9, pumpkinCaps:Object.freeze([2,3,3]),
